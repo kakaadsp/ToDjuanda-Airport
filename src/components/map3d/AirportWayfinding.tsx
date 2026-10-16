@@ -1245,6 +1245,9 @@ export function AirportWayfinding() {
               start={startWorldPoint}
               destination={destinationWorldPoint}
               visitorPosition={liveTracking ? livePosition : (visibleRouteProgress?.position ?? null)}
+              startLabel={automaticLocation && locationMapped
+                ? (lang === "ID" ? "LOKASI ANDA" : "YOUR LOCATION")
+                : (lang === "ID" ? "TITIK AWAL" : "START")}
             />
           </Suspense>
           <CameraController

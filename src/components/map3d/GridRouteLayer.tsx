@@ -9,9 +9,10 @@ type GridRouteLayerProps = {
   start: RouteWorldPoint | null;
   destination: RouteWorldPoint | null;
   visitorPosition: RouteWorldPoint | null;
+  startLabel?: string;
 };
 
-export function GridRouteLayer({ points, highlightedPoints, start, destination, visitorPosition }: GridRouteLayerProps) {
+export function GridRouteLayer({ points, highlightedPoints, start, destination, visitorPosition, startLabel = "TITIK AWAL" }: GridRouteLayerProps) {
   return (
     <group name="GEOMETRY_ROUTE_OVERLAY">
       {points.length >= 2 && (
@@ -33,7 +34,7 @@ export function GridRouteLayer({ points, highlightedPoints, start, destination, 
             <meshBasicMaterial color="#16a36a" depthWrite={false} toneMapped={false} />
           </mesh>
           <Html position={[0, 0.75, 0]} center zIndexRange={[40, 0]} style={{ pointerEvents: "none" }}>
-            <span className="navigation-marker-label start-marker-label">TITIK AWAL</span>
+            <span className="navigation-marker-label start-marker-label">{startLabel}</span>
           </Html>
         </group>
       )}

@@ -18,7 +18,7 @@ export const T1_GEO_CALIBRATION = {
   /** Hindari menempelkan lokasi berbasis IP yang masih jauh dari Terminal 1. */
   maximumTerminalDistanceMeters: 1_200,
   /** Di atas nilai ini marker dapat berpindah ke koridor yang keliru. */
-  maximumUsableAccuracyMeters: 150,
+  maximumUsableAccuracyMeters: 100,
 } as const;
 
 const EARTH_RADIUS_METERS = 6_378_137;
