@@ -142,3 +142,78 @@ export function getRouteGuidance(
 
   return { kind: "straight", label: "Lurus", distance: remaining };
 }
+
+/**
+ * Akurasi 1.0: Proyeksikan titik GPS atau marker tepat ke garis rute (Route Snapping).
+ * Menjamin titik berada persis di atas garis rute tanpa keluar jalur.
+ */
+export function projectPointOntoRouteSegments(
+  points: RouteWorldPoint[],
+  target: [number, number, number],
+  preferredFloorY?: number,
+): {
+  projected: RouteWorldPoint;
+  distanceFromStart: number;
+  segmentIndex: number;
+  deviationDistance: number;
+} | null {
+  if (points.length < 2) return null;
+
+  let bestSegmentIndex = 0;
+  let bestDistanceSq = Infinity;
+  let bestProjected: RouteWorldPoint = points[0];
+  let cumulativeDistanceBeforeBest = 0;
+  let distanceAlongBestSegment = 0;
+  let currentCumulativeDistance = 0;
+
+  for (let i = 0; i < points.length - 1; i++) {
+    const a = points[i];
+    const b = points[i + 1];
+
+    const dx = b[0] - a[0];
+    const dy = b[1] - a[1];
+    const dz = b[2] - a[2];
+    const segLengthSq = dx * dx + dz * dz;
+    const segLength = Math.sqrt(segLengthSq);
+
+    let t = 0;
+    if (segLengthSq > 0.000001) {
+      const tox = target[0] - a[0];
+      const toz = target[2] - a[2];
+      t = (tox * dx + toz * dz) / segLengthSq;
+      t = Math.max(0, Math.min(1, t));
+    }
+
+    const projX = a[0] + t * dx;
+    const projY = a[1] + t * dy;
+    const projZ = a[2] + t * dz;
+
+    const distX = target[0] - projX;
+    const distZ = target[2] - projZ;
+    let distSq = distX * distX + distZ * distZ;
+
+    if (preferredFloorY !== undefined) {
+      const floorDiff = Math.abs(projY - preferredFloorY);
+      if (floorDiff > 1.2) {
+        distSq += floorDiff * floorDiff * 8;
+      }
+    }
+
+    if (distSq < bestDistanceSq) {
+      bestDistanceSq = distSq;
+      bestSegmentIndex = i;
+      bestProjected = [projX, projY, projZ];
+      cumulativeDistanceBeforeBest = currentCumulativeDistance;
+      distanceAlongBestSegment = t * segLength;
+    }
+
+    currentCumulativeDistance += segLength;
+  }
+
+  return {
+    projected: bestProjected,
+    distanceFromStart: cumulativeDistanceBeforeBest + distanceAlongBestSegment,
+    segmentIndex: bestSegmentIndex,
+    deviationDistance: Math.sqrt(bestDistanceSq),
+  };
+}

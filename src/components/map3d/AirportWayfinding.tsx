@@ -57,6 +57,7 @@ import {
   createRouteMetrics,
   type RouteWorldPoint,
   type RoutePlaybackSnapshot,
+  projectPointOntoRouteSegments,
 } from "@/lib/map3d/route-guidance";
 import { createRouteSteps } from "@/lib/map3d/route-steps";
 import {
@@ -95,9 +96,9 @@ type CameraMode = "map" | "pov";
 
 const mapCopy = {
   ID: {
-    loading: "MEMUAT MODEL LANTAI", directions: "Petunjuk arah", from: "Dari", to: "Ke", chooseStart: "Pilih titik awal", chooseDestination: "Pilih tujuan", searchStart: "Cari titik awal", searchDestination: "Cari tujuan", clearSearch: "Hapus pencarian", noResults: "Tidak ditemukan. Coba nama tenant, kode building, atau nomor gate.", routeHint: "Rute terdekat menghindari tembok dan pilar, melalui bukaan pintu yang ada pada model.", chooseStartHint: "Titik awal berada di area jalan terdekat. Pilih tujuan.", selectStartHint: "Pilih posisi awal terlebih dahulu.", noSafeRoute: "Tidak ditemukan jalur aman pada lantai ini. Coba titik awal atau tujuan lain.", noFloorRoute: "Tidak ditemukan jalur lewat eskalator atau tangga menuju lantai tujuan.", stepTitle: "Langkah perjalanan", previous: "Sebelumnya", next: "Berikutnya", mapView: "Lihat peta", simulation: "Mulai simulasi 3D", continueSimulation: "Lanjutkan simulasi 3D", pause: "Jeda", resume: "Lanjutkan", center: "Pusatkan", estimate: "Perkiraan", minutes: "menit", arrive: "Tiba di tujuan", straight: "Jalan lurus", left: "Belok kiri", right: "Belok kanan", floorDirection: "Ikuti papan petunjuk ke lantai tujuan", operationalHours: "Jam operasional", open24: "Buka 24 jam", activePeriod: "Masa aktif", now: "Sekarang", unspecified: "Tidak ditentukan", facility: "FASILITAS BANDARA", tenant: "TENANT KOMERSIAL", frontPhoto: "Tampak depan", resetRoute: "Hapus rute", showMap: "Tampilkan seluruh peta", zoomIn: "Perbesar peta", zoomOut: "Perkecil peta", hideExterior: "Sembunyikan area luar gedung", showExterior: "Tampilkan area luar gedung", compass: "Arah mata angin pada model peta", locating: "Mencari posisi Anda", locationActive: "Lokasi real-time aktif", locationDenied: "Izin lokasi diblokir", locationUnavailable: "Lokasi hanya tersedia melalui HTTPS atau localhost", locationTimeout: "GPS belum merespons", locationOutside: "Anda belum terdeteksi di sekitar Terminal 1", locationInaccurate: "Akurasi GPS belum cukup", retryLocation: "Coba lagi", yourLocation: "Lokasi Anda (GPS)", locationFloorNote: "GPS tidak dapat mendeteksi lantai. Koreksi bila perlu." },
+    loading: "MEMUAT MODEL LANTAI", directions: "Petunjuk arah", from: "Dari", to: "Ke", chooseStart: "Pilih titik awal", chooseDestination: "Pilih tujuan", searchStart: "Cari titik awal", searchDestination: "Cari tujuan", clearSearch: "Hapus pencarian", noResults: "Tidak ditemukan. Coba nama tenant, kode building, atau nomor gate.", routeHint: "Rute terdekat menghindari tembok dan pilar, melalui bukaan pintu yang ada pada model.", chooseStartHint: "Titik awal berada di area jalan terdekat. Pilih tujuan.", selectStartHint: "Pilih posisi awal terlebih dahulu.", noSafeRoute: "Tidak ditemukan jalur aman pada lantai ini. Coba titik awal atau tujuan lain.", noFloorRoute: "Tidak ditemukan jalur lewat eskalator atau tangga menuju lantai tujuan.", stepTitle: "Langkah perjalanan", previous: "Sebelumnya", next: "Berikutnya", mapView: "Lihat peta", simulation: "Mulai simulasi 3D", continueSimulation: "Lanjutkan simulasi 3D", pause: "Jeda", resume: "Lanjutkan", center: "Pusatkan", estimate: "Perkiraan", minutes: "menit", arrive: "Tiba di tujuan", straight: "Jalan lurus", left: "Belok kiri", right: "Belok kanan", floorDirection: "Ikuti papan petunjuk ke lantai tujuan", operationalHours: "Jam operasional", open24: "Buka 24 jam", activePeriod: "Masa aktif", now: "Sekarang", unspecified: "Tidak ditentukan", facility: "FASILITAS BANDARA", tenant: "TENANT KOMERSIAL", frontPhoto: "Tampak depan", resetRoute: "Hapus rute", showMap: "Tampilkan seluruh peta", zoomIn: "Perbesar peta", zoomOut: "Perkecil peta", hideExterior: "Sembunyikan area luar gedung", showExterior: "Tampilkan area luar gedung", compass: "Arah mata angin pada model peta", locating: "Mengalibrasi GPS Akurasi 1.0...", locationActive: "Lokasi Anda Aktif (Akurasi 1.0)", locationDenied: "Izin lokasi diblokir", locationUnavailable: "Lokasi hanya tersedia melalui HTTPS atau localhost", locationTimeout: "GPS belum merespons", locationOutside: "Anda belum terdeteksi di sekitar Terminal 1", locationInaccurate: "Akurasi GPS belum cukup", retryLocation: "Coba lagi", yourLocation: "Lokasi Anda (GPS)", locationFloorNote: "GPS tidak dapat mendeteksi lantai. Koreksi bila perlu." },
   EN: {
-    loading: "LOADING FLOOR MODEL", directions: "Directions", from: "From", to: "To", chooseStart: "Choose starting point", chooseDestination: "Choose destination", searchStart: "Search starting point", searchDestination: "Search destination", clearSearch: "Clear search", noResults: "No results. Try a tenant name, building code, or gate number.", routeHint: "The shortest route avoids walls and pillars through the model's available doorways.", chooseStartHint: "Your start is on the nearest walkway. Choose a destination.", selectStartHint: "Choose a starting point first.", noSafeRoute: "No safe route was found on this floor. Try another start or destination.", noFloorRoute: "No route via an escalator or staircase was found to the destination floor.", stepTitle: "Walking steps", previous: "Previous", next: "Next", mapView: "View map", simulation: "Start 3D simulation", continueSimulation: "Continue 3D simulation", pause: "Pause", resume: "Resume", center: "Recenter", estimate: "Estimated", minutes: "min", arrive: "Arrive at destination", straight: "Walk straight", left: "Turn left", right: "Turn right", floorDirection: "Follow signs to the destination floor", operationalHours: "Operating hours", open24: "Open 24 hours", activePeriod: "Active period", now: "Now", unspecified: "Not specified", facility: "AIRPORT FACILITY", tenant: "COMMERCIAL TENANT", frontPhoto: "Front view", resetRoute: "Clear route", showMap: "Show full map", zoomIn: "Zoom in", zoomOut: "Zoom out", hideExterior: "Hide exterior area", showExterior: "Show exterior area", compass: "Map compass", locating: "Finding your position", locationActive: "Live location active", locationDenied: "Location permission is blocked", locationUnavailable: "Location requires HTTPS or localhost", locationTimeout: "GPS has not responded", locationOutside: "You are not detected near Terminal 1", locationInaccurate: "GPS accuracy is not sufficient yet", retryLocation: "Try again", yourLocation: "Your location (GPS)", locationFloorNote: "GPS cannot detect floors. Correct it if needed." },
+    loading: "LOADING FLOOR MODEL", directions: "Directions", from: "From", to: "To", chooseStart: "Choose starting point", chooseDestination: "Choose destination", searchStart: "Search starting point", searchDestination: "Search destination", clearSearch: "Clear search", noResults: "No results. Try a tenant name, building code, or gate number.", routeHint: "The shortest route avoids walls and pillars through the model's available doorways.", chooseStartHint: "Your start is on the nearest walkway. Choose a destination.", selectStartHint: "Choose a starting point first.", noSafeRoute: "No safe route was found on this floor. Try another start or destination.", noFloorRoute: "No route via an escalator or staircase was found to the destination floor.", stepTitle: "Walking steps", previous: "Previous", next: "Next", mapView: "View map", simulation: "Start 3D simulation", continueSimulation: "Continue 3D simulation", pause: "Pause", resume: "Resume", center: "Recenter", estimate: "Estimated", minutes: "min", arrive: "Arrive at destination", straight: "Walk straight", left: "Turn left", right: "Turn right", floorDirection: "Follow signs to the destination floor", operationalHours: "Operating hours", open24: "Open 24 hours", activePeriod: "Active period", now: "Now", unspecified: "Not specified", facility: "AIRPORT FACILITY", tenant: "COMMERCIAL TENANT", frontPhoto: "Front view", resetRoute: "Clear route", showMap: "Show full map", zoomIn: "Zoom in", zoomOut: "Zoom out", hideExterior: "Hide exterior area", showExterior: "Show exterior area", compass: "Map compass", locating: "Calibrating GPS Accuracy 1.0...", locationActive: "Live location active (Accuracy 1.0)", locationDenied: "Location permission is blocked", locationUnavailable: "Location requires HTTPS or localhost", locationTimeout: "GPS has not responded", locationOutside: "You are not detected near Terminal 1", locationInaccurate: "GPS accuracy is not sufficient yet", retryLocation: "Try again", yourLocation: "Your location (GPS)", locationFloorNote: "GPS cannot detect floors. Correct it if needed." },
 } as const;
 const CameraController = forwardRef<
   ViewerApi,
@@ -670,6 +671,38 @@ export function AirportWayfinding() {
     if (liveReadingTimestamp.current === usableLocationReading.timestamp) return;
     liveReadingTimestamp.current = usableLocationReading.timestamp;
     const [x, z] = geographicToT1Model(usableLocationReading);
+    // Akurasi 1.0: Jika rute aktif, proyeksikan GPS tepat ke garis rute (Route Snapping)
+    if (routeWorldPoints.length >= 2) {
+      const snappedToRoute = projectPointOntoRouteSegments(
+        routeWorldPoints,
+        [x, 0, z],
+        livePosition ? livePosition[1] : undefined,
+      );
+      if (snappedToRoute) {
+        const targetPoint = snappedToRoute.projected;
+        if (livePosition) {
+          const distance = Math.hypot(targetPoint[0] - livePosition[0], targetPoint[2] - livePosition[2]);
+          if (distance < 0.25) return;
+          const smoothing = Math.min(0.85, Math.max(0.4, distance / 12));
+          const nextX = livePosition[0] + (targetPoint[0] - livePosition[0]) * smoothing;
+          const nextZ = livePosition[2] + (targetPoint[2] - livePosition[2]) * smoothing;
+          const reprojected = projectPointOntoRouteSegments(routeWorldPoints, [nextX, targetPoint[1], nextZ], targetPoint[1]);
+          const finalPoint = reprojected ? reprojected.projected : targetPoint;
+          setLivePosition(finalPoint);
+          if (routeMetrics) {
+            const currentDist = reprojected ? reprojected.distanceFromStart : snappedToRoute.distanceFromStart;
+            setRouteProgress(createPlaybackSnapshot(routeMetrics, currentDist));
+          }
+        } else {
+          setLivePosition(targetPoint);
+          if (routeMetrics) {
+            setRouteProgress(createPlaybackSnapshot(routeMetrics, snappedToRoute.distanceFromStart));
+          }
+        }
+        return;
+      }
+    }
+
     const snapped = snapPlace(navigation, { floor: passengerFloor, point: [x, z] });
     if (!snapped) return;
     const next: RouteWorldPoint = [snapped.point[0], placeElevation(navigation, snapped), snapped.point[1]];
@@ -689,7 +722,7 @@ export function AirportWayfinding() {
     }
     setStartPoint(snapped);
     setStartName(copy.yourLocation);
-  }, [copy.yourLocation, livePosition, liveTracking, navigation, passengerFloor, usableLocationReading]);
+  }, [copy.yourLocation, livePosition, liveTracking, navigation, passengerFloor, routeMetrics, routeWorldPoints, usableLocationReading]);
 
   // Saat simulasi berjalan dengan satu lantai terpilih, peta mengikuti lantai
   // tempat pengunjung berada tanpa mengubah pilihan pengguna.
@@ -1064,10 +1097,15 @@ export function AirportWayfinding() {
         return false;
       }
       setAutomaticLocation(true);
-      setLivePosition(startWorldPoint);
+      // Akurasi 1.0: Titik navigasi awal di-kunci persis di titik awal garis rute
+      const initialPoint = routeWorldPoints.length > 0 ? routeWorldPoints[0] : startWorldPoint;
+      setLivePosition(initialPoint);
+      if (routeMetrics && routeWorldPoints.length > 0) {
+        setRouteProgress(createPlaybackSnapshot(routeMetrics, 0));
+      }
       return true;
     });
-  }, [startWorldPoint]);
+  }, [routeMetrics, routeWorldPoints, startWorldPoint]);
 
   const recenterActiveRoute = useCallback(() => {
     if (!routeSessionActive) return;

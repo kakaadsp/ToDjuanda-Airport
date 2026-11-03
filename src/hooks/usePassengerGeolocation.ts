@@ -57,28 +57,46 @@ export function usePassengerGeolocation(enabled = true) {
         };
         // GPS indoor sering mengirim loncatan besar. Abaikan pembacaan yang
         // terlalu kasar atau tidak masuk akal dibanding sampel sebelumnya.
-        if (!Number.isFinite(next.latitude) || !Number.isFinite(next.longitude) || next.accuracy > 150) return;
+        if (!Number.isFinite(next.latitude) || !Number.isFinite(next.longitude) || next.accuracy > 65) return;
         const previous = samplesRef.current.at(-1);
         if (previous) {
           const dLat = (next.latitude - previous.latitude) * 111_320;
           const dLon = (next.longitude - previous.longitude) * 111_320 * Math.cos(next.latitude * Math.PI / 180);
           const jumpMeters = Math.hypot(dLat, dLon);
           const elapsedSeconds = Math.max(0.5, (next.timestamp - previous.timestamp) / 1000);
-          if (jumpMeters > Math.max(45, next.accuracy * 1.5) && jumpMeters / elapsedSeconds > 8) return;
+          if (jumpMeters > Math.max(25, next.accuracy * 1.2) && jumpMeters / elapsedSeconds > 6) return;
         }
-        samplesRef.current = [...samplesRef.current.slice(-4), next];
+        samplesRef.current = [...samplesRef.current.slice(-5), next];
         const samples = samplesRef.current;
-        // Pakai sampel valid pertama agar lokasi awal tampil cepat. Sampel
-        // berikutnya tetap dipakai untuk meredam noise tanpa menunda sinyal.
-        if (samples.length === 1) {
-          setReading(next);
-          setStatus("tracking");
+        // Akurasi 1.0: Kumpulkan minimal 4 sampel akurat sebelum mengunci titik awal
+        // agar koordinat konvergen stabil dan tidak terlempar oleh sinyal kasar pertama.
+
+        const MIN_REQUIRED_SAMPLES = 4;
+        if (samples.length < MIN_REQUIRED_SAMPLES) {
+          setStatus("checking");
+
+
+
+
           return;
         }
-        const latitude = samples.reduce((sum, sample) => sum + sample.latitude, 0) / samples.length;
-        const longitude = samples.reduce((sum, sample) => sum + sample.longitude, 0) / samples.length;
-        const averageAccuracy = samples.reduce((sum, sample) => sum + sample.accuracy, 0) / samples.length;
-        setReading({ ...next, latitude, longitude, accuracy: Math.max(10, Math.min(150, averageAccuracy)) });
+        let totalWeight = 0;
+        let weightedLat = 0;
+        let weightedLon = 0;
+        let bestAccuracy = Infinity;
+
+        for (const sample of samples) {
+          const weight = 1 / Math.max(sample.accuracy * sample.accuracy, 1);
+          totalWeight += weight;
+          weightedLat += sample.latitude * weight;
+          weightedLon += sample.longitude * weight;
+          if (sample.accuracy < bestAccuracy) bestAccuracy = sample.accuracy;
+        }
+
+        const latitude = weightedLat / totalWeight;
+        const longitude = weightedLon / totalWeight;
+
+        setReading({ ...next, latitude, longitude, accuracy: Math.max(8, bestAccuracy) });
         setStatus("tracking");
       };
     const handleError = (error: GeolocationPositionError) => {
