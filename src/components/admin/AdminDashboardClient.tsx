@@ -34,7 +34,7 @@ import { AdminMapPanel } from "@/components/admin/AdminMapPanel";
 import { DashboardAnalytics } from "@/components/admin/DashboardAnalytics";
 import { MapStage } from "@/components/wayfinding/MapStage";
 import { routeEdges, routeNodes, spaces } from "@/data/demo-wayfinding";
-import { fetchMapObjectConfigsFromDb, readMapObjectConfigs, type MapObjectConfig, type MapObjectConfigByName } from "@/lib/map3d/admin-object-config";
+import { defaultMapObjectConfig, fetchMapObjectConfigsFromDb, readMapObjectConfigs, writeMapObjectConfigs, type MapObjectConfig, type MapObjectConfigByName } from "@/lib/map3d/admin-object-config";
 import type { TerminalCode } from "@/types";
 
 type TenantRow = {
@@ -193,6 +193,16 @@ export function AdminDashboardClient({
       created = { id: `local-${Date.now()}`, name: newTenant.name, category: newTenant.category, terminal: newTenant.terminal as TerminalCode, floor: newTenant.floor, spaceCode: newTenant.spaceCode, status: "ACTIVE", hours: newTenant.hours };
     }
     setTenants((current) => [created, ...current]);
+    const cachedConfigs = readMapObjectConfigs();
+    writeMapObjectConfigs({
+      ...cachedConfigs,
+      [newTenant.spaceCode]: {
+        ...(cachedConfigs[newTenant.spaceCode] ?? defaultMapObjectConfig(newTenant.spaceCode)),
+        objectName: newTenant.spaceCode,
+        displayName: newTenant.name,
+        entityType: "TENANT",
+      },
+    });
     setNewTenant({ name: "", category: "Kuliner & F&B", terminal: "T1", floor: "Lantai 1", spaceCode: "", hours: "07:00 - 21:00" });
     setShowAddTenantModal(false);
     setShowTenantPlacement(false);

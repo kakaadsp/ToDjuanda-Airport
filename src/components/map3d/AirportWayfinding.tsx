@@ -741,7 +741,8 @@ export function AirportWayfinding() {
   const chooseEntryPoint = useCallback(
     (point: THREE.Vector3, objectName: string, side: "NORTH" | "EAST" | "SOUTH" | "WEST") => {
       if (!navigation) return;
-      commitStartPoint({ floor: floorAtHeight(navigation, point.y), point: [point.x, point.z] }, `${objectName} · Pintu ${side}`);
+      const displayName = mapObjectConfigs[objectName]?.displayName?.trim();
+      commitStartPoint({ floor: floorAtHeight(navigation, point.y), point: [point.x, point.z] }, `${displayName || objectName} · Pintu ${side}`);
     },
     [commitStartPoint, navigation],
   );
@@ -749,7 +750,8 @@ export function AirportWayfinding() {
   const setBuildingAsStart = useCallback(
     (record: SceneObjectRecord) => {
       setSelected(createSelectedObject(record.object));
-      commitStartPoint(recordCenter(record), record.selectableLabel ?? record.name);
+      const displayName = mapObjectConfigs[record.name]?.displayName?.trim();
+      commitStartPoint(recordCenter(record), displayName || record.selectableLabel || record.name);
     },
     [commitStartPoint],
   );
@@ -811,7 +813,7 @@ export function AirportWayfinding() {
         const fromEntrance = entranceStart ? findFloorRoute(navigation, entranceStart, target) : null;
         route = toEntrance && fromEntrance ? joinRoutes(toEntrance, fromEntrance) : null;
       }
-      const label = record.selectableLabel ?? record.name;
+      const label = objectConfig.displayName?.trim() || record.selectableLabel || record.name;
       setRouteProgress(null);
       setRoutePaused(false);
       setActiveStepIndex(0);
@@ -1454,6 +1456,11 @@ export function AirportWayfinding() {
         <div className="sea-location-info-body">
           <span className="sea-location-kicker">{selectedLocationConfig.entityType === "FACILITY" ? copy.facility : copy.tenant}</span>
           <h2>{selectedLocationConfig.displayName || selected.name}</h2>
+          {selectedLocationConfig.displayName?.trim() && (
+            <small style={{ display: "block", color: "#7c93a0", fontSize: "12px", marginTop: "2px", marginBottom: "4px" }}>
+              Blok: {selected.name}
+            </small>
+          )}
           <span className="sea-location-category">{selected.category}{multiFloor ? ` · ${selected.location.replace(/^Terminal 1 - /, "")}` : ""}</span>
           {selectedLocationConfig.description && <p>{selectedLocationConfig.description}</p>}
           <div className="sea-location-hours"><strong>Jam operasional</strong><span>{selectedLocationConfig.entityType === "FACILITY" || (!selectedLocationConfig.openTime && !selectedLocationConfig.closeTime) ? "Buka 24 jam" : `${selectedLocationConfig.openTime} – ${selectedLocationConfig.closeTime}`}</span></div>

@@ -71,6 +71,11 @@ export async function POST(request: Request) {
         const [openTime, closeTime] = hours.split(/\s*-\s*/);
         await tx.operationalHour.create({ data: { tenantId: created.id, dayOfWeek: 0, isOpen: true, is24Hours, openTime: is24Hours ? null : openTime || null, closeTime: is24Hours ? null : closeTime || null } });
       }
+      await tx.mapObjectConfig.upsert({
+        where: { objectName: spaceCode },
+        update: { displayName: name, entityType: "TENANT", description: description || "" },
+        create: { objectName: spaceCode, displayName: name, entityType: "TENANT", description: description || "" },
+      });
       await tx.auditLog.create({ data: { actorId: session.user.id, action: "TENANT_CREATE", entityType: "Tenant", entityId: created.id, after: created } });
       return created;
     });

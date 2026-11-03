@@ -426,11 +426,13 @@ export function SceneModel({ selectedUuid, onSelect, onSelectFloor, onSelectPoin
       const center = box.getCenter(new THREE.Vector3());
       // Editor menampilkan kode asli objek agar setiap bangunan dapat
       // dicocokkan langsung dengan denah/model (contoh: T1-GF-02).
-      const displayName = sourceName;
+      const configuredName = config.displayName?.trim();
+      const fallbackLabel = getSelectableLabel(sourceName);
+      const displayName = configuredName || fallbackLabel || sourceName;
       labels.push({
         key: object.uuid,
         name: displayName,
-        category: metadata.key,
+        category: config.entityType === "TENANT" && configuredName ? "building" : metadata.key,
         floor,
         position: [center.x, box.max.y + 0.45, center.z],
       });
