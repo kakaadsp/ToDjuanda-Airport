@@ -201,6 +201,10 @@ export function AdminDashboardClient({
   const [auditLoading, setAuditLoading] = useState(false);
   const [auditSearch, setAuditSearch] = useState("");
   const [auditCategoryFilter, setAuditCategoryFilter] = useState("ALL");
+  const [auditDateRange, setAuditDateRange] = useState<"ALL" | "TODAY" | "WEEK" | "MONTH" | "YEAR" | "CUSTOM">("ALL");
+  const [auditStartDate, setAuditStartDate] = useState("");
+  const [auditEndDate, setAuditEndDate] = useState("");
+  const [auditExporting, setAuditExporting] = useState<"excel" | "pdf" | null>(null);
 
   const fetchAuditLogs = async () => {
     setAuditLoading(true);
@@ -417,6 +421,12 @@ export function AdminDashboardClient({
   );
 
   const filteredAuditLogs = useMemo(() => {
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const startOfWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).getTime();
+    const startOfMonth = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).getTime();
+    const startOfYear = new Date(now.getFullYear(), 0, 1).getTime();
+
     return auditLogs.filter((log) => {
       const q = auditSearch.trim().toLowerCase();
       const matchSearch =
@@ -432,9 +442,165 @@ export function AdminDashboardClient({
         (auditCategoryFilter === "TENANT" && (log.actionCode.includes("TENANT") || log.actionCode.includes("MAP_OBJECT"))) ||
         (auditCategoryFilter === "USER" && (log.actionCode.includes("USER") || log.actionCode.includes("SECURITY")));
 
-      return matchSearch && matchCat;
+      if (!matchSearch || !matchCat) return false;
+
+      // Filter Rentang Waktu (Hari / Minggu / Bulan / Tahun / Custom)
+      const logTime = new Date(log.createdAt).getTime();
+      if (auditDateRange === "TODAY") {
+        if (logTime < startOfToday) return false;
+      } else if (auditDateRange === "WEEK") {
+        if (logTime < startOfWeek) return false;
+      } else if (auditDateRange === "MONTH") {
+        if (logTime < startOfMonth) return false;
+      } else if (auditDateRange === "YEAR") {
+        if (logTime < startOfYear) return false;
+      } else if (auditDateRange === "CUSTOM") {
+        if (auditStartDate) {
+          const s = new Date(auditStartDate).setHours(0, 0, 0, 0);
+          if (logTime < s) return false;
+        }
+        if (auditEndDate) {
+          const e = new Date(auditEndDate).setHours(23, 59, 59, 999);
+          if (logTime > e) return false;
+        }
+      }
+
+      return true;
     });
-  }, [auditLogs, auditSearch, auditCategoryFilter]);
+  }, [auditLogs, auditSearch, auditCategoryFilter, auditDateRange, auditStartDate, auditEndDate]);
+
+  const auditDateFilterLabel = useMemo(() => {
+    switch (auditDateRange) {
+      case "TODAY":
+        return "Hari Ini";
+      case "WEEK":
+        return "7 Hari Terakhir (Minggu Ini)";
+      case "MONTH":
+        return "30 Hari Terakhir (Bulan Ini)";
+      case "YEAR":
+        return "Tahun Ini";
+      case "CUSTOM":
+        return `Kustom (${auditStartDate || "Awal"} s/d ${auditEndDate || "Sekarang"})`;
+      default:
+        return "Semua Waktu";
+    }
+  }, [auditDateRange, auditStartDate, auditEndDate]);
+
+  const exportAuditExcel = async () => {
+    setAuditExporting("excel");
+    try {
+      // @ts-ignore
+      const { default: writeXlsxFile } = await import("write-excel-file/browser");
+      const mergedRow = (value: string, style: Record<string, unknown> = {}) => [
+        { value, columnSpan: 7, ...style }, null, null, null, null, null, null,
+      ];
+      const tableHeader = (value: string) => ({
+        value,
+        fontWeight: "bold" as const,
+        backgroundColor: "#00A8BD",
+        textColor: "#FFFFFF",
+        align: "center" as const,
+        alignVertical: "center" as const,
+        height: 24,
+      });
+
+      const sheetData: SheetData = [
+        mergedRow("INJOURNEY AIRPORTS — BANDARA INTERNASIONAL JUANDA", {
+          fontWeight: "bold",
+          fontSize: 16,
+          backgroundColor: "#142328",
+          textColor: "#FFFFFF",
+          height: 30,
+          alignVertical: "center",
+        }),
+        mergedRow("LAPORAN REKAP AUDIT LOG & KEAMANAN SISTEM", { fontWeight: "bold", fontSize: 12, height: 24 }),
+        mergedRow(`Tanggal cetak laporan: ${new Intl.DateTimeFormat("id-ID", { dateStyle: "long", timeStyle: "medium" }).format(new Date())}`),
+        mergedRow(`Periode filter: ${auditDateFilterLabel}`),
+        mergedRow(`Jumlah aktivitas: ${filteredAuditLogs.length} catatan log`),
+        [null, null, null, null, null, null, null],
+        ["No", "Waktu Audit", "Administrator", "Email Login", "Tindakan (Action)", "Entitas / Objek", "Detail Perubahan"].map(tableHeader),
+        ...filteredAuditLogs.map((log, index) => [
+          { value: index + 1, type: Number, align: "center" as const, backgroundColor: index % 2 ? "#F3F7F8" : undefined },
+          { value: formatAuditTime(log.createdAt), backgroundColor: index % 2 ? "#F3F7F8" : undefined },
+          { value: log.adminName, backgroundColor: index % 2 ? "#F3F7F8" : undefined },
+          { value: log.adminEmail, backgroundColor: index % 2 ? "#F3F7F8" : undefined },
+          { value: log.actionLabel, backgroundColor: index % 2 ? "#F3F7F8" : undefined },
+          { value: log.entity, backgroundColor: index % 2 ? "#F3F7F8" : undefined },
+          { value: log.detailSummary, backgroundColor: index % 2 ? "#F3F7F8" : undefined },
+        ]),
+      ];
+      const excelFile = writeXlsxFile(sheetData, {
+        columns: [
+          { width: 6 }, { width: 22 }, { width: 26 }, { width: 30 },
+          { width: 26 }, { width: 24 }, { width: 42 },
+        ],
+        sheet: "Audit Logs",
+      });
+      await excelFile.toFile(`rekap-audit-log-juanda-${new Date().toISOString().slice(0, 10)}.xlsx`);
+    } catch (err) {
+      console.error("Export audit excel error:", err);
+    } finally {
+      setAuditExporting(null);
+    }
+  };
+
+  const exportAuditPdf = async () => {
+    setAuditExporting("pdf");
+    try {
+      const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+        // @ts-ignore
+        import("jspdf"),
+        // @ts-ignore
+        import("jspdf-autotable"),
+      ]);
+      const document = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+      document.setFillColor(20, 35, 40);
+      document.rect(0, 0, 297, 31, "F");
+      document.setTextColor(255, 255, 255);
+      document.setFontSize(10);
+      document.setFont("helvetica", "bold");
+      document.text("INJOURNEY AIRPORTS", 14, 10);
+      document.setFontSize(17);
+      document.text("Laporan Rekap Audit Log & Keamanan Sistem", 14, 20);
+      document.setFontSize(9);
+      document.setFont("helvetica", "normal");
+      document.text("Bandara Internasional Juanda — Surabaya", 14, 26);
+      document.setFontSize(9);
+      document.setTextColor(94, 111, 117);
+
+      document.text(`Tanggal cetak: ${new Intl.DateTimeFormat("id-ID", { dateStyle: "long", timeStyle: "medium" }).format(new Date())}`, 14, 38);
+      document.text(`Periode: ${auditDateFilterLabel}`, 14, 43);
+      document.text(`Jumlah data: ${filteredAuditLogs.length} aktivitas log`, 240, 38);
+
+      autoTable(document, {
+        startY: 48,
+        head: [["No", "Waktu Audit", "Administrator", "Email Login", "Tindakan", "Entitas / Objek", "Detail Perubahan"]],
+        body: filteredAuditLogs.map((log, index) => [
+          index + 1,
+          formatAuditTime(log.createdAt),
+          log.adminName,
+          log.adminEmail,
+          log.actionLabel,
+          log.entity,
+          log.detailSummary,
+        ]),
+        styles: { fontSize: 8, cellPadding: 2.5 },
+        headStyles: { fillColor: [0, 168, 189], textColor: 255 },
+        alternateRowStyles: { fillColor: [243, 247, 248] },
+        margin: { left: 14, right: 14 },
+        didDrawPage: ({ pageNumber }: { pageNumber: number }) => {
+          document.setFontSize(8);
+          document.setTextColor(94, 111, 117);
+          document.text(`Halaman ${pageNumber} — Sistem Portal Manajemen Operasional Bandara Juanda`, 283, 200, { align: "right" });
+        },
+      });
+      document.save(`laporan-audit-log-juanda-${new Date().toISOString().slice(0, 10)}.pdf`);
+    } catch (err) {
+      console.error("Export audit pdf error:", err);
+    } finally {
+      setAuditExporting(null);
+    }
+  };
 
   const exportFilterSummary = [
     `Terminal: ${reportFilters.terminal === "ALL" ? "Semua" : reportFilters.terminal}`,
@@ -1268,29 +1434,79 @@ export function AdminDashboardClient({
                   <h2>Audit Logs & Rekam Jejak Keamanan</h2>
                   <p>Catatan real-time setiap perubahan status tenant, jam operasional, dan akun oleh administrator</p>
                 </div>
-                <button
-                  type="button"
-                  onClick={fetchAuditLogs}
-                  disabled={auditLoading}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    padding: "8px 16px",
-                    borderRadius: "10px",
-                    border: "1px solid #cbd5e1",
-                    background: "#ffffff",
-                    color: "#334155",
-                    fontSize: "13px",
-                    fontWeight: "700",
-                    cursor: auditLoading ? "wait" : "pointer",
-                    boxShadow: "0 2px 6px rgba(0,0,0,0.04)",
-                  }}
-                  title="Perbarui data audit log dari database"
-                >
-                  <RefreshCw size={15} style={{ animation: auditLoading ? "spin 1s linear infinite" : "none" }} />
-                  <span>{auditLoading ? "Memuat..." : "Muat Ulang Data"}</span>
-                </button>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                  <button
+                    type="button"
+                    onClick={exportAuditExcel}
+                    disabled={auditExporting !== null || filteredAuditLogs.length === 0}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "7px",
+                      padding: "8px 14px",
+                      borderRadius: "10px",
+                      border: "1px solid #10b981",
+                      background: "#ecfdf5",
+                      color: "#047857",
+                      fontSize: "13px",
+                      fontWeight: "750",
+                      cursor: auditExporting || filteredAuditLogs.length === 0 ? "not-allowed" : "pointer",
+                      boxShadow: "0 2px 6px rgba(16,185,129,0.08)",
+                    }}
+                    title="Ekspor data audit logs yang terfilter ke format spreadsheet Excel (.xlsx)"
+                  >
+                    <FileSpreadsheet size={15} />
+                    <span>{auditExporting === "excel" ? "Mengekspor..." : "Ekspor Excel"}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={exportAuditPdf}
+                    disabled={auditExporting !== null || filteredAuditLogs.length === 0}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "7px",
+                      padding: "8px 14px",
+                      borderRadius: "10px",
+                      border: "1px solid #ef4444",
+                      background: "#fef2f2",
+                      color: "#b91c1c",
+                      fontSize: "13px",
+                      fontWeight: "750",
+                      cursor: auditExporting || filteredAuditLogs.length === 0 ? "not-allowed" : "pointer",
+                      boxShadow: "0 2px 6px rgba(239,68,68,0.08)",
+                    }}
+                    title="Ekspor data audit logs yang terfilter ke dokumen PDF resmi (.pdf)"
+                  >
+                    <FileText size={15} />
+                    <span>{auditExporting === "pdf" ? "Mencetak..." : "Ekspor PDF"}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={fetchAuditLogs}
+                    disabled={auditLoading}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      padding: "8px 16px",
+                      borderRadius: "10px",
+                      border: "1px solid #cbd5e1",
+                      background: "#ffffff",
+                      color: "#334155",
+                      fontSize: "13px",
+                      fontWeight: "700",
+                      cursor: auditLoading ? "wait" : "pointer",
+                      boxShadow: "0 2px 6px rgba(0,0,0,0.04)",
+                    }}
+                    title="Perbarui data audit log dari database"
+                  >
+                    <RefreshCw size={15} style={{ animation: auditLoading ? "spin 1s linear infinite" : "none" }} />
+                    <span>{auditLoading ? "Memuat..." : "Muat Ulang"}</span>
+                  </button>
+                </div>
               </div>
 
               {/* STATS CARDS RINGKASAN */}
@@ -1402,6 +1618,111 @@ export function AdminDashboardClient({
                       {cat.label}
                     </button>
                   ))}
+                </div>
+              </div>
+
+              {/* RENTANG WAKTU / REKAP FILTER */}
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: "10px",
+                  padding: "12px 18px",
+                  background: "#ffffff",
+                  borderRadius: "14px",
+                  border: "1px solid #e2e8f0",
+                  marginBottom: "16px",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                  <span style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12.5px", fontWeight: "750", color: "#475569" }}>
+                    <Calendar size={15} style={{ color: "#00a8bd" }} />
+                    <span>Rekap Periode:</span>
+                  </span>
+
+                  {[
+                    { id: "ALL", label: "Semua Waktu" },
+                    { id: "TODAY", label: "Hari Ini" },
+                    { id: "WEEK", label: "7 Hari Terakhir" },
+                    { id: "MONTH", label: "30 Hari Terakhir" },
+                    { id: "YEAR", label: "Tahun Ini" },
+                    { id: "CUSTOM", label: "Pilih Tanggal..." },
+                  ].map((range) => (
+                    <button
+                      key={range.id}
+                      type="button"
+                      onClick={() => setAuditDateRange(range.id as any)}
+                      style={{
+                        padding: "5px 12px",
+                        borderRadius: "8px",
+                        border: auditDateRange === range.id ? "1.5px solid #00a8bd" : "1px solid #e2e8f0",
+                        background: auditDateRange === range.id ? "#e0f7fa" : "#f8fafc",
+                        color: auditDateRange === range.id ? "#007b8b" : "#475569",
+                        fontSize: "12px",
+                        fontWeight: auditDateRange === range.id ? "800" : "600",
+                        cursor: "pointer",
+                        transition: "all 0.15s ease",
+                      }}
+                    >
+                      {range.label}
+                    </button>
+                  ))}
+                </div>
+
+                {auditDateRange === "CUSTOM" && (
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                    <span style={{ fontSize: "12px", color: "#64748b", fontWeight: "600" }}>Dari:</span>
+                    <input
+                      type="date"
+                      value={auditStartDate}
+                      onChange={(e) => setAuditStartDate(e.target.value)}
+                      style={{
+                        padding: "4px 10px",
+                        borderRadius: "8px",
+                        border: "1px solid #cbd5e1",
+                        fontSize: "12px",
+                        color: "#1e293b",
+                        background: "#ffffff",
+                      }}
+                    />
+                    <span style={{ fontSize: "12px", color: "#64748b", fontWeight: "600" }}>Sampai:</span>
+                    <input
+                      type="date"
+                      value={auditEndDate}
+                      onChange={(e) => setAuditEndDate(e.target.value)}
+                      style={{
+                        padding: "4px 10px",
+                        borderRadius: "8px",
+                        border: "1px solid #cbd5e1",
+                        fontSize: "12px",
+                        color: "#1e293b",
+                        background: "#ffffff",
+                      }}
+                    />
+                    {(auditStartDate || auditEndDate) && (
+                      <button
+                        type="button"
+                        onClick={() => { setAuditStartDate(""); setAuditEndDate(""); }}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          color: "#ef4444",
+                          fontSize: "11.5px",
+                          fontWeight: "700",
+                          cursor: "pointer",
+                          padding: "2px 6px",
+                        }}
+                      >
+                        Reset Tanggal
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                <div style={{ fontSize: "12px", color: "#64748b", marginLeft: "auto" }}>
+                  Menampilkan <strong style={{ color: "#00a8bd" }}>{filteredAuditLogs.length}</strong> dari {auditLogs.length} total log
                 </div>
               </div>
 
