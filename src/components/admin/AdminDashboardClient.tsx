@@ -34,10 +34,9 @@ import type { AdminRole } from "@/types";
 // @ts-ignore
 type SheetData = any;
 import { AdminMapPanel } from "@/components/admin/AdminMapPanel";
-import { AdminNavigationGraphMap } from "@/components/admin/AdminNavigationGraphMap";
 import { DashboardAnalytics } from "@/components/admin/DashboardAnalytics";
 import { MapStage } from "@/components/wayfinding/MapStage";
-import { routeEdges, routeNodes, spaces } from "@/data/demo-wayfinding";
+import { spaces } from "@/data/demo-wayfinding";
 import { defaultMapObjectConfig, fetchMapObjectConfigsFromDb, readMapObjectConfigs, writeMapObjectConfigs, type MapObjectConfig, type MapObjectConfigByName } from "@/lib/map3d/admin-object-config";
 import type { TerminalCode } from "@/types";
 
@@ -53,20 +52,6 @@ type AdminUserRow = {
   status: string;
   lastLogin: string;
 };
-
-type GraphEdgeRow = {
-  id: string;
-  label: string;
-  from: string;
-  to: string;
-  floorId: string;
-  floorCode?: string;
-  toFloorCode?: string;
-  type?: string;
-  accessible?: boolean;
-  distanceMeters?: number;
-};
-type GraphMetrics = { nodes: number; edges: number; connectors: number; accessiblePercent: number };
 
 function mapObjectCategory(config: MapObjectConfig) {
   const value = `${config.objectName} ${config.displayName}`;
@@ -140,15 +125,6 @@ export function AdminDashboardClient({
   const [deletingUser, setDeletingUser] = useState<AdminUserRow | null>(null);
   const [userActionError, setUserActionError] = useState<string | null>(null);
   const [savingUser, setSavingUser] = useState(false);
-  const [graphMetrics, setGraphMetrics] = useState<GraphMetrics>({ nodes: routeNodes.length, edges: routeEdges.length, connectors: 0, accessiblePercent: 0 });
-  const [graphEdges, setGraphEdges] = useState<GraphEdgeRow[]>([]);
-  const [graphClosures, setGraphClosures] = useState<GraphEdgeRow[]>([]);
-  const [selectedGraphEdge, setSelectedGraphEdge] = useState("");
-  const [graphLoading, setGraphLoading] = useState(false);
-  const [graphError, setGraphError] = useState<string | null>(null);
-  const [graphEdgeFilter, setGraphEdgeFilter] = useState("ALL");
-  const [graphToggling, setGraphToggling] = useState(false);
-  const [graphActionMsg, setGraphActionMsg] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showAddTenantModal, setShowAddTenantModal] = useState(false);
   const [showTenantPlacement, setShowTenantPlacement] = useState(false);
@@ -190,19 +166,6 @@ export function AdminDashboardClient({
       })
       .catch(() => undefined);
   }, [activeRole]);
-
-  useEffect(() => {
-    if (activeRole !== "SUPER_ADMIN" || activeTab !== "graph") return;
-    setGraphLoading(true);
-    fetch("/api/admin/route-graph", { cache: "no-store" })
-      .then(async (response) => {
-        if (!response.ok) throw new Error("Data graph belum tersedia dari server");
-        return await response.json() as { metrics: GraphMetrics; availableEdges: GraphEdgeRow[]; closures: GraphEdgeRow[] };
-      })
-      .then((payload) => { setGraphMetrics(payload.metrics); setGraphEdges(payload.availableEdges ?? []); setGraphClosures(payload.closures ?? []); setSelectedGraphEdge(payload.availableEdges?.[0]?.id ?? ""); setGraphError(null); })
-      .catch((error) => setGraphError(error instanceof Error ? error.message : "Gagal memuat graph"))
-      .finally(() => setGraphLoading(false));
-  }, [activeRole, activeTab]);
 
   const occupiedSpaceCodes = useMemo(() => new Set(tenants.map((tenant) => tenant.spaceCode).filter(Boolean)), [tenants]);
   const placementFloorId = `${newTenant.terminal}-${newTenant.floor.endsWith("2") ? "L2" : "L1"}`;
@@ -302,47 +265,6 @@ export function AdminDashboardClient({
       setUserActionError(error instanceof Error ? error.message : "Gagal menghapus akun");
     } finally {
       setSavingUser(false);
-    }
-  };
-
-  const toggleGraphEdge = async (edgeId: string, active: boolean) => {
-    setGraphError(null);
-    setGraphToggling(true);
-    try {
-      const response = await fetch("/api/admin/route-graph", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ edgeId, active }),
-      });
-      const payload = (await response.json()) as { error?: string; edge?: GraphEdgeRow };
-      if (!response.ok) throw new Error(payload.error ?? "Gagal memperbarui jalur");
-
-      if (active) {
-        const reopened = graphClosures.find((edge) => edge.id === edgeId) || payload.edge;
-        setGraphClosures((current) => current.filter((edge) => edge.id !== edgeId));
-        if (reopened) {
-          setGraphEdges((current) => [reopened, ...current.filter((edge) => edge.id !== edgeId)]);
-        }
-        setGraphActionMsg("✓ Jalur berhasil dibuka kembali untuk navigasi penumpang.");
-      } else {
-        const closed = graphEdges.find((edge) => edge.id === edgeId) || payload.edge;
-        setGraphEdges((current) => current.filter((edge) => edge.id !== edgeId));
-        if (closed) {
-          setGraphClosures((current) => [closed, ...current.filter((edge) => edge.id !== edgeId)]);
-        }
-        setGraphActionMsg("⚠ Jalur berhasil ditutup sementara (diblokir dari kalkulasi rute A*).");
-      }
-
-      setGraphMetrics((current) => ({
-        ...current,
-        edges: active ? current.edges + 1 : Math.max(0, current.edges - 1),
-      }));
-      setSelectedGraphEdge("");
-      setTimeout(() => setGraphActionMsg(null), 5000);
-    } catch (error) {
-      setGraphError(error instanceof Error ? error.message : "Gagal memperbarui jalur");
-    } finally {
-      setGraphToggling(false);
     }
   };
 
@@ -594,15 +516,6 @@ export function AdminDashboardClient({
                 >
                   <Users size={18} />
                   <span>Akun & Role Administrator</span>
-                </button>
-                <button
-                  type="button"
-                  className="nav-item"
-                  data-active={activeTab === "graph"}
-                  onClick={() => setActiveTab("graph")}
-                >
-                  <MapPinned size={18} />
-                  <span>Navigation Graph Engineering</span>
                 </button>
                 <button
                   type="button"
@@ -1019,216 +932,6 @@ export function AdminDashboardClient({
                     ))}
                   </tbody>
                 </table>
-              </div>
-            </div>
-          )}
-
-          {/* SUPERADMIN: ROUTE GRAPH TAB */}
-          {activeRole === "SUPER_ADMIN" && activeTab === "graph" && (
-            <div className="content-box">
-              <div className="box-header">
-                <div className="box-title">
-                  <h2>Navigation Graph Engineering (A*)</h2>
-                  <p>Pemantauan visual peta koridor terminal, kesehatan node, dan penutupan jalur darurat untuk rute navigasi A*</p>
-                </div>
-              </div>
-
-              {/* Peta Interaktif Koridor & Status Jalur Buka/Tutup */}
-              <AdminNavigationGraphMap
-                availableEdges={graphEdges}
-                closures={graphClosures}
-                selectedEdgeId={selectedGraphEdge}
-                onSelectEdge={setSelectedGraphEdge}
-                onToggleEdge={toggleGraphEdge}
-                isToggling={graphToggling}
-              />
-
-              <div className="graph-engineering-grid">
-                <div className="graph-card" style={{ background: "#ffffff", borderRadius: "16px", border: "1px solid #dfe7e9", padding: "22px" }}>
-                  <h3 style={{ fontSize: "16px", fontWeight: "800", color: "#142328", marginBottom: "16px" }}>
-                    Graph Metrics (Jaringan A*)
-                  </h3>
-                  <div style={{ display: "grid", gap: "10px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", borderRadius: "12px", background: "#f8fafc", border: "1px solid #e2e8f0" }}>
-                      <span style={{ fontSize: "13px", color: "#475569", fontWeight: "600" }}>Total Navigation Nodes:</span>
-                      <strong style={{ fontSize: "15px", color: "#008ca2", fontWeight: "800" }}>
-                        {graphLoading ? "Memuat..." : `${graphMetrics.nodes} Nodes`}
-                      </strong>
-                    </div>
-
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", borderRadius: "12px", background: "#f8fafc", border: "1px solid #e2e8f0" }}>
-                      <span style={{ fontSize: "13px", color: "#475569", fontWeight: "600" }}>Total Pedestrian Edges:</span>
-                      <strong style={{ fontSize: "15px", color: "#16a34a", fontWeight: "800" }}>
-                        {graphLoading ? "Memuat..." : `${graphMetrics.edges} Edges aktif`}
-                      </strong>
-                    </div>
-
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", borderRadius: "12px", background: "#f8fafc", border: "1px solid #e2e8f0" }}>
-                      <span style={{ fontSize: "13px", color: "#475569", fontWeight: "600" }}>Koneksi Vertikal (Lift/Tangga):</span>
-                      <strong style={{ fontSize: "15px", color: "#4f46e5", fontWeight: "800" }}>
-                        {graphLoading ? "Memuat..." : `${graphMetrics.connectors} Connector Nodes`}
-                      </strong>
-                    </div>
-
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", borderRadius: "12px", background: "#f8fafc", border: "1px solid #e2e8f0" }}>
-                      <span style={{ fontSize: "13px", color: "#475569", fontWeight: "600" }}>Jalur Ramah Kursi Roda:</span>
-                      <strong style={{ fontSize: "15px", color: "#ea580c", fontWeight: "800" }}>
-                        {graphLoading ? "Memuat..." : `${graphMetrics.accessiblePercent}% Accessible`}
-                      </strong>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="graph-card" style={{ background: "#ffffff", borderRadius: "16px", border: "1px solid #dfe7e9", padding: "22px" }}>
-                  <h3 style={{ fontSize: "16px", fontWeight: "800", color: "#142328", marginBottom: "8px" }}>
-                    Penutupan Jalur Darurat (Emergency Closure)
-                  </h3>
-                  <p style={{ fontSize: "12.5px", color: "#64748b", margin: "0 0 16px 0", lineHeight: "1.5" }}>
-                    Gunakan kontrol ini untuk memblokir lorong tertentu saat perbaikan/renovasi. Algoritma A* penumpang otomatis mengalihkan rute tanpa perlu menggambar ulang model visual:
-                  </p>
-
-                  {/* Filter Lantai */}
-                  <div style={{ display: "flex", gap: "8px", marginBottom: "12px", flexWrap: "wrap" }}>
-                    {["ALL", "Lantai 1", "Lantai 2"].map((fl) => (
-                      <button
-                        key={fl}
-                        type="button"
-                        onClick={() => setGraphEdgeFilter(fl)}
-                        style={{
-                          padding: "5px 14px",
-                          borderRadius: "20px",
-                          border: graphEdgeFilter === fl ? "1.5px solid #00a8bd" : "1px solid #cbd5e1",
-                          background: graphEdgeFilter === fl ? "#00a8bd" : "#ffffff",
-                          color: graphEdgeFilter === fl ? "#ffffff" : "#475569",
-                          fontSize: "12px",
-                          fontWeight: "750",
-                          cursor: "pointer",
-                          transition: "all 0.15s ease",
-                        }}
-                      >
-                        {fl === "ALL" ? "Semua Jalur" : fl}
-                      </button>
-                    ))}
-                  </div>
-
-                  {graphEdges.length > 0 ? (
-                    <div className="graph-closure-control" style={{ display: "grid", gap: "10px" }}>
-                      <select
-                        value={selectedGraphEdge}
-                        onChange={(event) => setSelectedGraphEdge(event.target.value)}
-                        aria-label="Pilih edge untuk ditutup"
-                        style={{
-                          minHeight: "44px",
-                          padding: "0 14px",
-                          borderRadius: "10px",
-                          border: "1.5px solid #cbd5e1",
-                          background: "#ffffff",
-                          color: "#1e293b",
-                          fontSize: "13px",
-                          fontWeight: "650",
-                        }}
-                      >
-                        <option value="">Pilih jalur koridor yang ingin ditutup ({graphEdges.filter((e) => graphEdgeFilter === "ALL" || e.floorId.includes(graphEdgeFilter)).length} jalur tersedia)...</option>
-                        {graphEdges
-                          .filter((e) => graphEdgeFilter === "ALL" || e.floorId.includes(graphEdgeFilter))
-                          .map((edge) => (
-                            <option key={edge.id} value={edge.id}>
-                              {edge.label} ({edge.floorId})
-                            </option>
-                          ))}
-                      </select>
-
-                      <button
-                        type="button"
-                        disabled={!selectedGraphEdge || graphToggling}
-                        onClick={() => toggleGraphEdge(selectedGraphEdge, false)}
-                        style={{
-                          minHeight: "44px",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: "8px",
-                          padding: "0 18px",
-                          borderRadius: "10px",
-                          border: "none",
-                          background: !selectedGraphEdge ? "#e2e8f0" : "#dc2626",
-                          color: !selectedGraphEdge ? "#94a3b8" : "#ffffff",
-                          fontWeight: "750",
-                          fontSize: "13px",
-                          cursor: !selectedGraphEdge || graphToggling ? "not-allowed" : "pointer",
-                          boxShadow: !selectedGraphEdge ? "none" : "0 4px 14px rgba(220, 38, 38, 0.3)",
-                          transition: "all 0.16s ease",
-                        }}
-                      >
-                        <AlertTriangle size={16} />
-                        <span>{graphToggling ? "Memproses..." : "Tutup / Blokir Jalur Terpilih"}</span>
-                      </button>
-                    </div>
-                  ) : (
-                    <p className="graph-empty-state">
-                      {graphLoading ? "Memuat data jalur koridor..." : "Belum ada edge aktif yang dapat ditutup pada database graph."}
-                    </p>
-                  )}
-
-                  {/* Feedback Action Alert */}
-                  {graphActionMsg && (
-                    <div style={{ marginTop: "12px", padding: "10px 14px", borderRadius: "10px", background: "#f0fdf4", border: "1px solid #bbf7d0", color: "#166534", fontSize: "12.5px", fontWeight: "700" }}>
-                      {graphActionMsg}
-                    </div>
-                  )}
-
-                  {/* Daftar Jalur yang Sedang Ditutup */}
-                  {graphClosures.length > 0 && (
-                    <div style={{ marginTop: "18px", paddingTop: "14px", borderTop: "1px solid #e2e8f0" }}>
-                      <strong style={{ display: "flex", alignItems: "center", gap: "6px", color: "#b45309", fontSize: "13px", marginBottom: "10px" }}>
-                        <AlertTriangle size={15} /> Jalur Sedang Ditutup ({graphClosures.length} jalur diblokir):
-                      </strong>
-                      <div style={{ display: "grid", gap: "8px", maxHeight: "220px", overflowY: "auto" }}>
-                        {graphClosures.map((edge) => (
-                          <div
-                            key={edge.id}
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "space-between",
-                              gap: "10px",
-                              padding: "10px 14px",
-                              borderRadius: "10px",
-                              background: "#fef3c7",
-                              border: "1px solid #fde68a",
-                            }}
-                          >
-                            <div>
-                              <strong style={{ display: "block", color: "#92400e", fontSize: "13px" }}>{edge.label}</strong>
-                              <small style={{ color: "#b45309", fontSize: "11px" }}>Lokasi: {edge.floorId}</small>
-                            </div>
-                            <button
-                              type="button"
-                              disabled={graphToggling}
-                              onClick={() => toggleGraphEdge(edge.id, true)}
-                              style={{
-                                padding: "6px 14px",
-                                borderRadius: "8px",
-                                border: "none",
-                                background: "#16a34a",
-                                color: "#ffffff",
-                                fontSize: "12px",
-                                fontWeight: "750",
-                                cursor: "pointer",
-                                boxShadow: "0 2px 8px rgba(22, 163, 74, 0.3)",
-                                whiteSpace: "nowrap",
-                              }}
-                            >
-                              ✓ Buka Kembali
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {graphError && <p className="graph-error" role="alert" style={{ marginTop: "12px", color: "#dc2626", fontSize: "12px", fontWeight: "700" }}>{graphError}</p>}
-                </div>
               </div>
             </div>
           )}
