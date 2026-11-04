@@ -458,14 +458,6 @@ export function AdminDashboardClient({
             {activeRole === "SUPER_ADMIN" ? <ShieldCheck size={14} /> : <Store size={14} />}
             {activeRole === "SUPER_ADMIN" ? "Superadmin" : "Admin Komersil"}
           </span>
-          <button
-            type="button"
-            className="admin-signout-button"
-            onClick={() => signOut({ redirectTo: "/auth/signin" })}
-          >
-            <LogOut size={15} />
-            <span>Keluar</span>
-          </button>
         </div>
       </header>
 
@@ -580,12 +572,12 @@ export function AdminDashboardClient({
           <div className="sidebar-bottom-actions">
             <button
               type="button"
-              className="sidebar-collapse-bottom-btn"
-              onClick={() => setIsSidebarCollapsed(true)}
-              title="Geser / Sembunyikan Sidebar"
+              className="sidebar-signout-button"
+              onClick={() => signOut({ redirectTo: "/auth/signin" })}
+              title="Keluar dari akun admin"
             >
-              <ChevronLeft size={15} />
-              <span>Geser Sembunyikan Bar</span>
+              <LogOut size={16} />
+              <span>Keluar</span>
             </button>
           </div>
         </aside>
