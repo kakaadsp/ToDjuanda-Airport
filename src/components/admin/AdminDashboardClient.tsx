@@ -105,6 +105,19 @@ export function AdminDashboardClient({
   const activeRole = user.role;
   const [activeTab, setActiveTab] = useState<string>("overview");
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    if (loggingOut) return;
+    setLoggingOut(true);
+    try {
+      await signOut({ redirect: false });
+    } catch (e) {
+      console.error("Signout error:", e);
+    } finally {
+      window.location.href = "/auth/signin";
+    }
+  };
   const [mapObjectToEdit, setMapObjectToEdit] = useState<string | null>(null);
   const [tenants, setTenants] = useState<TenantRow[]>([]);
   const [users, setUsers] = useState(INITIAL_USERS);
@@ -573,11 +586,31 @@ export function AdminDashboardClient({
             <button
               type="button"
               className="sidebar-signout-button"
-              onClick={() => signOut({ redirectTo: "/auth/signin" })}
+              onClick={handleLogout}
+              disabled={loggingOut}
               title="Keluar dari akun admin"
+              style={{
+                width: "100%",
+                minHeight: "46px",
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "10px",
+                padding: "0 16px",
+                borderRadius: "12px",
+                border: "none",
+                background: "#e02424",
+                color: "#ffffff",
+                fontSize: "14px",
+                fontWeight: "800",
+                cursor: loggingOut ? "wait" : "pointer",
+                boxShadow: "0 4px 14px rgba(224, 36, 36, 0.3)",
+                opacity: loggingOut ? 0.75 : 1,
+              }}
             >
-              <LogOut size={16} />
-              <span>Keluar</span>
+              <LogOut size={18} />
+              <span>{loggingOut ? "Keluar..." : "Keluar"}</span>
             </button>
           </div>
         </aside>
@@ -585,15 +618,29 @@ export function AdminDashboardClient({
         {/* Main Content Area */}
         <section className="admin-main-view">
           {isSidebarCollapsed && (
-            <button
-              type="button"
-              className="admin-sidebar-reopen-float"
-              onClick={() => setIsSidebarCollapsed(false)}
-              title="Buka Menu Navigasi"
-              aria-label="Buka Menu Navigasi"
-            >
-              <PanelLeftOpen size={18} />
-            </button>
+            <div className="admin-sidebar-reopen-bar">
+              <button
+                type="button"
+                className="admin-sidebar-reopen-float"
+                onClick={() => setIsSidebarCollapsed(false)}
+                title="Buka Menu Navigasi"
+                aria-label="Buka Menu Navigasi"
+                style={{
+                  width: "42px",
+                  height: "42px",
+                  display: "grid",
+                  placeItems: "center",
+                  borderRadius: "12px",
+                  border: "none",
+                  background: "#00a8bd",
+                  color: "#ffffff",
+                  cursor: "pointer",
+                  boxShadow: "0 4px 14px rgba(0, 168, 189, 0.35)",
+                }}
+              >
+                <PanelLeftOpen size={20} />
+              </button>
+            </div>
           )}
           {/* Dashboard Header Bar */}
           <div className="view-banner">
