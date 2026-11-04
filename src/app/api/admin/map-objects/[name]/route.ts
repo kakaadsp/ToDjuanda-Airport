@@ -87,6 +87,26 @@ export async function PUT(request: Request, { params }: Params) {
       create: { objectName, ...data },
     });
 
+    const action = data.occupancy === "WALKABLE" 
+      ? "SET_TENANT_CLOSED" 
+      : (data.openTime === "00:00" && data.closeTime === "23:59")
+        ? "SET_TENANT_OPEN_24H"
+        : "UPDATE_TENANT_CONFIG";
+
+    await prisma.auditLog.create({
+      data: {
+        actorId: session.user.id,
+        action,
+        entityType: data.entityType,
+        entityId: objectName,
+        after: {
+          name: data.displayName || objectName,
+          status: data.occupancy === "WALKABLE" ? "TUTUP_SEMENTARA" : "BUKA",
+          hours: `${data.openTime || "--:--"} - ${data.closeTime || "--:--"}`
+        },
+      },
+    }).catch((err) => console.error("Audit log error:", err));
+
     return NextResponse.json({
       objectName: result.objectName,
       updatedAt: result.updatedAt.toISOString(),

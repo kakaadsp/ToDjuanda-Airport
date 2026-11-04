@@ -6,13 +6,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
 import {
+  Activity,
   AlertTriangle,
   PanelLeftClose,
   PanelLeftOpen,
   BarChart3,
   Building2,
+  CheckCircle2,
   CirclePause,
   CirclePlay,
+  Clock,
   FileSpreadsheet,
   FileClock,
   FileText,
@@ -20,8 +23,10 @@ import {
   Map,
   MapPinned,
   Pencil,
+  RefreshCw,
   RotateCcw,
   Search,
+  Shield,
   ShieldCheck,
   SlidersHorizontal,
   Store,
@@ -88,12 +93,42 @@ const INITIAL_USERS: AdminUserRow[] = [
   { id: "fallback-commercial-admin", name: "Admin Komersil Juanda", email: "admin.komersil@juanda-airport.local", role: "AIRPORT_ADMIN" as AdminRole, status: "ACTIVE", lastLogin: "Data akun aktif" },
 ];
 
-const AUDIT_LOGS = [
-  { id: "log-101", timestamp: "2026-08-26 00:45:12", actor: "Super Administrator", action: "UPDATE_SPACE_STATUS", entity: "Space T1-L2-005", ip: "192.168.1.10" },
-  { id: "log-102", timestamp: "2026-08-25 18:22:04", actor: "Budi Santoso", action: "UPDATE_TENANT_HOURS", entity: "Tenant Kopi Juanda", ip: "192.168.1.24" },
-  { id: "log-103", timestamp: "2026-08-25 11:05:30", actor: "Super Administrator", action: "CREATE_ADMIN_USER", entity: "User siti.t1@juanda-airport.com", ip: "192.168.1.10" },
-  { id: "log-104", timestamp: "2026-08-24 09:14:55", actor: "Siti Rahma", action: "TOGGLE_FACILITY_STATUS", entity: "Facility Mushola T1-L1", ip: "192.168.1.33" },
-];
+type AuditLogRow = {
+  id: string;
+  createdAt: string;
+  actionCode: string;
+  actionLabel: string;
+  badgeType: "success" | "warning" | "danger" | "info";
+  adminName: string;
+  adminEmail: string;
+  adminRole: string;
+  entity: string;
+  detailSummary: string;
+};
+
+type AuditMetrics = {
+  total: number;
+  todayCount: number;
+  activeAdminsCount: number;
+  lastActionTime: string | null;
+};
+
+function formatAuditTime(iso: string) {
+  try {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return iso;
+    return d.toLocaleString("id-ID", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    }).replace(/\./g, ":");
+  } catch {
+    return iso;
+  }
+}
 
 export function AdminDashboardClient({
   user,
@@ -136,6 +171,38 @@ export function AdminDashboardClient({
     name: string;
     currentStatus: string;
   } | null>(null);
+
+  // Real-time Audit Logs state
+  const [auditLogs, setAuditLogs] = useState<AuditLogRow[]>([]);
+  const [auditMetrics, setAuditMetrics] = useState<AuditMetrics>({ total: 0, todayCount: 0, activeAdminsCount: 0, lastActionTime: null });
+  const [auditLoading, setAuditLoading] = useState(false);
+  const [auditSearch, setAuditSearch] = useState("");
+  const [auditCategoryFilter, setAuditCategoryFilter] = useState("ALL");
+
+  const fetchAuditLogs = async () => {
+    setAuditLoading(true);
+    try {
+      const res = await fetch("/api/admin/audit-logs", { cache: "no-store" });
+      if (!res.ok) throw new Error("Gagal mengambil data audit");
+      const data = await res.json() as { logs: AuditLogRow[]; metrics: AuditMetrics };
+      if (Array.isArray(data.logs)) {
+        setAuditLogs(data.logs);
+      }
+      if (data.metrics) {
+        setAuditMetrics(data.metrics);
+      }
+    } catch (err) {
+      console.error("Fetch audit logs error:", err);
+    } finally {
+      setAuditLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeRole === "SUPER_ADMIN" && activeTab === "audit") {
+      fetchAuditLogs();
+    }
+  }, [activeRole, activeTab]);
 
   // New Tenant Form state
   const [newTenant, setNewTenant] = useState({
@@ -281,6 +348,26 @@ export function AdminDashboardClient({
       tenant.spaceCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
       tenant.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const filteredAuditLogs = useMemo(() => {
+    return auditLogs.filter((log) => {
+      const q = auditSearch.trim().toLowerCase();
+      const matchSearch =
+        !q ||
+        log.adminName.toLowerCase().includes(q) ||
+        log.adminEmail.toLowerCase().includes(q) ||
+        log.entity.toLowerCase().includes(q) ||
+        log.actionLabel.toLowerCase().includes(q) ||
+        log.detailSummary.toLowerCase().includes(q);
+
+      const matchCat =
+        auditCategoryFilter === "ALL" ||
+        (auditCategoryFilter === "TENANT" && (log.actionCode.includes("TENANT") || log.actionCode.includes("MAP_OBJECT"))) ||
+        (auditCategoryFilter === "USER" && (log.actionCode.includes("USER") || log.actionCode.includes("SECURITY")));
+
+      return matchSearch && matchCat;
+    });
+  }, [auditLogs, auditSearch, auditCategoryFilter]);
 
   const exportFilterSummary = [
     `Terminal: ${reportFilters.terminal === "ALL" ? "Semua" : reportFilters.terminal}`,
@@ -939,42 +1026,284 @@ export function AdminDashboardClient({
           {/* SUPERADMIN: AUDIT LOGS TAB */}
           {activeRole === "SUPER_ADMIN" && activeTab === "audit" && (
             <div className="content-box">
-              <div className="box-header">
+              <div className="box-header" style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: "14px" }}>
                 <div className="box-title">
-                  <h2>Audit Logs Keamanan Sistem</h2>
-                  <p>Catatan rekam jejak aktivitas pengubahan data oleh administrator</p>
+                  <h2>Audit Logs & Rekam Jejak Keamanan</h2>
+                  <p>Catatan real-time setiap perubahan status tenant, jam operasional, dan akun oleh administrator</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={fetchAuditLogs}
+                  disabled={auditLoading}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    padding: "8px 16px",
+                    borderRadius: "10px",
+                    border: "1px solid #cbd5e1",
+                    background: "#ffffff",
+                    color: "#334155",
+                    fontSize: "13px",
+                    fontWeight: "700",
+                    cursor: auditLoading ? "wait" : "pointer",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.04)",
+                  }}
+                  title="Perbarui data audit log dari database"
+                >
+                  <RefreshCw size={15} style={{ animation: auditLoading ? "spin 1s linear infinite" : "none" }} />
+                  <span>{auditLoading ? "Memuat..." : "Muat Ulang Data"}</span>
+                </button>
+              </div>
+
+              {/* STATS CARDS RINGKASAN */}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+                  gap: "14px",
+                  marginBottom: "20px",
+                }}
+              >
+                <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "16px 18px", boxShadow: "0 2px 6px rgba(0,0,0,0.02)" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
+                    <span style={{ fontSize: "12px", color: "#64748b", fontWeight: "750", textTransform: "uppercase" }}>Total Log Tercatat</span>
+                    <Activity size={16} style={{ color: "#00a8bd" }} />
+                  </div>
+                  <strong style={{ fontSize: "22px", color: "#0f172a", fontWeight: "800" }}>{auditMetrics.total}</strong>
+                  <span style={{ display: "block", fontSize: "11.5px", color: "#94a3b8", marginTop: "2px" }}>Aktivitas di sistem</span>
+                </div>
+
+                <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "16px 18px", boxShadow: "0 2px 6px rgba(0,0,0,0.02)" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
+                    <span style={{ fontSize: "12px", color: "#64748b", fontWeight: "750", textTransform: "uppercase" }}>Aktivitas Hari Ini</span>
+                    <Clock size={16} style={{ color: "#16a34a" }} />
+                  </div>
+                  <strong style={{ fontSize: "22px", color: "#16a34a", fontWeight: "800" }}>{auditMetrics.todayCount}</strong>
+                  <span style={{ display: "block", fontSize: "11.5px", color: "#94a3b8", marginTop: "2px" }}>Tindakan dalam 24 jam</span>
+                </div>
+
+                <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "16px 18px", boxShadow: "0 2px 6px rgba(0,0,0,0.02)" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
+                    <span style={{ fontSize: "12px", color: "#64748b", fontWeight: "750", textTransform: "uppercase" }}>Admin Aktif</span>
+                    <Users size={16} style={{ color: "#4f46e5" }} />
+                  </div>
+                  <strong style={{ fontSize: "22px", color: "#4f46e5", fontWeight: "800" }}>{auditMetrics.activeAdminsCount}</strong>
+                  <span style={{ display: "block", fontSize: "11.5px", color: "#94a3b8", marginTop: "2px" }}>Administrator beroperasi</span>
+                </div>
+
+                <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "16px 18px", boxShadow: "0 2px 6px rgba(0,0,0,0.02)" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
+                    <span style={{ fontSize: "12px", color: "#64748b", fontWeight: "750", textTransform: "uppercase" }}>Aksi Terakhir</span>
+                    <ShieldCheck size={16} style={{ color: "#ea580c" }} />
+                  </div>
+                  <strong style={{ fontSize: "13px", color: "#1e293b", fontWeight: "800", display: "block", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {auditMetrics.lastActionTime ? formatAuditTime(auditMetrics.lastActionTime) : "Belum ada"}
+                  </strong>
+                  <span style={{ display: "block", fontSize: "11.5px", color: "#94a3b8", marginTop: "2px" }}>Pembaruan sistem</span>
                 </div>
               </div>
 
-              <div className="table-responsive">
+              {/* FILTER & SEARCH CONTROLS */}
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: "12px",
+                  padding: "14px 18px",
+                  background: "#f8fafc",
+                  borderRadius: "14px",
+                  border: "1px solid #e2e8f0",
+                  marginBottom: "16px",
+                }}
+              >
+                <div style={{ position: "relative", minWidth: "260px", flex: 1 }}>
+                  <Search size={16} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
+                  <input
+                    type="text"
+                    value={auditSearch}
+                    onChange={(e) => setAuditSearch(e.target.value)}
+                    placeholder="Cari nama admin, email, nama tenant (misal: Family Mart)..."
+                    style={{
+                      width: "100%",
+                      minHeight: "40px",
+                      paddingLeft: "36px",
+                      paddingRight: "14px",
+                      borderRadius: "10px",
+                      border: "1px solid #cbd5e1",
+                      background: "#ffffff",
+                      fontSize: "13px",
+                      color: "#1e293b",
+                    }}
+                  />
+                </div>
+
+                <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                  {[
+                    { id: "ALL", label: "Semua Aktivitas" },
+                    { id: "TENANT", label: "Tenant & Fasilitas" },
+                    { id: "USER", label: "Akun & Keamanan" },
+                  ].map((cat) => (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setAuditCategoryFilter(cat.id)}
+                      style={{
+                        padding: "6px 14px",
+                        borderRadius: "20px",
+                        border: auditCategoryFilter === cat.id ? "1.5px solid #00a8bd" : "1px solid #cbd5e1",
+                        background: auditCategoryFilter === cat.id ? "#00a8bd" : "#ffffff",
+                        color: auditCategoryFilter === cat.id ? "#ffffff" : "#475569",
+                        fontSize: "12px",
+                        fontWeight: "750",
+                        cursor: "pointer",
+                        transition: "all 0.15s ease",
+                      }}
+                    >
+                      {cat.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* MODERN AUDIT LOGS TABLE */}
+              <div className="table-responsive" style={{ background: "#ffffff", borderRadius: "14px", border: "1px solid #e2e8f0", overflow: "hidden" }}>
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>Waktu Audit</th>
-                      <th>Aktor Admin</th>
-                      <th>Tindakan (Action)</th>
-                      <th>Entitas Terpengaruh</th>
-                      <th>Alamat IP</th>
+                      <th style={{ width: "180px" }}>Waktu Audit</th>
+                      <th style={{ width: "260px" }}>Admin</th>
+                      <th style={{ width: "210px" }}>Tindakan (Action)</th>
+                      <th>Entitas & Detail Perubahan</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {AUDIT_LOGS.map((log) => (
-                      <tr key={log.id}>
-                        <td>
-                          <code>{log.timestamp}</code>
-                        </td>
-                        <td>
-                          <strong>{log.actor}</strong>
-                        </td>
-                        <td>
-                          <span className="badge-cat">{log.action}</span>
-                        </td>
-                        <td>{log.entity}</td>
-                        <td>
-                          <code>{log.ip}</code>
+                    {filteredAuditLogs.length > 0 ? (
+                      filteredAuditLogs.map((log) => {
+                        const initials = log.adminName
+                          .split(" ")
+                          .map((w) => w[0])
+                          .slice(0, 2)
+                          .join("")
+                          .toUpperCase() || "AD";
+
+                        return (
+                          <tr key={log.id} style={{ transition: "background 0.12s ease" }}>
+                            {/* Waktu Audit */}
+                            <td>
+                              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                <Clock size={13} style={{ color: "#64748b", flexShrink: 0 }} />
+                                <span style={{ fontSize: "12.5px", fontWeight: "700", color: "#334155" }}>
+                                  {formatAuditTime(log.createdAt)}
+                                </span>
+                              </div>
+                            </td>
+
+                            {/* Admin Info (Nama + Email Unik) */}
+                            <td>
+                              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                                <div
+                                  style={{
+                                    width: "34px",
+                                    height: "34px",
+                                    borderRadius: "50%",
+                                    background: log.adminRole === "Super Admin" ? "#00a8bd" : "#0284c7",
+                                    color: "#ffffff",
+                                    fontSize: "12px",
+                                    fontWeight: "800",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    flexShrink: 0,
+                                  }}
+                                >
+                                  {initials}
+                                </div>
+                                <div style={{ minWidth: 0 }}>
+                                  <strong style={{ display: "block", color: "#0f172a", fontSize: "13px", lineHeight: "1.3" }}>
+                                    {log.adminName}
+                                  </strong>
+                                  <span style={{ display: "block", color: "#64748b", fontSize: "11.5px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                    {log.adminEmail}
+                                  </span>
+                                </div>
+                              </div>
+                            </td>
+
+                            {/* Tindakan (Action Badge) */}
+                            <td>
+                              <span
+                                style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "5px",
+                                  padding: "5px 10px",
+                                  borderRadius: "8px",
+                                  fontSize: "11.5px",
+                                  fontWeight: "800",
+                                  background:
+                                    log.badgeType === "success"
+                                      ? "#dcfce7"
+                                      : log.badgeType === "danger"
+                                      ? "#fee2e2"
+                                      : log.badgeType === "warning"
+                                      ? "#fef3c7"
+                                      : "#e0f2fe",
+                                  color:
+                                    log.badgeType === "success"
+                                      ? "#166534"
+                                      : log.badgeType === "danger"
+                                      ? "#991b1b"
+                                      : log.badgeType === "warning"
+                                      ? "#92400e"
+                                      : "#0369a1",
+                                  border:
+                                    log.badgeType === "success"
+                                      ? "1px solid #bbf7d0"
+                                      : log.badgeType === "danger"
+                                      ? "1px solid #fecaca"
+                                      : log.badgeType === "warning"
+                                      ? "1px solid #fde68a"
+                                      : "1px solid #bae6fd",
+                                }}
+                              >
+                                {log.badgeType === "success" && <CheckCircle2 size={13} />}
+                                {log.badgeType === "danger" && <AlertTriangle size={13} />}
+                                {log.badgeType === "info" && <Activity size={13} />}
+                                {log.badgeType === "warning" && <FileClock size={13} />}
+                                <span>{log.actionLabel}</span>
+                              </span>
+                            </td>
+
+                            {/* Entitas & Detail */}
+                            <td>
+                              <div>
+                                <strong style={{ display: "block", color: "#1e293b", fontSize: "13px" }}>
+                                  {log.entity}
+                                </strong>
+                                <small style={{ color: "#64748b", fontSize: "11.5px" }}>
+                                  {log.detailSummary}
+                                </small>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    ) : (
+                      <tr>
+                        <td colSpan={4} style={{ textAlign: "center", padding: "36px 20px" }}>
+                          <FileClock size={32} style={{ color: "#cbd5e1", margin: "0 auto 10px auto", display: "block" }} />
+                          <strong style={{ display: "block", color: "#475569", fontSize: "14px", marginBottom: "4px" }}>
+                            {auditLoading ? "Memuat catatan audit dari database..." : "Tidak ada catatan audit yang cocok"}
+                          </strong>
+                          <span style={{ fontSize: "12px", color: "#94a3b8" }}>
+                            {auditSearch ? "Coba kata kunci pencarian yang berbeda" : "Aktivitas terbaru akan otomatis muncul di sini saat konfigurasi diperbarui."}
+                          </span>
                         </td>
                       </tr>
-                    ))}
+                    )}
                   </tbody>
                 </table>
               </div>

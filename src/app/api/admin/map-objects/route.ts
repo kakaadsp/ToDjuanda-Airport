@@ -117,6 +117,19 @@ export async function POST(request: Request) {
       });
       results.push(objectName);
     }
+
+    if (results.length > 0) {
+      await prisma.auditLog.create({
+        data: {
+          actorId: session.user.id,
+          action: "UPDATE_MAP_OBJECT_BATCH",
+          entityType: "MapObject",
+          entityId: results.slice(0, 3).join(", ") + (results.length > 3 ? ` (+${results.length - 3} lainnya)` : ""),
+          after: { count: results.length, objectNames: results.slice(0, 10) },
+        },
+      }).catch((err) => console.error("Audit log error:", err));
+    }
+
     return NextResponse.json({ saved: results.length, objectNames: results });
   } catch {
     return NextResponse.json({ error: "Gagal menyimpan konfigurasi" }, { status: 500 });
