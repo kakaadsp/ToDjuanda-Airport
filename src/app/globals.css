@@ -406,9 +406,8 @@ button:active { transform: translateY(1px); }
    ADMIN DASHBOARD SYSTEM STYLES
    ========================================================================== */
 .admin-dashboard-root { min-height: 100dvh; background: #f0f4f5; display: flex; flex-direction: column; }
-.admin-header-bar { min-height: 72px; display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 12px 24px; background: #ffffff; border-bottom: 1px solid #dfe7e9; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04); position: relative; z-index: 20; }
-.admin-header-left { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
-.admin-brand-row { display: flex; align-items: center; gap: 16px; }
+.admin-header-bar { min-height: 64px; display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 10px 24px; background: #ffffff; border-bottom: 1px solid #dfe7e9; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04); position: relative; z-index: 20; }
+.admin-header-left { display: flex; align-items: center; gap: 16px; }
 .admin-brand-link img { height: 42px; width: auto; object-fit: contain; }
 .admin-header-divider { width: 1px; height: 28px; background: #dfe7e9; }
 .admin-title-block { display: flex; flex-direction: column; line-height: 1.2; }
@@ -421,27 +420,7 @@ button:active { transform: translateY(1px); }
 .admin-signout-button:hover { color: #b91c1c; border-color: #fecaca; background: #fef2f2; }
 
 /* Admin Body & Sidebar Layout */
-.admin-header-toggle-sidebar {
-  min-height: 34px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 0 12px;
-  border-radius: 999px;
-  background: #f0f7f8;
-  border: 1px solid #bce6eb;
-  color: #008ca2;
-  font-size: 11px;
-  font-weight: 750;
-  cursor: pointer;
-  transition: all 0.16s ease;
-  white-space: nowrap;
-}
-.admin-header-toggle-sidebar:hover {
-  background: #00a8bd;
-  color: #ffffff;
-  border-color: #00a8bd;
-}
+
 
 
 
@@ -536,26 +515,29 @@ button:active { transform: translateY(1px); }
   position: sticky;
   top: 16px;
   z-index: 25;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
   align-self: flex-start;
   margin-bottom: -10px;
-  padding: 7px 14px;
-  border-radius: 999px;
-  border: 1px solid #00a8bd;
-  background: #00a8bd;
-  color: #ffffff;
-  font-size: 11.5px;
-  font-weight: 750;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 168, 189, 0.35);
+  background: #ffffff;
+  color: #008ca2;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(0, 168, 189, 0.3);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
   transition: all 0.16s ease;
 }
 .admin-sidebar-reopen-float:hover {
-  background: #008ca2;
-  transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(0, 168, 189, 0.4);
+  background: #00a8bd;
+  color: #ffffff;
+  border-color: #00a8bd;
+  transform: scale(1.06);
+  box-shadow: 0 6px 18px rgba(0, 168, 189, 0.25);
+}
+.admin-sidebar-reopen-float:active {
+  transform: scale(0.96);
 }
 
 .user-profile-badge { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 16px; background: #f7fafb; border: 1px solid #dfe7e9; }

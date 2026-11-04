@@ -17,7 +17,6 @@ import {
   LogOut,
   Map,
   MapPinned,
-  PanelLeftClose,
   PanelLeftOpen,
   Pencil,
   RotateCcw,
@@ -444,26 +443,14 @@ export function AdminDashboardClient({
       {/* Admin Top Header Navigation */}
       <header className="admin-header-bar">
         <div className="admin-header-left">
-          <div className="admin-brand-row">
-            <Link href="/" className="admin-brand-link">
-              <Image src="/injourney-airports.png" width={180} height={52} priority alt="InJourney Airports" />
-            </Link>
-            <div className="admin-header-divider" />
-            <div className="admin-title-block">
-              <strong>PORTAL MANAJEMEN OPERASIONAL</strong>
-              <small>Bandara Internasional Juanda</small>
-            </div>
+          <Link href="/" className="admin-brand-link">
+            <Image src="/injourney-airports.png" width={180} height={52} priority alt="InJourney Airports" />
+          </Link>
+          <div className="admin-header-divider" />
+          <div className="admin-title-block">
+            <strong>PORTAL MANAJEMEN OPERASIONAL</strong>
+            <small>Bandara Internasional Juanda</small>
           </div>
-          <button
-            type="button"
-            className="admin-header-toggle-sidebar"
-            onClick={() => setIsSidebarCollapsed((prev) => !prev)}
-            title={isSidebarCollapsed ? "Buka Menu Sidebar (Super Admin s/d Audit Logs)" : "Geser / Sembunyikan Menu Sidebar"}
-            aria-label="Toggle Sidebar"
-          >
-            {isSidebarCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
-            <span>{isSidebarCollapsed ? "Buka Menu Sidebar" : "Geser Menu Sidebar"}</span>
-          </button>
         </div>
 
         <div className="admin-header-right">
@@ -610,11 +597,10 @@ export function AdminDashboardClient({
               type="button"
               className="admin-sidebar-reopen-float"
               onClick={() => setIsSidebarCollapsed(false)}
-              title="Buka kembali menu sidebar (Super Admin s/d Audit Logs)"
-              aria-label="Buka Menu Sidebar"
+              title="Buka Menu Navigasi"
+              aria-label="Buka Menu Navigasi"
             >
-              <PanelLeftOpen size={16} />
-              <span>Buka Menu Navigasi</span>
+              <PanelLeftOpen size={18} />
             </button>
           )}
           {/* Dashboard Header Bar */}
