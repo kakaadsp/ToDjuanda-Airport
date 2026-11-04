@@ -1490,7 +1490,27 @@ export function AirportWayfinding() {
         >
           <X size={18} />
         </button>
-        {getMapObjectPhotoUrl(selectedLocationConfig.photoUrl) && <img src={getMapObjectPhotoUrl(selectedLocationConfig.photoUrl)} alt={`Tampak depan ${selectedLocationConfig.displayName || selected.name}`} />}
+        {selectedLocationConfig.photoUrl?.trim() && (
+          <img
+            src={getMapObjectPhotoUrl(selectedLocationConfig.photoUrl)}
+            alt={`Tampak depan ${selectedLocationConfig.displayName || selected.name}`}
+            referrerPolicy="no-referrer"
+            crossOrigin="anonymous"
+            onError={(e) => {
+              const target = e.currentTarget;
+              if (!target.dataset.triedFallback) {
+                target.dataset.triedFallback = "true";
+                const match = selectedLocationConfig.photoUrl.match(/\/(?:file\/)?d\/([^/]+)/i);
+                const id = match?.[1] || (selectedLocationConfig.photoUrl.includes("id=") ? new URL(selectedLocationConfig.photoUrl).searchParams.get("id") : null);
+                if (id) {
+                  target.src = `https://drive.google.com/thumbnail?id=${id}&sz=w1200`;
+                  return;
+                }
+              }
+              target.style.display = "none";
+            }}
+          />
+        )}
         <div className="sea-location-info-body">
           <span className="sea-location-kicker">{selectedLocationConfig.entityType === "FACILITY" ? copy.facility : copy.tenant}</span>
           <h2>{selectedLocationConfig.displayName || selected.name}</h2>

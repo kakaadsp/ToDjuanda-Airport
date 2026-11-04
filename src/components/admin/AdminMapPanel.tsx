@@ -704,16 +704,118 @@ export function AdminMapPanel({ initialObjectName = null, focusNonce = 0 }: { in
                 </EditorField>
               </div>
 
-              {getMapObjectPhotoUrl(draft.photoUrl) && (
-                <img
-                  className="admin-object-photo-preview"
-                  src={getMapObjectPhotoUrl(draft.photoUrl)}
-                  alt={`Foto ${draft.displayName || draft.objectName}`}
-                  onError={(event) => {
-                    event.currentTarget.style.display = "none";
-                  }}
-                />
-              )}
+              {/* Review Foto Tampak Depan di atas tombol Simpan Konfigurasi */}
+              <div
+                style={{
+                  width: "100%",
+                  marginTop: "20px",
+                  padding: "16px",
+                  borderRadius: "14px",
+                  border: "1.5px solid #cbd5e1",
+                  background: "#f8fafc",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "10px",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <span
+                    style={{
+                      fontSize: "13px",
+                      fontWeight: "750",
+                      color: "#1e293b",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "7px",
+                    }}
+                  >
+                    <ImageIcon size={16} style={{ color: "#00a8bd" }} />
+                    Review Foto Tampak Depan
+                  </span>
+                  {draft.photoUrl?.trim() && (
+                    <a
+                      href={draft.photoUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        fontSize: "11.5px",
+                        fontWeight: "700",
+                        color: "#0284c7",
+                        textDecoration: "underline",
+                      }}
+                    >
+                      Buka Link Foto ↗
+                    </a>
+                  )}
+                </div>
+
+                {draft.photoUrl?.trim() ? (
+                  <div
+                    style={{
+                      position: "relative",
+                      width: "100%",
+                      minHeight: "180px",
+                      maxHeight: "260px",
+                      borderRadius: "10px",
+                      overflow: "hidden",
+                      background: "#0f172a",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      border: "1px solid #e2e8f0",
+                    }}
+                  >
+                    <img
+                      src={getMapObjectPhotoUrl(draft.photoUrl)}
+                      alt={`Foto tampak depan ${draft.displayName || draft.objectName}`}
+                      referrerPolicy="no-referrer"
+                      crossOrigin="anonymous"
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        maxHeight: "260px",
+                        objectFit: "cover",
+                        display: "block",
+                      }}
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        if (!target.dataset.triedFallback) {
+                          target.dataset.triedFallback = "true";
+                          const match = draft.photoUrl.match(/\/(?:file\/)?d\/([^/]+)/i);
+                          const id = match?.[1] || (draft.photoUrl.includes("id=") ? new URL(draft.photoUrl).searchParams.get("id") : null);
+                          if (id) {
+                            target.src = `https://drive.google.com/thumbnail?id=${id}&sz=w1200`;
+                            return;
+                          }
+                        }
+                        target.style.display = "none";
+                        const parent = target.parentElement;
+                        if (parent) {
+                          parent.innerHTML = '<div style="color: #94a3b8; font-size: 12px; text-align: center; padding: 20px; line-height: 1.5;">Preview foto gagal dimuat.<br /><span style="font-size: 11px; color: #cbd5e1;">Jika menggunakan Google Drive, pastikan izin file disetel ke <b>\"Siapa saja yang memiliki link dapat melihat\"</b> (Akses Publik).</span></div>';
+                        }
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      padding: "20px 14px",
+                      borderRadius: "10px",
+                      border: "1px dashed #cbd5e1",
+                      background: "#ffffff",
+                      textAlign: "center",
+                      color: "#64748b",
+                      fontSize: "12px",
+                      lineHeight: "1.5",
+                    }}
+                  >
+                    Belum ada URL foto tampak depan.<br />
+                    <span style={{ fontSize: "11px", color: "#94a3b8" }}>
+                      Masukkan link foto di kolom <b>Foto tampak depan (URL)</b> di atas untuk melihat preview.
+                    </span>
+                  </div>
+                )}
+              </div>
 
               {/* Tombol Simpan Konfigurasi - Full Besar & Hijau */}
               <div className="admin-object-form-actions" style={{ width: "100%", marginTop: "24px" }}>

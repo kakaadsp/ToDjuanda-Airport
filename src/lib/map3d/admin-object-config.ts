@@ -31,10 +31,12 @@ export function getMapObjectPhotoUrl(value: string | undefined | null): string {
   if (!raw) return "";
   try {
     const url = new URL(raw);
-    if (!/(^|\.)drive\.google\.com$/i.test(url.hostname)) return raw;
-    const fileMatch = url.pathname.match(/\/file\/d\/([^/]+)/i);
+    if (!/(^|\.)drive\.google\.com$/i.test(url.hostname) && !/(^|\.)googleusercontent\.com$/i.test(url.hostname)) {
+      return raw;
+    }
+    const fileMatch = url.pathname.match(/\/(?:file\/)?d\/([^/]+)/i);
     const id = fileMatch?.[1] ?? url.searchParams.get("id");
-    return id ? `https://drive.google.com/thumbnail?id=${encodeURIComponent(id)}&sz=w1200` : raw;
+    return id ? `https://lh3.googleusercontent.com/d/${id}` : raw;
   } catch {
     return raw;
   }
