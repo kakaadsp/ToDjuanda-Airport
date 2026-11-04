@@ -387,7 +387,7 @@ export function FullMapShell() {
             <h3>{lang === "ID" ? "Cari fasilitas" : "Find facilities"}</h3>
             <label>Terminal
               <select aria-label="Terminal" value={store.terminal} onChange={(event) => { store.setTerminal(event.target.value as TerminalCode); }}>
-                <option value="T1">Terminal 1</option><option value="T2">Terminal 2</option>
+                <option value="T1">Terminal 1</option>
               </select>
             </label>
             <label>{lang === "ID" ? "Lantai peta" : "Map floor"}

@@ -119,7 +119,7 @@ export function SearchOverlayModal() {
                 value={store.terminal}
                 onChange={(event) => store.setTerminal(event.target.value as TerminalCode)}
               >
-                <option value="T1">Terminal 1</option><option value="T2">Terminal 2</option>
+                <option value="T1">Terminal 1</option>
               </select>
               <span>{lang === "ID" ? "Semua lantai" : "All floors"}</span>
             </div>

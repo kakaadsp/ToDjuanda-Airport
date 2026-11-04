@@ -28,13 +28,17 @@ export type TenantAnalyticsRow = {
 };
 
 export function DashboardAnalytics({ tenants }: { tenants: TenantAnalyticsRow[] }) {
-  const [selectedTerminal, setSelectedTerminal] = useState<"ALL" | "T1" | "T2">("ALL");
+  const [selectedFloor, setSelectedFloor] = useState<"ALL" | "L1" | "L2">("ALL");
 
-  // Filtered tenants by selected terminal
+  // Filtered tenants by selected floor (Terminal 1)
   const filteredTenants = useMemo(() => {
-    if (selectedTerminal === "ALL") return tenants;
-    return tenants.filter((t) => t.terminal === selectedTerminal);
-  }, [tenants, selectedTerminal]);
+    if (selectedFloor === "ALL") return tenants;
+    return tenants.filter(
+      (t) =>
+        t.floor?.includes(selectedFloor === "L1" ? "1" : "2") ||
+        t.floorCode?.includes(selectedFloor === "L1" ? "GF" : "FF")
+    );
+  }, [tenants, selectedFloor]);
 
   // Operational metrics
   const activeCount = filteredTenants.filter((tenant) => tenant.status === "ACTIVE" || tenant.status === "WALKWAY").length;
@@ -58,22 +62,20 @@ export function DashboardAnalytics({ tenants }: { tenants: TenantAnalyticsRow[] 
     ? Math.round((Number(topCategory[1]) / filteredTenants.length) * 100)
     : 0;
 
-  // Terminal & Floor distribution
+  // Floor distribution in Terminal 1
   const floorBreakdown = useMemo(() => {
     const floors = [
-      { id: "T1-L1", label: "Terminal 1 • Lantai 1", terminal: "T1", floor: "Lantai 1" },
-      { id: "T1-L2", label: "Terminal 1 • Lantai 2", terminal: "T1", floor: "Lantai 2" },
-      { id: "T2-L1", label: "Terminal 2 • Lantai 1", terminal: "T2", floor: "Lantai 1" },
-      { id: "T2-L2", label: "Terminal 2 • Lantai 2", terminal: "T2", floor: "Lantai 2" },
+      { id: "T1-L1", label: "Terminal 1 • Lantai 1 (Ground Floor)", terminal: "T1", floor: "Lantai 1" },
+      { id: "T1-L2", label: "Terminal 1 • Lantai 2 (First Floor)", terminal: "T1", floor: "Lantai 2" },
     ];
 
     return floors
-      .filter((f) => selectedTerminal === "ALL" || f.terminal === selectedTerminal)
+      .filter((f) => selectedFloor === "ALL" || (selectedFloor === "L1" ? f.floor === "Lantai 1" : f.floor === "Lantai 2"))
       .map((f) => {
         const matching = tenants.filter(
-          (t) => t.terminal === f.terminal && (t.floor?.includes(f.floor.slice(-1)) || t.floorCode?.includes(f.floor.slice(-1)))
+          (t) => t.floor?.includes(f.floor.slice(-1)) || t.floorCode?.includes(f.floor.slice(-1))
         );
-        const active = matching.filter((t) => t.status === "ACTIVE").length;
+        const active = matching.filter((t) => t.status === "ACTIVE" || t.status === "WALKWAY").length;
         return {
           ...f,
           total: matching.length,
@@ -81,10 +83,10 @@ export function DashboardAnalytics({ tenants }: { tenants: TenantAnalyticsRow[] 
           inactive: matching.length - active,
         };
       });
-  }, [tenants, selectedTerminal]);
+  }, [tenants, selectedFloor]);
 
   // Estimated space occupancy (based on standard airport terminal commercial block allotment)
-  const totalCommercialCapacity = selectedTerminal === "ALL" ? 36 : 18;
+  const totalCommercialCapacity = selectedFloor === "ALL" ? 36 : 18;
   const occupiedSpaces = filteredTenants.length;
   const occupancyPercent = Math.min(100, Math.round((occupiedSpaces / totalCommercialCapacity) * 100));
 
@@ -150,15 +152,15 @@ export function DashboardAnalytics({ tenants }: { tenants: TenantAnalyticsRow[] 
         >
           {(
             [
-              { id: "ALL", label: "Semua Terminal" },
-              { id: "T1", label: "Terminal 1" },
-              { id: "T2", label: "Terminal 2" },
+              { id: "ALL", label: "Semua Lantai (T1)" },
+              { id: "L1", label: "Lantai 1 (GF)" },
+              { id: "L2", label: "Lantai 2 (FF)" },
             ] as const
           ).map((tab) => (
             <button
               key={tab.id}
               type="button"
-              onClick={() => setSelectedTerminal(tab.id)}
+              onClick={() => setSelectedFloor(tab.id)}
               style={{
                 padding: "7px 16px",
                 borderRadius: "8px",
@@ -167,9 +169,9 @@ export function DashboardAnalytics({ tenants }: { tenants: TenantAnalyticsRow[] 
                 fontWeight: "750",
                 cursor: "pointer",
                 transition: "all 0.15s ease",
-                background: selectedTerminal === tab.id ? "#ffffff" : "transparent",
-                color: selectedTerminal === tab.id ? "#00a8bd" : "#64748b",
-                boxShadow: selectedTerminal === tab.id ? "0 2px 6px rgba(0,0,0,0.06)" : "none",
+                background: selectedFloor === tab.id ? "#ffffff" : "transparent",
+                color: selectedFloor === tab.id ? "#00a8bd" : "#64748b",
+                boxShadow: selectedFloor === tab.id ? "0 2px 6px rgba(0,0,0,0.06)" : "none",
               }}
             >
               {tab.label}
@@ -227,7 +229,7 @@ export function DashboardAnalytics({ tenants }: { tenants: TenantAnalyticsRow[] 
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "8px", fontSize: "12px", color: "#64748b" }}>
               <span style={{ padding: "2px 8px", borderRadius: "6px", background: "#f1f5f9", fontWeight: "700", color: "#334155" }}>
-                {selectedTerminal === "ALL" ? `${tenants.filter((t) => t.terminal === "T1").length} T1 • ${tenants.filter((t) => t.terminal === "T2").length} T2` : selectedTerminal}
+                Terminal 1 • Bandara Juanda
               </span>
               <span>Terdata di Wayfinding</span>
             </div>
@@ -634,7 +636,7 @@ export function DashboardAnalytics({ tenants }: { tenants: TenantAnalyticsRow[] 
               : "Performa komersial optimal dengan tingkat keaktifan penuh"}
           </h3>
           <p style={{ margin: 0, fontSize: "13px", color: "#9eb4ba", lineHeight: 1.5 }}>
-            Data dianalisis secara terintegrasi dengan direktori wayfinding penumpang di Terminal 1 dan Terminal 2 Bandara Internasional Juanda untuk memastikan informasi gerai selalu mutakhir bagi calon penumpang.
+            Data dianalisis secara terintegrasi dengan direktori wayfinding penumpang di Terminal 1 Bandara Internasional Juanda untuk memastikan informasi gerai selalu mutakhir bagi calon penumpang.
           </p>
         </div>
 

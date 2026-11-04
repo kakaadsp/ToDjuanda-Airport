@@ -108,10 +108,10 @@ export function astar(
 // =============================================================================
 // PUBLIC — A* dengan deteksi lintas lantai otomatis
 //
-// Caller wajib menyuplai data tangga dari terminal yang aktif:
-//   - staircaseL1 : titik tangga di Lantai 1 (DestinationPoint dari t1.ts / t2.ts)
-//   - staircaseL2 : titik tangga di Lantai 2 (DestinationPoint dari t1.ts / t2.ts)
-//   - floor1RowMin: batas baris minimum Lantai 1 (FLOOR1_ROW_MIN dari t1.ts / t2.ts)
+// Caller wajib menyuplai data tangga dari Terminal 1:
+//   - staircaseL1 : titik tangga di Lantai 1 (DestinationPoint dari t1.ts)
+//   - staircaseL2 : titik tangga di Lantai 2 (DestinationPoint dari t1.ts)
+//   - floor1RowMin: batas baris minimum Lantai 1 (FLOOR1_ROW_MIN dari t1.ts)
 //
 // destId prefix:
 //   "l1_" → tujuan di Lantai 1

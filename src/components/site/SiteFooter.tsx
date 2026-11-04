@@ -85,8 +85,7 @@ export function SiteFooter() {
         <address className={styles.footerAddress}>
           <strong>Bandar Udara Internasional Juanda</strong>
           <span>Jalan Ir. Haji Juanda, Surabaya 61253</span>
-          <a href="tel:+62312986200">Telephone: T1 (+6231) 2986200</a>
-          <a href="tel:+62312986700">T2 (+6231) 2986700</a>
+          <a href="tel:+62312986200">Telephone: (+6231) 2986200</a>
         </address>
 
         <div className={styles.footerContacts}>

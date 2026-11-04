@@ -4,7 +4,7 @@
 export type LatLng = [number, number];
 
 export type TerminalArea = {
-  id: "T1" | "T2";
+  id: "T1";
   name: string;
   href: string | null;
   polygon: LatLng[];

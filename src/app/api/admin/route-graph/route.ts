@@ -88,26 +88,6 @@ async function autoSeedEdgesIfEmpty() {
     });
   }
 
-  const t2L1 = floors.find((f) => f.code === "T2-L1");
-  const t2L2 = floors.find((f) => f.code === "T2-L2");
-  if (t2L1 && t2L2) {
-    const pairs = findVerticalPairs(t2L1.routeNodes, t2L2.routeNodes, 3);
-    pairs.forEach((p, idx) => {
-      const type = idx === 0 ? "LIFT" : idx === 1 ? "ESCALATOR" : "STAIRS";
-      createdEdges.push({
-        id: `connector-t2-${type.toLowerCase()}-${idx}`,
-        fromNodeId: p.node1.id,
-        toNodeId: p.node2.id,
-        distanceMeters: 6.0,
-        type,
-        direction: "BIDIRECTIONAL",
-        publicAccess: true,
-        accessible: type === "LIFT",
-        active: true,
-        status: "ACTIVE",
-      });
-    });
-  }
 
   if (createdEdges.length > 0) {
     await prisma.routeEdge.createMany({

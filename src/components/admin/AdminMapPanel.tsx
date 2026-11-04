@@ -47,7 +47,7 @@ function LegacyAdminMapPanel() {
 
         <div className="admin-map-selectors" aria-label="Pilih area peta">
           <div className="admin-map-selector-group" aria-label="Pilih terminal">
-            {(["T1", "T2"] as TerminalCode[]).map((item) => (
+            {(["T1"] as TerminalCode[]).map((item) => (
               <button
                 key={item}
                 type="button"

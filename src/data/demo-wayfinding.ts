@@ -1,7 +1,5 @@
 import t1Json from "@/data/map/T1_gabungan.json";
-import t2Json from "@/data/map/T2_gabungan.json";
 import { T1_WALL_DATA } from "@/data/walls/t1";
-import { T2_WALL_DATA } from "@/data/walls/t2";
 import { buildWallSet } from "@/lib/astar";
 import type { DestinationPoint, GridRoom, MapSpace, TerminalCode, WayfindingEdge, WayfindingNode } from "@/types";
 
@@ -25,20 +23,11 @@ export const terminals: Array<{
       "T1-L2": { asset: "/map/juanda-terminal-1.png", imageWidth: 2198, imageHeight: 1065, crop: { x: 35, y: 625, width: 2110, height: 415 } },
     },
   },
-  {
-    code: "T2", name: "Terminal 2", mapAsset: "/map/juanda-terminal-2.png",
-    floorMaps: {
-      "T2-L1": { asset: "/map/juanda-terminal-2.png", imageWidth: 1650, imageHeight: 1169, crop: { x: 25, y: 35, width: 1600, height: 500 } },
-      "T2-L2": { asset: "/map/juanda-terminal-2.png", imageWidth: 1650, imageHeight: 1169, crop: { x: 20, y: 545, width: 1610, height: 545 } },
-    },
-  },
 ];
 
 export const floors = [
   { id: "T1-L1", terminal: "T1" as const, label: "Lantai 1", number: 1 },
   { id: "T1-L2", terminal: "T1" as const, label: "Lantai 2", number: 2 },
-  { id: "T2-L1", terminal: "T2" as const, label: "Lantai 1", number: 1 },
-  { id: "T2-L2", terminal: "T2" as const, label: "Lantai 2", number: 2 },
 ];
 
 export const categories = [
@@ -76,21 +65,12 @@ function uniqueName(kind: PlaceKind, index: number, terminal: TerminalCode, floo
 }
 
 export function gridToMapPoint(terminal: TerminalCode, floorId: string, r: number, c: number) {
-  if (terminal === "T1") {
-    // T1 image: 9820×1875, SVG viewBox 1000×700, terminal spreads horizontally
-    // Grid: cols 0-300 → SVG x 20-980; rows 0-100 → SVG y 180-520 (floor 1)
-    const x = 20 + (Math.max(0, Math.min(300, c)) / 300) * 960;
-    const y = floorId.endsWith("L1")
-      ? 180 + (Math.max(0, Math.min(100, r)) / 100) * 340
-      : 180 + (Math.max(0, Math.min(32, r)) / 32) * 340;
-    return { x, y };
-  }
-  // T2 image: 1650×1169, terminal is more square
-  // Grid: cols 0-321 → SVG x 30-970; rows 55-117 → SVG y 160-540 (floor 1)
-  const x = 30 + (Math.max(0, Math.min(321, c)) / 321) * 940;
+  // T1 image: 9820×1875, SVG viewBox 1000×700, terminal spreads horizontally
+  // Grid: cols 0-300 → SVG x 20-980; rows 0-100 → SVG y 180-520 (floor 1)
+  const x = 20 + (Math.max(0, Math.min(300, c)) / 300) * 960;
   const y = floorId.endsWith("L1")
-    ? 160 + ((Math.max(55, Math.min(117, r)) - 55) / 62) * 380
-    : 160 + (Math.max(0, Math.min(54, r)) / 54) * 380;
+    ? 180 + (Math.max(0, Math.min(100, r)) / 100) * 340
+    : 180 + (Math.max(0, Math.min(32, r)) / 32) * 340;
   return { x, y };
 }
 
@@ -122,7 +102,7 @@ function nearestWalkable(r: number, c: number, walls: Set<string>, rows: number,
 }
 
 function buildTerminalData(terminal: TerminalCode, raw: RawMap) {
-  const wallData = terminal === "T1" ? T1_WALL_DATA : T2_WALL_DATA;
+  const wallData = T1_WALL_DATA;
   const walls = buildWallSet(wallData.walls);
   const counters: Record<PlaceKind, number> = { office: 0, food: 0, shop: 0, prayer: 0 };
   const terminalSpaces: MapSpace[] = [];
@@ -160,11 +140,9 @@ function buildTerminalData(terminal: TerminalCode, raw: RawMap) {
 }
 
 const t1 = buildTerminalData("T1", t1Json as RawMap);
-const t2 = buildTerminalData("T2", t2Json as RawMap);
-export const spaces = [...t1.spaces, ...t2.spaces];
-export const routeNodes = [...t1.nodes, ...t2.nodes];
+export const spaces = t1.spaces;
+export const routeNodes = t1.nodes;
 export const routeEdges: WayfindingEdge[] = [];
 export const qrLocations = [
   { locationId: "demo-t1-arrival", terminal: "T1" as const, floorId: "T1-L1", nodeId: "T1-ENTRANCE-NODE", label: "Pintu Masuk T1" },
-  { locationId: "demo-t2-arrival", terminal: "T2" as const, floorId: "T2-L1", nodeId: "T2-ENTRANCE-NODE", label: "Pintu Masuk T2" },
 ];

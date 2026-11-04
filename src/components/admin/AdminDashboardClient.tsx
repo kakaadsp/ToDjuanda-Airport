@@ -75,7 +75,7 @@ function mapConfigsToDirectory(configs: MapObjectConfigByName): TenantRow[] {
     .filter((config) => config.displayName.trim() || /(?:ATM|TOILET|T1-(?:GF|FF)-)/i.test(config.objectName))
     .map((config) => {
       const floorCode = /-FF-/i.test(config.objectName) ? "FF" : "GF";
-      const terminal = /^T2-/i.test(config.objectName) ? "T2" : "T1";
+      const terminal = "T1";
       return {
         id: config.objectName,
         name: config.displayName.trim() || config.objectName,
@@ -961,7 +961,6 @@ export function AdminDashboardClient({
                       {[
                         { value: "ALL", label: "Semua" },
                         { value: "T1", label: "T1" },
-                        { value: "T2", label: "T2" },
                       ].map((option) => (
                         <button
                           key={option.value}
@@ -1879,7 +1878,6 @@ export function AdminDashboardClient({
                     onChange={(e) => setNewTenant({ ...newTenant, terminal: e.target.value })}
                   >
                     <option value="T1">Terminal 1</option>
-                    <option value="T2">Terminal 2</option>
                   </select>
                 </label>
                 <label>

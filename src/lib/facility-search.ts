@@ -58,7 +58,7 @@ export function mapSearchHref(terminal: TerminalCode, category: string, query = 
 
 export function readMapSearch(params: Pick<URLSearchParams, "get">, fallback: TerminalCode) {
   const value = params.get("terminal");
-  const terminal = value === "T1" || value === "T2" ? value : fallback;
+  const terminal = value === "T1" ? value : fallback;
   const category = params.get("category") ?? "all";
   return { terminal, category: isMapCategory(category) ? category : "all", query: params.get("q")?.trim() ?? "" };
 }

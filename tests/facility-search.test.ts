@@ -5,8 +5,8 @@ import { facilityShortcuts, findFacilities, mapSearchHref, poiCategoryIds, readM
 import { getCategoryLabel } from "../src/lib/wayfinding-language";
 import { useMapStore } from "../src/store/mapStore";
 
-test("facility shortcuts round-trip through a refreshable URL for both terminals", () => {
-  for (const terminal of ["T1", "T2"] as const) {
+test("facility shortcuts round-trip through a refreshable URL for Terminal 1", () => {
+  for (const terminal of ["T1"] as const) {
     for (const shortcut of facilityShortcuts) {
       const url = new URL(mapSearchHref(terminal, shortcut.id), "https://example.test");
       assert.equal(url.pathname, "/map");
@@ -30,7 +30,7 @@ test("POI and search menus share one ordered set of category names", () => {
 });
 
 test("directory isolates the selected terminal while including facilities on both floors", () => {
-  for (const terminal of ["T1", "T2"] as const) {
+  for (const terminal of ["T1"] as const) {
     const results = findFacilities(spaces, terminal, "prayer");
     assert.ok(results.length > 0);
     assert.ok(results.every((space) => space.terminal === terminal && space.category === "prayer"));
@@ -39,7 +39,7 @@ test("directory isolates the selected terminal while including facilities on bot
 });
 
 test("missing facility data produces no invented or unrelated locations", () => {
-  for (const terminal of ["T1", "T2"] as const) {
+  for (const terminal of ["T1"] as const) {
     for (const category of ["restroom", "atm", "lounge"]) {
       assert.deepEqual(findFacilities(spaces, terminal, category), []);
     }
@@ -50,7 +50,7 @@ test("missing facility data produces no invented or unrelated locations", () => 
 });
 
 test("Indonesian and English facility searches return the same places", () => {
-  for (const terminal of ["T1", "T2"] as const) {
+  for (const terminal of ["T1"] as const) {
     const expected = findFacilities(spaces, terminal, "prayer");
     assert.deepEqual(findFacilities(spaces, terminal, "all", "  musala  "), expected);
     assert.deepEqual(findFacilities(spaces, terminal, "all", "prayer"), expected);
@@ -59,7 +59,7 @@ test("Indonesian and English facility searches return the same places", () => {
 });
 
 test("invalid URL values fall back safely and search text stays in the query parameter", () => {
-  assert.deepEqual(readMapSearch(new URLSearchParams("terminal=T9&category=unknown"), "T2"), { terminal: "T2", category: "all", query: "" });
+  assert.deepEqual(readMapSearch(new URLSearchParams("terminal=T9&category=unknown"), "T1"), { terminal: "T1", category: "all", query: "" });
   const query = "Kopi & Roti #1 / ?";
   const url = new URL(mapSearchHref("T1", "food", query, true), "https://example.test");
   assert.equal(url.searchParams.get("q"), query);
@@ -73,7 +73,7 @@ test("inactive locations are hidden while temporarily closed facilities remain i
   assert.deepEqual(findFacilities(items, original.terminal, "prayer").map((space) => space.id), ["closed"]);
 });
 
-test("confirming the same terminal preserves the QR origin; switching terminals clears it", () => {
+test("confirming the same terminal preserves the QR origin", () => {
   const store = useMapStore;
   store.setState(store.getInitialState(), true);
   assert.equal(store.getState().terminalSelected, false);
@@ -83,10 +83,5 @@ test("confirming the same terminal preserves the QR origin; switching terminals 
   assert.equal(store.getState().terminalSelected, true);
   assert.equal(store.getState().currentNodeId, "T1-ENTRANCE-NODE");
   assert.equal(store.getState().floorId, "T1-L2");
-  store.getState().setTerminal("T2");
-  assert.equal(store.getState().currentNodeId, null);
-  assert.equal(store.getState().fromNodeId, null);
-  assert.equal(store.getState().selectedSpaceId, null);
-  assert.equal(store.getState().floorId, "T2-L1");
   store.setState(store.getInitialState(), true);
 });

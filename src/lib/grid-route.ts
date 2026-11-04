@@ -6,12 +6,6 @@ import {
   STAIRCASE_L2 as T1_STAIRCASE_L2,
   T1_WALL_DATA,
 } from "@/data/walls/t1";
-import {
-  FLOOR1_ROW_MIN as T2_FLOOR1_ROW_MIN,
-  STAIRCASE_L1 as T2_STAIRCASE_L1,
-  STAIRCASE_L2 as T2_STAIRCASE_L2,
-  T2_WALL_DATA,
-} from "@/data/walls/t2";
 import type { DijkstraResult, GridPoint, RouteOptions, RouteSegment, TerminalCode, WayfindingNode } from "@/types";
 
 const FLOOR_CHANGE_METERS = 12;
@@ -107,10 +101,8 @@ function walkwaySegments(nodes: WayfindingNode[], prefix: string): RouteSegment[
 export function findGridRoute(start: WayfindingNode | undefined, end: WayfindingNode | undefined, options: RouteOptions = {}): DijkstraResult | null {
   if (!start || !end || start.gridRow == null || start.gridCol == null || end.gridRow == null || end.gridCol == null) return null;
   const terminal = start.id.slice(0, 2) as TerminalCode;
-  if (end.id.slice(0, 2) !== terminal) return null;
-  const config = terminal === "T1"
-    ? { wallData: T1_WALL_DATA, floor1Min: T1_FLOOR1_ROW_MIN, stairL1: T1_STAIRCASE_L1, stairL2: T1_STAIRCASE_L2 }
-    : { wallData: T2_WALL_DATA, floor1Min: T2_FLOOR1_ROW_MIN, stairL1: T2_STAIRCASE_L1, stairL2: T2_STAIRCASE_L2 };
+  if (terminal !== "T1" || end.id.slice(0, 2) !== "T1") return null;
+  const config = { wallData: T1_WALL_DATA, floor1Min: T1_FLOOR1_ROW_MIN, stairL1: T1_STAIRCASE_L1, stairL2: T1_STAIRCASE_L2 };
   const walls = buildWallSet(config.wallData.walls);
   const startGrid = nearestWalkable({ r: start.gridRow, c: start.gridCol }, walls, config.wallData.rows, config.wallData.cols);
   const endGrid = nearestWalkable({ r: end.gridRow, c: end.gridCol }, walls, config.wallData.rows, config.wallData.cols);

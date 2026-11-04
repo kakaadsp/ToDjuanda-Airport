@@ -1,4 +1,4 @@
-export type TerminalCode = "T1" | "T2";
+export type TerminalCode = "T1";
 export type AdminRole = "SUPER_ADMIN" | "AIRPORT_ADMIN";
 export type EdgeType = "WALKWAY" | "STAIRS" | "LIFT" | "ESCALATOR";
 export type EdgeDirection = "BIDIRECTIONAL" | "ONE_WAY";
