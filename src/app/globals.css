@@ -668,6 +668,10 @@ button:active { transform: translateY(1px); }
 .admin-3d-editor-canvas { position: relative; overflow: hidden; border-radius: 14px; background: #102d3d; }
 .admin-3d-editor-canvas canvas { display: block; width: 100% !important; height: 100% !important; }
 .admin-3d-loading { position: absolute; inset: 0; display: grid; place-items: center; color: #e8f8fb; font-size: 13px; pointer-events: none; }
+.admin-map-controls { position: absolute; top: 14px; right: 14px; z-index: 10; display: flex; flex-direction: column; gap: 8px; }
+.admin-map-controls button { width: 38px; height: 38px; display: grid; place-items: center; border: 1px solid rgba(48, 197, 225, 0.45); border-radius: 9px; background: rgba(10, 32, 46, 0.88); color: #e8f8fb; backdrop-filter: blur(8px); cursor: pointer; transition: all 0.16s ease; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35); }
+.admin-map-controls button:hover { background: #00a8bd; color: #ffffff; border-color: #00a8bd; transform: scale(1.05); }
+.admin-map-controls button:active { transform: scale(0.96); }
 .admin-object-editor-layout { display: grid; grid-template-columns: minmax(210px, 0.32fr) minmax(0, 1fr); gap: 14px; margin-top: 14px; }
 .admin-object-list, .admin-object-form { min-width: 0; border: 1px solid #dfe7e9; border-radius: 14px; background: #fff; }
 .admin-object-list-header { display: flex; justify-content: space-between; align-items: center; padding: 13px 14px; border-bottom: 1px solid #e8eff0; color: #17313b; font-size: 12px; }

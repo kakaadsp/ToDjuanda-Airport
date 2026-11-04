@@ -2780,23 +2780,23 @@
 .map3d-root .map-object-label, .admin-object-editor .map-object-label {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  max-width: 180px;
-  min-height: 24px;
-  padding: 3px 8px 3px 4px;
-  border: 1px solid rgba(48, 197, 225, .72);
+  gap: 7px;
+  max-width: 280px;
+  min-height: 32px;
+  padding: 4px 12px 4px 6px;
+  border: 1.5px solid rgba(48, 197, 225, .85);
   border-radius: 999px;
   background: rgba(5, 35, 52, .96);
   color: #fff;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, .38);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .45);
   backdrop-filter: blur(6px);
   white-space: nowrap;
 }
 .map3d-root .map-object-label-icon, .admin-object-editor .map-object-label-icon {
   display: grid;
-  width: 18px;
-  height: 18px;
-  flex: 0 0 18px;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
   place-items: center;
   border-radius: 50%;
   background: #0ba8c2;
@@ -2804,10 +2804,10 @@
 }
 .map3d-root .map-object-label strong, .admin-object-editor .map-object-label strong {
   overflow: hidden;
-  font-size: 9px;
+  font-size: 13.5px;
   font-weight: 850;
-  letter-spacing: .01em;
-  line-height: 1;
+  letter-spacing: .015em;
+  line-height: 1.2;
   text-overflow: ellipsis;
 }
 .map3d-root .map-attribution {

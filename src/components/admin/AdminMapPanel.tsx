@@ -1,10 +1,11 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
+import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import * as THREE from "three";
-import { Check, Image as ImageIcon, Layers3, MapPin, Save } from "lucide-react";
+import { Check, Image as ImageIcon, Layers3, MapPin, Minus, Plus, RotateCcw, Save } from "lucide-react";
 import { MapStage } from "@/components/wayfinding/MapStage";
 import { floors, spaces } from "@/data/demo-wayfinding";
 import type { MapSpace, TerminalCode } from "@/types";
@@ -113,15 +114,69 @@ function LegacyAdminMapPanel() {
   );
 }
 
-function AdminCamera({ bounds }: { bounds: SceneBounds | null }) {
-  const { camera } = useThree();
-  useEffect(() => {
-    if (!bounds || !(camera instanceof THREE.PerspectiveCamera)) return;
+function AdminCamera({
+  bounds,
+  controlRef,
+}: {
+  bounds: SceneBounds | null;
+  controlRef?: React.MutableRefObject<{
+    zoomIn: () => void;
+    zoomOut: () => void;
+    reset: () => void;
+  } | null>;
+}) {
+  const { camera, invalidate } = useThree();
+  const controlsRef = useRef<OrbitControlsImpl>(null);
+
+  const resetView = useCallback(() => {
+    if (!bounds || !(camera instanceof THREE.PerspectiveCamera) || !controlsRef.current) return;
     const direction = new THREE.Vector3(0.72, 0.95, 0.72).normalize();
     camera.position.copy(bounds.center).add(direction.multiplyScalar(Math.max(bounds.radius * 1.35, 20)));
+    controlsRef.current.target.copy(bounds.center);
     camera.lookAt(bounds.center);
-  }, [bounds, camera]);
-  return <OrbitControls makeDefault enableDamping minDistance={3} maxDistance={1000} />;
+    controlsRef.current.update();
+    invalidate();
+  }, [bounds, camera, invalidate]);
+
+  useEffect(() => {
+    resetView();
+  }, [bounds, resetView]);
+
+  const zoomBy = useCallback(
+    (factor: number) => {
+      if (!controlsRef.current || !(camera instanceof THREE.PerspectiveCamera)) return;
+      const target = controlsRef.current.target;
+      const offset = camera.position.clone().sub(target);
+      const minD = controlsRef.current.minDistance ?? 0.05;
+      const maxD = controlsRef.current.maxDistance ?? 10000;
+      const nextDistance = THREE.MathUtils.clamp(offset.length() * factor, minD, maxD);
+      camera.position.copy(target).add(offset.normalize().multiplyScalar(nextDistance));
+      controlsRef.current.update();
+      invalidate();
+    },
+    [camera, invalidate],
+  );
+
+  useEffect(() => {
+    if (controlRef) {
+      controlRef.current = {
+        zoomIn: () => zoomBy(0.65),
+        zoomOut: () => zoomBy(1.45),
+        reset: resetView,
+      };
+    }
+  }, [controlRef, zoomBy, resetView]);
+
+  return (
+    <OrbitControls
+      ref={controlsRef}
+      makeDefault
+      enableDamping
+      minDistance={0.05}
+      maxDistance={10000}
+      dampingFactor={0.12}
+    />
+  );
 }
 
 const OCCUPANCY_OPTIONS: Array<{ value: MapObjectOccupancy; label: string; help: string }> = [
@@ -135,6 +190,7 @@ function EditorField({ label, children }: { label: string; children: React.React
 }
 
 export function AdminMapPanel({ initialObjectName = null }: { initialObjectName?: string | null }) {
+  const cameraControlRef = useRef<{ zoomIn: () => void; zoomOut: () => void; reset: () => void } | null>(null);
   const [bounds, setBounds] = useState<SceneBounds | null>(null);
   const [objects, setObjects] = useState<SceneObjectRecord[]>([]);
   const [floorView, setFloorView] = useState<FloorId>("L1");
@@ -208,7 +264,36 @@ export function AdminMapPanel({ initialObjectName = null }: { initialObjectName?
   return <div className="content-box admin-map-box admin-object-editor">
     <div className="box-header admin-map-header"><div className="box-title"><h2>Editor lokasi 3D Terminal 1</h2><p>Pilih tenant, fasilitas, gate, area keberangkatan, atau struktur yang dapat dikonfigurasi pada kedua lantai.</p></div><div className="admin-map-summary"><span><Layers3 size={15} /> T1 &bull; {FLOOR_LABELS[floorView]}</span><strong>{editableObjects.length} objek dapat diatur</strong></div></div>
     <div className="admin-map-selectors admin-3d-floor-selector" aria-label="Pilih lantai editor 3D">{(["L1", "L2"] as FloorId[]).map((floor) => <button key={floor} type="button" aria-pressed={floorView === floor} onClick={() => { setFloorView(floor); setSelected(null); setDraft(null); setSaved(false); }}>{FLOOR_LABELS[floor]}</button>)}</div>
-    <div className="admin-map-canvas admin-3d-editor-canvas"><Canvas dpr={[1, 1.5]} camera={{ fov: 55, near: 0.01, far: 100000, position: [20, 20, 20] }}><color attach="background" args={["#102d3d"]} /><ambientLight intensity={0.9} /><hemisphereLight intensity={1.1} color="#ffffff" groundColor="#65747d" /><directionalLight position={[12, 24, 10]} intensity={1.7} /><Suspense fallback={null}><SceneModel modelUrl={TERMINAL_MODEL_URL} floorView={floorView} showObjectLabels selectedUuid={selected?.uuid ?? null} onSelect={selectObject} onSelectFloor={(_, objectName) => { const record = objectName ? objects.find((item) => item.floor === floorView && item.name === objectName) : undefined; if (record) selectRecord(record); }} onReady={handleReady} objectConfigs={configs} /></Suspense><AdminCamera bounds={bounds} /></Canvas>{!bounds && <div className="admin-3d-loading">Memuat model gabungan Terminal 1...</div>}</div>
+    <div className="admin-map-canvas admin-3d-editor-canvas"><Canvas dpr={[1, 1.5]} camera={{ fov: 55, near: 0.01, far: 100000, position: [20, 20, 20] }}><color attach="background" args={["#102d3d"]} /><ambientLight intensity={0.9} /><hemisphereLight intensity={1.1} color="#ffffff" groundColor="#65747d" /><directionalLight position={[12, 24, 10]} intensity={1.7} /><Suspense fallback={null}><SceneModel modelUrl={TERMINAL_MODEL_URL} floorView={floorView} showObjectLabels selectedUuid={selected?.uuid ?? null} onSelect={selectObject} onSelectFloor={(_, objectName) => { const record = objectName ? objects.find((item) => item.floor === floorView && item.name === objectName) : undefined; if (record) selectRecord(record); }} onReady={handleReady} objectConfigs={configs} /></Suspense><AdminCamera bounds={bounds} controlRef={cameraControlRef} />
+    </Canvas>
+    <div className="admin-map-controls" aria-label="Kontrol zoom peta terminal">
+      <button
+        type="button"
+        onClick={() => cameraControlRef.current?.zoomIn()}
+        title="Zoom In (Perbesar hingga maksimal)"
+        aria-label="Zoom in"
+      >
+        <Plus size={18} />
+      </button>
+      <button
+        type="button"
+        onClick={() => cameraControlRef.current?.zoomOut()}
+        title="Zoom Out (Perkecil hingga maksimal)"
+        aria-label="Zoom out"
+      >
+        <Minus size={18} />
+      </button>
+      <button
+        type="button"
+        onClick={() => cameraControlRef.current?.reset()}
+        title="Reset Sudut & Posisi Kamera"
+        aria-label="Reset kamera"
+      >
+        <RotateCcw size={16} />
+      </button>
+    </div>
+    {!bounds && <div className="admin-3d-loading">Memuat model gabungan Terminal 1...</div>}
+  </div>
     <div className="admin-object-editor-layout"><aside className="admin-object-list"><div className="admin-object-list-header"><strong>Objek editable · {FLOOR_LABELS[floorView]}</strong><span>{editableObjects.length}</span></div><div className="admin-object-list-scroll">{editableObjects.map((record) => <button type="button" key={record.uuid} className={record.uuid === selected?.uuid ? "is-selected" : ""} onClick={() => selectRecord(record)}><strong>{configs[record.name]?.displayName || record.selectableLabel || record.name}</strong><small>{record.name} &bull; {configs[record.name]?.occupancy === "WALKABLE" ? "Bisa dilalui" : configs[record.name]?.occupancy === "OBSTACLE" ? "Obstacle" : record.metadata.category}</small></button>)}{!editableObjects.length && <div className="admin-object-empty"><strong>Belum ada objek editable</strong><span>Objek Lantai 2 yang dapat dikonfigurasi akan muncul setelah model selesai dimuat.</span></div>}</div></aside>
       <section className="admin-object-form">{!draft ? <div className="admin-object-empty"><ImageIcon size={22} /><strong>Pilih objek dari model</strong><span>Data tenant/fasilitas, jam aktif, foto, dan status rute akan muncul di sini.</span></div> : <><div className="admin-object-form-heading"><div><small>OBJEK TERPILIH</small><h3>{draft.displayName.trim() || selected?.name}</h3>{draft.displayName.trim() && <small style={{ color: "#7c93a0", display: "block", marginTop: "2px" }}>Kode Blok: {selected?.name}</small>}</div><span className="admin-object-pill">{draft.entityType === "TENANT" ? "Tenant" : "Fasilitas"}</span></div><div className="admin-object-form-grid">
         <EditorField label="Nama tampilan"><input value={draft.displayName} onChange={(event) => updateDraft("displayName", event.target.value)} placeholder="Contoh: Kopi Juanda" /></EditorField>

@@ -614,14 +614,14 @@ export function SceneModel({ selectedUuid, onSelect, onSelectFloor, onSelectPoin
 }
 
 function ObjectLabelIcon({ category }: { category: ObjectMetadata["key"] }) {
-  if (category === "toilet") return <Toilet size={14} aria-hidden="true" />;
-  if (category === "nursery") return <Baby size={14} aria-hidden="true" />;
-  if (category === "prayer-room") return <Landmark size={14} aria-hidden="true" />;
-  if (category === "security") return <ShieldCheck size={14} aria-hidden="true" />;
-  if (category === "customer-service") return <Headphones size={14} aria-hidden="true" />;
-  if (category === "baggage-claim" || category === "baggage-wrap") return <Luggage size={14} aria-hidden="true" />;
-  if (category === "building") return <Store size={14} aria-hidden="true" />;
-  return <Building2 size={14} aria-hidden="true" />;
+  if (category === "toilet") return <Toilet size={17} aria-hidden="true" />;
+  if (category === "nursery") return <Baby size={17} aria-hidden="true" />;
+  if (category === "prayer-room") return <Landmark size={17} aria-hidden="true" />;
+  if (category === "security") return <ShieldCheck size={17} aria-hidden="true" />;
+  if (category === "customer-service") return <Headphones size={17} aria-hidden="true" />;
+  if (category === "baggage-claim" || category === "baggage-wrap") return <Luggage size={17} aria-hidden="true" />;
+  if (category === "building") return <Store size={17} aria-hidden="true" />;
+  return <Building2 size={17} aria-hidden="true" />;
 }
 
 function ObjectLabelMarker({ label, category, position }: { label: string; category: ObjectMetadata["key"]; position: [number, number, number] }) {
@@ -635,13 +635,13 @@ function ObjectLabelMarker({ label, category, position }: { label: string; categ
     // frame ketika kamera sedang bergerak.
     if (state.clock.elapsedTime - lastCheck.current < 0.12) return;
     lastCheck.current = state.clock.elapsedTime;
-    const nextVisible = camera.position.distanceTo(markerPosition) <= 420;
+    const nextVisible = camera.position.distanceTo(markerPosition) <= 3500;
     setVisible((current) => current === nextVisible ? current : nextVisible);
   });
 
   if (!visible) return null;
   return (
-    <Html position={position} center distanceFactor={14} style={{ pointerEvents: "none" }}>
+    <Html position={position} center distanceFactor={22} style={{ pointerEvents: "none" }}>
       <span className="map-object-label">
         <span className="map-object-label-icon"><ObjectLabelIcon category={category} /></span>
         <strong title={label}>{label}</strong>
