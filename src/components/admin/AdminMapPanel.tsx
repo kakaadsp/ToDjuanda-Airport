@@ -215,7 +215,7 @@ function AdminCamera({
 const OCCUPANCY_OPTIONS: Array<{ value: MapObjectOccupancy; label: string; help: string }> = [
   { value: "OCCUPIED", label: "Ditempati", help: "Lokasi aktif dan memiliki tenant/fasilitas." },
   { value: "OBSTACLE", label: "Tembok / pilar", help: "Tetap terlihat dan menjadi penghalang rute." },
-  { value: "WALKABLE", label: "Kosong / bisa dilalui", help: "Disembunyikan dari model dan tidak menghalangi rute." },
+  { value: "WALKABLE", label: "Jalan (kosong / bisa dilalui)", help: "Disembunyikan dari model 3D dan berfungsi sebagai jalan koridor yang bisa dilalui rute." },
 ];
 
 function EditorField({ label, children }: { label: string; children: React.ReactNode }) {
@@ -416,7 +416,7 @@ export function AdminMapPanel({ initialObjectName = null, focusNonce = 0 }: { in
               >
                 <strong>{configs[record.name]?.displayName || record.selectableLabel || record.name}</strong>
                 <small>
-                  {record.name} &bull; {configs[record.name]?.occupancy === "WALKABLE" ? "Bisa dilalui" : configs[record.name]?.occupancy === "OBSTACLE" ? "Obstacle" : record.metadata.category}
+                  {record.name} &bull; {configs[record.name]?.occupancy === "WALKABLE" ? "Jalan" : configs[record.name]?.occupancy === "OBSTACLE" ? "Obstacle" : record.metadata.category}
                 </small>
               </button>
             ))}
@@ -504,29 +504,44 @@ export function AdminMapPanel({ initialObjectName = null, focusNonce = 0 }: { in
                   {OCCUPANCY_OPTIONS.find((option) => option.value === draft.occupancy)?.help}
                 </div>
 
-                {/* Status Operasional saat Ditempati (OCCUPIED) */}
-                {draft.occupancy === "OCCUPIED" && (
+                {/* Status Operasional (tersedia saat Ditempati atau Kosong/Bisa Dilalui/Jalan) */}
+                {(draft.occupancy === "OCCUPIED" || draft.occupancy === "WALKABLE") && (
                   <div className="admin-operational-panel">
                     <div className="admin-operational-heading">
                       <small>STATUS OPERASIONAL</small>
-                      <strong>Jadwal & Ketersediaan Layanan</strong>
+                      <strong>
+                        {draft.occupancy === "WALKABLE" ? "Status Area Jalan & Layanan" : "Jadwal & Ketersediaan Layanan"}
+                      </strong>
                     </div>
 
-                    {/* Tombol Buka / Tutup */}
-                    <div className="admin-status-toggle-row">
+                    {/* Tombol Buka, Buka 24 Jam, Tutup */}
+                    <div className="admin-status-toggle-row" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px" }}>
                       <button
                         type="button"
-                        className={`admin-status-btn open ${draft.openTime !== "CLOSED" ? "is-active" : ""}`}
+                        className={`admin-status-btn open ${draft.openTime !== "CLOSED" && !((draft.openTime === "00:00" && (draft.closeTime === "23:59" || draft.closeTime === "24:00" || draft.closeTime === "00:00")) || draft.openTime === "24 Jam") ? "is-active" : ""}`}
                         onClick={() => {
-                          if (draft.openTime === "CLOSED") {
-                            updateDraft("openTime", "08:00");
-                            updateDraft("closeTime", "22:00");
-                          }
+                          updateDraft("openTime", draft.openTime && draft.openTime !== "CLOSED" && draft.openTime !== "00:00" ? draft.openTime : "08:00");
+                          updateDraft("closeTime", draft.closeTime && draft.closeTime !== "CLOSED" && draft.closeTime !== "23:59" ? draft.closeTime : "22:00");
                         }}
+                        style={{ minHeight: "38px", padding: "0 10px", fontSize: "12px" }}
                       >
-                        <CheckCircle2 size={18} />
+                        <CheckCircle2 size={16} />
                         <span>Buka</span>
                       </button>
+
+                      <button
+                        type="button"
+                        className={`admin-status-btn open ${((draft.openTime === "00:00" && (draft.closeTime === "23:59" || draft.closeTime === "24:00" || draft.closeTime === "00:00")) || draft.openTime === "24 Jam") ? "is-active" : ""}`}
+                        onClick={() => {
+                          updateDraft("openTime", "00:00");
+                          updateDraft("closeTime", "23:59");
+                        }}
+                        style={{ minHeight: "38px", padding: "0 10px", fontSize: "12px" }}
+                      >
+                        <Clock size={16} />
+                        <span>Buka 24 Jam</span>
+                      </button>
+
                       <button
                         type="button"
                         className={`admin-status-btn closed ${draft.openTime === "CLOSED" ? "is-active" : ""}`}
@@ -534,71 +549,38 @@ export function AdminMapPanel({ initialObjectName = null, focusNonce = 0 }: { in
                           updateDraft("openTime", "CLOSED");
                           updateDraft("closeTime", "CLOSED");
                         }}
+                        style={{ minHeight: "38px", padding: "0 10px", fontSize: "12px" }}
                       >
-                        <XCircle size={18} />
+                        <XCircle size={16} />
                         <span>Tutup</span>
                       </button>
                     </div>
 
-                    {/* Konfigurasi saat status BUKA */}
-                    {draft.openTime !== "CLOSED" && (
-                      <div className="admin-open-hours-config">
-                        {/* Tombol Buka 24 Jam */}
-                        <div className="admin-24h-row">
-                          <button
-                            type="button"
-                            className={`admin-24h-btn ${
-                              ((draft.openTime === "00:00" && (draft.closeTime === "23:59" || draft.closeTime === "24:00" || draft.closeTime === "00:00")) || draft.openTime === "24 Jam")
-                                ? "is-active"
-                                : ""
-                            }`}
-                            onClick={() => {
-                              const isCurrently24 =
-                                (draft.openTime === "00:00" && (draft.closeTime === "23:59" || draft.closeTime === "24:00" || draft.closeTime === "00:00")) ||
-                                draft.openTime === "24 Jam";
+                    {/* Konfigurasi saat status BUKA jam tertentu */}
+                    {draft.openTime !== "CLOSED" && !((draft.openTime === "00:00" && (draft.closeTime === "23:59" || draft.closeTime === "24:00" || draft.closeTime === "00:00")) || draft.openTime === "24 Jam") && (
+                      <div className="admin-time-inputs-row">
+                        <EditorField label="Jam buka">
+                          <input
+                            type="time"
+                            value={draft.openTime === "CLOSED" ? "" : (draft.openTime || "08:00")}
+                            onChange={(event) => updateDraft("openTime", event.target.value)}
+                          />
+                        </EditorField>
+                        <EditorField label="Jam tutup">
+                          <input
+                            type="time"
+                            value={draft.closeTime === "CLOSED" ? "" : (draft.closeTime || "22:00")}
+                            onChange={(event) => updateDraft("closeTime", event.target.value)}
+                          />
+                        </EditorField>
+                      </div>
+                    )}
 
-                              if (isCurrently24) {
-                                updateDraft("openTime", "08:00");
-                                updateDraft("closeTime", "22:00");
-                              } else {
-                                updateDraft("openTime", "00:00");
-                                updateDraft("closeTime", "23:59");
-                              }
-                            }}
-                          >
-                            <Clock size={16} />
-                            <span>
-                              {((draft.openTime === "00:00" && (draft.closeTime === "23:59" || draft.closeTime === "24:00" || draft.closeTime === "00:00")) || draft.openTime === "24 Jam")
-                                ? "✓ Buka 24 Jam (Aktif)"
-                                : "Buka 24 Jam"}
-                            </span>
-                          </button>
-                          <small className="admin-24h-note">
-                            {((draft.openTime === "00:00" && (draft.closeTime === "23:59" || draft.closeTime === "24:00" || draft.closeTime === "00:00")) || draft.openTime === "24 Jam")
-                              ? "Lokasi buka nonstop 24 jam sehari."
-                              : "Klik jika beroperasi 24 jam nonstop."}
-                          </small>
-                        </div>
-
-                        {/* Input Jam Buka & Jam Tutup jika BUKAN 24 Jam */}
-                        {!((draft.openTime === "00:00" && (draft.closeTime === "23:59" || draft.closeTime === "24:00" || draft.closeTime === "00:00")) || draft.openTime === "24 Jam") && (
-                          <div className="admin-time-inputs-row">
-                            <EditorField label="Jam buka">
-                              <input
-                                type="time"
-                                value={draft.openTime === "CLOSED" ? "" : (draft.openTime || "08:00")}
-                                onChange={(event) => updateDraft("openTime", event.target.value)}
-                              />
-                            </EditorField>
-                            <EditorField label="Jam tutup">
-                              <input
-                                type="time"
-                                value={draft.closeTime === "CLOSED" ? "" : (draft.closeTime || "22:00")}
-                                onChange={(event) => updateDraft("closeTime", event.target.value)}
-                              />
-                            </EditorField>
-                          </div>
-                        )}
+                    {/* Info saat status BUKA 24 JAM */}
+                    {((draft.openTime === "00:00" && (draft.closeTime === "23:59" || draft.closeTime === "24:00" || draft.closeTime === "00:00")) || draft.openTime === "24 Jam") && (
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11.5px", color: "#008ca2", background: "#e0f7fa", padding: "6px 12px", borderRadius: "8px" }}>
+                        <Clock size={14} />
+                        <span>Buka nonstop 24 jam sehari.</span>
                       </div>
                     )}
 

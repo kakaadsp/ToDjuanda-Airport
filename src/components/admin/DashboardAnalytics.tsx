@@ -37,8 +37,9 @@ export function DashboardAnalytics({ tenants }: { tenants: TenantAnalyticsRow[] 
   }, [tenants, selectedTerminal]);
 
   // Operational metrics
-  const activeCount = filteredTenants.filter((tenant) => tenant.status === "ACTIVE").length;
-  const inactiveCount = filteredTenants.length - activeCount;
+  const activeCount = filteredTenants.filter((tenant) => tenant.status === "ACTIVE" || tenant.status === "WALKWAY").length;
+  const closedCount = filteredTenants.filter((tenant) => tenant.status === "TEMPORARILY_CLOSED").length;
+  const inactiveCount = closedCount;
   const activePercent = filteredTenants.length ? Math.round((activeCount / filteredTenants.length) * 100) : 0;
 
   // Category composition
@@ -89,7 +90,7 @@ export function DashboardAnalytics({ tenants }: { tenants: TenantAnalyticsRow[] 
 
   // Inactive or special status tenants requiring operational attention
   const attentionTenants = useMemo(() => {
-    return filteredTenants.filter((t) => t.status !== "ACTIVE" || (t.hours && t.hours.toLowerCase().includes("tutup")));
+    return filteredTenants.filter((t) => t.status === "TEMPORARILY_CLOSED" || (t.hours && t.hours.toLowerCase().includes("tutup")));
   }, [filteredTenants]);
 
   return (

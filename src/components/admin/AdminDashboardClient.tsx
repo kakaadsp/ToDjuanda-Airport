@@ -84,8 +84,20 @@ function mapConfigsToDirectory(configs: MapObjectConfigByName): TenantRow[] {
         floor: floorCode === "FF" ? "Lantai 2" : "Lantai 1",
         floorCode,
         spaceCode: config.objectName,
-        status: config.occupancy === "WALKABLE" ? "TEMPORARILY_CLOSED" : "ACTIVE",
-        hours: config.openTime || config.closeTime ? `${config.openTime || "--:--"} - ${config.closeTime || "--:--"}` : "Belum diatur",
+        status: config.occupancy === "WALKABLE"
+          ? "WALKWAY"
+          : (config.openTime === "CLOSED" || config.closeTime === "CLOSED")
+          ? "TEMPORARILY_CLOSED"
+          : "ACTIVE",
+        hours: config.occupancy === "WALKABLE"
+          ? "Area Jalan (Bisa Dilalui)"
+          : (config.openTime === "CLOSED" || config.closeTime === "CLOSED")
+          ? "Tutup Sementara"
+          : ((config.openTime === "00:00" && (config.closeTime === "23:59" || config.closeTime === "24:00" || config.closeTime === "00:00")) || config.openTime === "24 Jam")
+          ? "Buka 24 Jam"
+          : config.openTime || config.closeTime
+          ? `${config.openTime || "--:--"} - ${config.closeTime || "--:--"}`
+          : "Belum diatur",
       } satisfies TenantRow;
     })
     .sort((a, b) => a.spaceCode.localeCompare(b.spaceCode, "id-ID", { numeric: true }));
@@ -971,6 +983,7 @@ export function AdminDashboardClient({
                         { value: "ALL", label: "Semua" },
                         { value: "ACTIVE", label: "Buka" },
                         { value: "TEMPORARILY_CLOSED", label: "Tutup" },
+                        { value: "WALKWAY", label: "Jalan" },
                       ].map((option) => (
                         <button
                           key={option.value}
@@ -1014,7 +1027,15 @@ export function AdminDashboardClient({
                     <div>
                       {reportFilters.terminal !== "ALL" && <i>Terminal {reportFilters.terminal.slice(1)}</i>}
                       {reportFilters.category !== "ALL" && <i>{reportFilters.category}</i>}
-                      {reportFilters.status !== "ALL" && <i>{reportFilters.status === "ACTIVE" ? "Status Buka" : "Tutup Sementara"}</i>}
+                      {reportFilters.status !== "ALL" && (
+                        <i>
+                          {reportFilters.status === "ACTIVE"
+                            ? "Status Buka"
+                            : reportFilters.status === "WALKWAY"
+                            ? "Status Jalan"
+                            : "Tutup Sementara"}
+                        </i>
+                      )}
                     </div>
                   )}
                 </div>
@@ -1050,9 +1071,28 @@ export function AdminDashboardClient({
                         </td>
                         <td>{t.hours}</td>
                         <td>
-                          <span className={`status-pill ${t.status === "ACTIVE" ? "active" : "closed"}`}>
-                            {t.status === "ACTIVE" ? "BUKA" : "TUTUP SEMENTARA"}
-                          </span>
+                          {t.status === "WALKWAY" ? (
+                            <span
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "4px",
+                                padding: "4px 10px",
+                                borderRadius: "20px",
+                                fontSize: "11px",
+                                fontWeight: "800",
+                                background: "#e0f2fe",
+                                color: "#0284c7",
+                                border: "1px solid #bae6fd",
+                              }}
+                            >
+                              JALAN
+                            </span>
+                          ) : (
+                            <span className={`status-pill ${t.status === "ACTIVE" ? "active" : "closed"}`}>
+                              {t.status === "ACTIVE" ? "BUKA" : "TUTUP SEMENTARA"}
+                            </span>
+                          )}
                         </td>
                         <td>
                           <button
