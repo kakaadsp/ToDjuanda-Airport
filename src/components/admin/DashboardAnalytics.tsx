@@ -40,11 +40,19 @@ export function DashboardAnalytics({ tenants }: { tenants: TenantAnalyticsRow[] 
     );
   }, [tenants, selectedFloor]);
 
-  // Operational metrics
-  const activeCount = filteredTenants.filter((tenant) => tenant.status === "ACTIVE" || tenant.status === "WALKWAY").length;
+  // Tenant vs Walkway metrics
+  const totalSpaces = filteredTenants.length;
+  const occupiedSpaces = filteredTenants.filter((tenant) => tenant.status !== "WALKWAY").length;
+  const vacantSpaces = filteredTenants.filter((tenant) => tenant.status === "WALKWAY").length;
+
+  // Operational metrics of occupied commercial tenants
+  const activeCount = filteredTenants.filter((tenant) => tenant.status === "ACTIVE").length;
   const closedCount = filteredTenants.filter((tenant) => tenant.status === "TEMPORARILY_CLOSED").length;
   const inactiveCount = closedCount;
-  const activePercent = filteredTenants.length ? Math.round((activeCount / filteredTenants.length) * 100) : 0;
+  const activePercent = occupiedSpaces > 0 ? Math.round((activeCount / occupiedSpaces) * 100) : 0;
+
+  // Space occupancy rate (excluding vacant / walkable hallway spaces)
+  const occupancyPercent = totalSpaces > 0 ? Math.round((occupiedSpaces / totalSpaces) * 100) : 0;
 
   // Category composition
   const categoryRows = useMemo(() => {
@@ -75,20 +83,22 @@ export function DashboardAnalytics({ tenants }: { tenants: TenantAnalyticsRow[] 
         const matching = tenants.filter(
           (t) => t.floor?.includes(f.floor.slice(-1)) || t.floorCode?.includes(f.floor.slice(-1))
         );
-        const active = matching.filter((t) => t.status === "ACTIVE" || t.status === "WALKWAY").length;
+        const occupied = matching.filter((t) => t.status !== "WALKWAY").length;
+        const vacant = matching.filter((t) => t.status === "WALKWAY").length;
+        const active = matching.filter((t) => t.status === "ACTIVE").length;
+        const closed = matching.filter((t) => t.status === "TEMPORARILY_CLOSED").length;
+        const occRate = matching.length ? Math.round((occupied / matching.length) * 100) : 0;
         return {
           ...f,
           total: matching.length,
+          occupied,
+          vacant,
           active,
-          inactive: matching.length - active,
+          closed,
+          occRate,
         };
       });
   }, [tenants, selectedFloor]);
-
-  // Estimated space occupancy (based on standard airport terminal commercial block allotment)
-  const totalCommercialCapacity = selectedFloor === "ALL" ? 36 : 18;
-  const occupiedSpaces = filteredTenants.length;
-  const occupancyPercent = Math.min(100, Math.round((occupiedSpaces / totalCommercialCapacity) * 100));
 
   // Inactive or special status tenants requiring operational attention
   const attentionTenants = useMemo(() => {
@@ -223,7 +233,7 @@ export function DashboardAnalytics({ tenants }: { tenants: TenantAnalyticsRow[] 
           <div>
             <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
               <strong style={{ fontSize: "28px", fontWeight: "850", color: "#0f172a" }}>
-                {filteredTenants.length}
+                {occupiedSpaces}
               </strong>
               <span style={{ fontSize: "13px", color: "#64748b" }}>Unit Usaha</span>
             </div>
@@ -231,7 +241,7 @@ export function DashboardAnalytics({ tenants }: { tenants: TenantAnalyticsRow[] 
               <span style={{ padding: "2px 8px", borderRadius: "6px", background: "#f1f5f9", fontWeight: "700", color: "#334155" }}>
                 Terminal 1 • Bandara Juanda
               </span>
-              <span>Terdata di Wayfinding</span>
+              <span>{vacantSpaces > 0 ? `(+${vacantSpaces} area kosong/jalan)` : "Terdata di Wayfinding"}</span>
             </div>
           </div>
         </div>
@@ -327,7 +337,9 @@ export function DashboardAnalytics({ tenants }: { tenants: TenantAnalyticsRow[] 
                 <div style={{ height: "100%", width: `${occupancyPercent}%`, background: "#2563eb", borderRadius: "999px" }} />
               </div>
               <span style={{ display: "block", fontSize: "11.5px", color: "#64748b", marginTop: "4px" }}>
-                {occupiedSpaces} dari ~{totalCommercialCapacity} unit kavling terpakai
+                {vacantSpaces > 0
+                  ? `${occupiedSpaces} dari ${totalSpaces} kavling terisi • ${vacantSpaces} kavling kosong/jalan`
+                  : `${occupiedSpaces} dari ${totalSpaces} unit kavling terisi penuh`}
               </span>
             </div>
           </div>
@@ -525,7 +537,7 @@ export function DashboardAnalytics({ tenants }: { tenants: TenantAnalyticsRow[] 
                       {row.label}
                     </span>
                     <span style={{ fontSize: "11.5px", color: "#64748b" }}>
-                      <strong style={{ color: "#0f172a" }}>{row.total}</strong> tenant ({row.active} aktif)
+                      <strong style={{ color: "#0f172a" }}>{row.occupied}</strong>/{row.total} kavling ({row.occRate}% terisi{row.vacant > 0 ? `, ${row.vacant} jalan/kosong` : ""})
                     </span>
                   </div>
                   <div style={{ height: "8px", width: "100%", background: "#f1f5f9", borderRadius: "999px", overflow: "hidden" }}>
