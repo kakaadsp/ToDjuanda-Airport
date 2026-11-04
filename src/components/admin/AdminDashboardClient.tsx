@@ -66,8 +66,8 @@ function mapObjectCategory(config: MapObjectConfig) {
   if (/(?:^|[-_ ])(?:TL|TOILET)(?:$|[-_ ])/i.test(value)) return "Toilet";
   if (/(?:^|[-_ ])ATM(?:$|[-_ ])/i.test(value)) return "ATM";
   if (/(?:^|[-_ ])MUS(?:$|[-_ ])|MUSH?OL/i.test(value)) return "Mushola";
-  if (/(?:AVSEC|BAGGAGE|GATE|DOOR|INFORMASI|LAYANAN)/i.test(value)) return "Fasilitas & Layanan";
-  return config.entityType === "TENANT" ? "Komersial" : "Fasilitas Umum";
+  if (/(?:AVSEC|BAGGAGE|GATE|DOOR|INFORMASI|LAYANAN|PELAYANAN|NURSERY|NR)/i.test(value)) return "Fasilitas & Layanan";
+  return config.entityType === "TENANT" ? "Komersial" : "Fasilitas & Layanan";
 }
 
 function mapConfigsToDirectory(configs: MapObjectConfigByName): TenantRow[] {
