@@ -5,7 +5,7 @@ import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import * as THREE from "three";
-import { Check, Image as ImageIcon, Layers3, MapPin, Minus, Plus, RotateCcw, Save } from "lucide-react";
+import { AlertCircle, Check, CheckCircle2, Clock, Image as ImageIcon, Layers3, MapPin, Minus, Plus, RotateCcw, Save, XCircle } from "lucide-react";
 import { MapStage } from "@/components/wayfinding/MapStage";
 import { floors, spaces } from "@/data/demo-wayfinding";
 import type { MapSpace, TerminalCode } from "@/types";

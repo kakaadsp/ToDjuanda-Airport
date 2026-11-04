@@ -831,8 +831,165 @@ button:active { transform: translateY(1px); }
 .admin-object-door-position span { width: 32px; color: #008ca2; font-weight: 800; }
 .admin-object-photo-preview { max-width: 240px; max-height: 130px; margin-top: 12px; border-radius: 9px; object-fit: cover; }
 .admin-object-field-help { display: block; margin-top: 6px; color: #667887; font-size: 11px; line-height: 1.4; }
-.admin-object-form-actions { display: flex; align-items: center; gap: 10px; margin-top: 15px; }
-.admin-object-form-actions .primary-button { display: inline-flex; align-items: center; gap: 7px; }
+.admin-operational-panel {
+  grid-column: 1 / -1;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.admin-operational-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.admin-operational-heading small {
+  color: #008ca2;
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+}
+.admin-operational-heading strong {
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 750;
+}
+.admin-status-toggle-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.admin-status-btn {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 16px;
+  border-radius: 10px;
+  border: 1.5px solid #cbd5e1;
+  background: #ffffff;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 750;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+.admin-status-btn.open:hover {
+  border-color: #16a34a;
+  color: #16a34a;
+  background: #f0fdf4;
+}
+.admin-status-btn.open.is-active {
+  border-color: #16a34a;
+  background: #16a34a;
+  color: #ffffff;
+  box-shadow: 0 3px 10px rgba(22, 163, 74, 0.25);
+}
+.admin-status-btn.closed:hover {
+  border-color: #dc2626;
+  color: #dc2626;
+  background: #fef2f2;
+}
+.admin-status-btn.closed.is-active {
+  border-color: #dc2626;
+  background: #dc2626;
+  color: #ffffff;
+  box-shadow: 0 3px 10px rgba(220, 38, 38, 0.25);
+}
+.admin-open-hours-config {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed #cbd5e1;
+}
+.admin-24h-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.admin-24h-btn {
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1.5px solid #00a8bd;
+  background: #f0f9fa;
+  color: #008ca2;
+  font-size: 12px;
+  font-weight: 750;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+.admin-24h-btn:hover {
+  background: #00a8bd;
+  color: #ffffff;
+}
+.admin-24h-btn.is-active {
+  background: #00a8bd;
+  color: #ffffff;
+  box-shadow: 0 3px 10px rgba(0, 168, 189, 0.25);
+}
+.admin-24h-note {
+  color: #64748b;
+  font-size: 11px;
+}
+.admin-time-inputs-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.admin-closed-alert {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  font-size: 12px;
+}
+.admin-object-form-actions {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 10px;
+  margin-top: 18px;
+}
+.admin-save-button-full {
+  width: 100%;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 20px;
+  border-radius: 12px;
+  border: none;
+  background: #16a34a;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(22, 163, 74, 0.35);
+  transition: all 0.18s ease;
+}
+.admin-save-button-full:hover:not(:disabled) {
+  background: #15803d;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(22, 163, 74, 0.45);
+}
+.admin-save-button-full:active:not(:disabled) {
+  transform: translateY(0);
+}
 .admin-object-saved { display: inline-flex; align-items: center; gap: 4px; color: #21844a; font-size: 11px; font-weight: 750; }
 .admin-object-empty { display: flex; min-height: 240px; flex-direction: column; align-items: center; justify-content: center; gap: 7px; color: #71848a; text-align: center; }
 .admin-object-empty svg { color: #00a8bd; }
