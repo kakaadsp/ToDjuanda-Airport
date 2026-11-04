@@ -8,6 +8,7 @@ import {
   AlertTriangle,
   BarChart3,
   Building2,
+  ChevronLeft,
   CirclePause,
   CirclePlay,
   FileSpreadsheet,
@@ -16,6 +17,10 @@ import {
   LogOut,
   Map,
   MapPinned,
+  Maximize,
+  Minimize,
+  PanelLeftClose,
+  PanelLeftOpen,
   Pencil,
   RotateCcw,
   Search,
@@ -102,6 +107,28 @@ export function AdminDashboardClient({
 }) {
   const activeRole = user.role;
   const [activeTab, setActiveTab] = useState<string>("overview");
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    const handleFsChange = () => {
+      setIsFullscreen(Boolean(document.fullscreenElement));
+    };
+    document.addEventListener("fullscreenchange", handleFsChange);
+    return () => document.removeEventListener("fullscreenchange", handleFsChange);
+  }, []);
+
+  const toggleFullscreen = async () => {
+    try {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+      } else {
+        await document.exitFullscreen();
+      }
+    } catch (err) {
+      console.error("Fullscreen error:", err);
+    }
+  };
   const [mapObjectToEdit, setMapObjectToEdit] = useState<string | null>(null);
   const [tenants, setTenants] = useState<TenantRow[]>([]);
   const [users, setUsers] = useState(INITIAL_USERS);
@@ -440,6 +467,17 @@ export function AdminDashboardClient({
       {/* Admin Top Header Navigation */}
       <header className="admin-header-bar">
         <div className="admin-header-left">
+          <button
+            type="button"
+            className="admin-header-toggle-sidebar"
+            onClick={() => setIsSidebarCollapsed((prev) => !prev)}
+            title={isSidebarCollapsed ? "Buka Menu Sidebar (Super Admin s/d Audit Logs)" : "Geser / Sembunyikan Menu Sidebar"}
+            aria-label="Toggle Sidebar"
+          >
+            {isSidebarCollapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+            <span>{isSidebarCollapsed ? "Buka Menu" : "Geser Menu"}</span>
+          </button>
+          <div className="admin-header-divider" />
           <Link href="/" className="admin-brand-link">
             <Image src="/injourney-airports.png" width={180} height={52} priority alt="InJourney Airports" />
           </Link>
@@ -451,6 +489,16 @@ export function AdminDashboardClient({
         </div>
 
         <div className="admin-header-right">
+          <button
+            type="button"
+            className="admin-fullscreen-button"
+            onClick={toggleFullscreen}
+            title={isFullscreen ? "Keluar Layar Penuh (ESC)" : "Mode Layar Penuh (Full Screen)"}
+            aria-label="Mode Layar Penuh"
+          >
+            {isFullscreen ? <Minimize size={15} /> : <Maximize size={15} />}
+            <span>{isFullscreen ? "Keluar Layar Penuh" : "Layar Penuh"}</span>
+          </button>
           <span className="session-role-badge">
             {activeRole === "SUPER_ADMIN" ? <ShieldCheck size={14} /> : <Store size={14} />}
             {activeRole === "SUPER_ADMIN" ? "Superadmin" : "Admin Komersil"}
@@ -466,9 +514,9 @@ export function AdminDashboardClient({
         </div>
       </header>
 
-      <div className="admin-body-container">
+      <div className="admin-body-container" data-sidebar-collapsed={isSidebarCollapsed ? "true" : "false"}>
         {/* Sidebar Controls */}
-        <aside className="admin-sidebar-nav">
+        <aside className="admin-sidebar-nav" aria-label="Navigasi Menu Admin">
           <div className="user-profile-badge">
             <div className="avatar-circle">
               {activeRole === "SUPER_ADMIN" ? "SA" : "AK"}
@@ -477,6 +525,15 @@ export function AdminDashboardClient({
               <strong>{user.name ?? (activeRole === "SUPER_ADMIN" ? "Super Administrator" : "Admin Komersil")}</strong>
               <small>{user.email ?? "Akun admin Juanda"}</small>
             </div>
+            <button
+              type="button"
+              className="sidebar-collapse-badge-btn"
+              onClick={() => setIsSidebarCollapsed(true)}
+              title="Geser / Sembunyikan Sidebar"
+              aria-label="Sembunyikan Sidebar"
+            >
+              <ChevronLeft size={16} />
+            </button>
           </div>
 
           <nav className="nav-menu-list">
@@ -564,10 +621,34 @@ export function AdminDashboardClient({
               </>
             )}
           </nav>
+
+          <div className="sidebar-bottom-actions">
+            <button
+              type="button"
+              className="sidebar-collapse-bottom-btn"
+              onClick={() => setIsSidebarCollapsed(true)}
+              title="Geser / Sembunyikan Sidebar"
+            >
+              <ChevronLeft size={15} />
+              <span>Geser Sembunyikan Bar</span>
+            </button>
+          </div>
         </aside>
 
         {/* Main Content Area */}
         <section className="admin-main-view">
+          {isSidebarCollapsed && (
+            <button
+              type="button"
+              className="admin-sidebar-reopen-float"
+              onClick={() => setIsSidebarCollapsed(false)}
+              title="Buka kembali menu sidebar (Super Admin s/d Audit Logs)"
+              aria-label="Buka Menu Sidebar"
+            >
+              <PanelLeftOpen size={16} />
+              <span>Buka Menu Navigasi</span>
+            </button>
+          )}
           {/* Dashboard Header Bar */}
           <div className="view-banner">
             <div>
