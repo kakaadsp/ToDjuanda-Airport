@@ -92,8 +92,8 @@ function mapConfigsToDirectory(configs: MapObjectConfigByName): TenantRow[] {
 }
 
 const INITIAL_USERS: AdminUserRow[] = [
-  { id: "fallback-super-admin", name: "Super Administrator Juanda", email: "superadmin@juanda-airport.local", role: "SUPER_ADMIN" as AdminRole, status: "ACTIVE" },
-  { id: "fallback-commercial-admin", name: "Admin Komersil Juanda", email: "admin.komersil@juanda-airport.local", role: "AIRPORT_ADMIN" as AdminRole, status: "ACTIVE" },
+  { id: "fallback-super-admin", name: "Super Administrator Juanda", email: "superadmin@juanda-airport.com", role: "SUPER_ADMIN" as AdminRole, status: "ACTIVE" },
+  { id: "fallback-commercial-admin", name: "Admin Komersial Juanda", email: "admin.komersil@juanda-airport.com", role: "AIRPORT_ADMIN" as AdminRole, status: "ACTIVE" },
 ];
 
 type AuditLogRow = {
