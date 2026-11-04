@@ -120,6 +120,7 @@ export function AdminDashboardClient({
     }
   };
   const [mapObjectToEdit, setMapObjectToEdit] = useState<string | null>(null);
+  const [mapEditNonce, setMapEditNonce] = useState(0);
   const [tenants, setTenants] = useState<TenantRow[]>([]);
   const [users, setUsers] = useState(INITIAL_USERS);
   const [editingUser, setEditingUser] = useState<AdminUserRow | null>(null);
@@ -653,7 +654,7 @@ export function AdminDashboardClient({
           {/* Dynamic Content Views */}
           {activeTab === "overview" && <DashboardAnalytics tenants={tenants} />}
 
-          {activeTab === "map" && <AdminMapPanel initialObjectName={mapObjectToEdit} />}
+          {activeTab === "map" && <AdminMapPanel initialObjectName={mapObjectToEdit} focusNonce={mapEditNonce} />}
 
           {/* AIRPORT ADMIN: TENANTS TAB */}
           {activeTab === "tenants" && (
@@ -832,7 +833,7 @@ export function AdminDashboardClient({
                           <button
                             type="button"
                             className={`status-action-button ${t.status === "ACTIVE" ? "deactivate" : "activate"}`}
-                            onClick={() => { setMapObjectToEdit(t.spaceCode); setActiveTab("map"); }}
+                            onClick={() => { setMapObjectToEdit(t.spaceCode); setMapEditNonce((n) => n + 1); setActiveTab("map"); }}
                             aria-label={`Edit ${t.name} pada peta terminal`}
                           >
                             <MapPinned size={15} />

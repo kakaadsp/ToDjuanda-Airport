@@ -117,13 +117,16 @@ function LegacyAdminMapPanel() {
 function AdminCamera({
   bounds,
   controlRef,
+  focusTarget,
 }: {
   bounds: SceneBounds | null;
   controlRef?: React.MutableRefObject<{
     zoomIn: () => void;
     zoomOut: () => void;
     reset: () => void;
+    focusOn: (obj: THREE.Object3D) => void;
   } | null>;
+  focusTarget?: THREE.Object3D | null;
 }) {
   const { camera, invalidate } = useThree();
   const controlsRef = useRef<OrbitControlsImpl>(null);
@@ -138,9 +141,38 @@ function AdminCamera({
     invalidate();
   }, [bounds, camera, invalidate]);
 
+  const focusOn = useCallback(
+    (targetObj: THREE.Object3D) => {
+      if (!controlsRef.current || !(camera instanceof THREE.PerspectiveCamera)) return;
+      targetObj.updateWorldMatrix(true, true);
+      const box = new THREE.Box3().setFromObject(targetObj);
+      if (box.isEmpty()) return;
+
+      const center = box.getCenter(new THREE.Vector3());
+      const radius = Math.max(box.getBoundingSphere(new THREE.Sphere()).radius, 3);
+      
+      // Zoom distance close to the building (matches Image 2 perfectly)
+      const zoomDistance = Math.min(Math.max(radius * 2.3, 15), 45);
+      
+      // Angled perspective from top-front-right looking down at the building
+      const direction = new THREE.Vector3(0.65, 0.9, 0.65).normalize();
+
+      camera.position.copy(center).add(direction.multiplyScalar(zoomDistance));
+      controlsRef.current.target.copy(center);
+      camera.lookAt(center);
+      controlsRef.current.update();
+      invalidate();
+    },
+    [camera, invalidate],
+  );
+
   useEffect(() => {
-    resetView();
-  }, [bounds, resetView]);
+    if (focusTarget) {
+      focusOn(focusTarget);
+    } else if (bounds) {
+      resetView();
+    }
+  }, [bounds, focusTarget, focusOn, resetView]);
 
   const zoomBy = useCallback(
     (factor: number) => {
@@ -163,9 +195,10 @@ function AdminCamera({
         zoomIn: () => zoomBy(0.65),
         zoomOut: () => zoomBy(1.45),
         reset: resetView,
+        focusOn,
       };
     }
-  }, [controlRef, zoomBy, resetView]);
+  }, [controlRef, zoomBy, resetView, focusOn]);
 
   return (
     <OrbitControls
@@ -189,12 +222,14 @@ function EditorField({ label, children }: { label: string; children: React.React
   return <label className="admin-object-field"><span>{label}</span>{children}</label>;
 }
 
-export function AdminMapPanel({ initialObjectName = null }: { initialObjectName?: string | null }) {
-  const cameraControlRef = useRef<{ zoomIn: () => void; zoomOut: () => void; reset: () => void } | null>(null);
+export function AdminMapPanel({ initialObjectName = null, focusNonce = 0 }: { initialObjectName?: string | null; focusNonce?: number }) {
+  const cameraControlRef = useRef<{ zoomIn: () => void; zoomOut: () => void; reset: () => void; focusOn: (obj: THREE.Object3D) => void } | null>(null);
+  const selectedButtonRef = useRef<HTMLButtonElement | null>(null);
   const [bounds, setBounds] = useState<SceneBounds | null>(null);
   const [objects, setObjects] = useState<SceneObjectRecord[]>([]);
   const [floorView, setFloorView] = useState<FloorId>("L1");
   const [selected, setSelected] = useState<SelectedObject | null>(null);
+  const [focusTarget, setFocusTarget] = useState<THREE.Object3D | null>(null);
   const [configs, setConfigs] = useState<MapObjectConfigByName>({});
   const [draft, setDraft] = useState<MapObjectConfig | null>(null);
   const [saved, setSaved] = useState(false);
@@ -216,18 +251,41 @@ export function AdminMapPanel({ initialObjectName = null }: { initialObjectName?
     setSelected({ ...record.metadata, uuid: record.uuid, name: record.name, position: [0, 0, 0] });
     setDraft(configs[record.name] ?? defaultMapObjectConfig(record.name));
     setSaved(false);
+    setFocusTarget(record.object);
   }, [configs]);
   const selectObject = useCallback((selection: SelectedObject) => {
     const record = objects.find((item) => item.uuid === selection.uuid);
-    if (record?.selectable) selectRecord(record);
+    if (record?.selectable) {
+      selectRecord(record);
+      setFocusTarget(record.object);
+      cameraControlRef.current?.focusOn(record.object);
+    }
   }, [objects, selectRecord]);
+
+  // Otomatis pilih dan zoom in ke objek saat navigasi dari direktori (misal: "Edit di peta")
   useEffect(() => {
-    if (!initialObjectName || selected?.name === initialObjectName) return;
-    const record = objects.find((item) => item.name === initialObjectName);
-    if (!record) return;
-    setFloorView(record.floor);
-    selectRecord(record);
-  }, [initialObjectName, objects, selectRecord, selected?.name]);
+    if (!initialObjectName || !objects.length) return;
+    const q = initialObjectName.trim().toLowerCase();
+    const match =
+      objects.find((r) => r.name.toLowerCase() === q) ||
+      objects.find((r) => configs[r.name]?.displayName?.trim().toLowerCase() === q) ||
+      objects.find((r) => r.selectableLabel?.trim().toLowerCase() === q) ||
+      objects.find((r) => r.name.toLowerCase().replace(/[-_]/g, "") === q.replace(/[-_]/g, "")) ||
+      objects.find((r) => r.uuid === initialObjectName);
+
+    if (!match) return;
+    setFloorView(match.floor);
+    selectRecord(match);
+    setFocusTarget(match.object);
+    cameraControlRef.current?.focusOn(match.object);
+  }, [initialObjectName, focusNonce, objects, configs, selectRecord]);
+
+  // Scroll otomatis pada list objek saat ada objek terpilih
+  useEffect(() => {
+    if (selected && selectedButtonRef.current) {
+      selectedButtonRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }, [selected?.uuid]);
   const updateDraft = <K extends keyof MapObjectConfig>(key: K, value: MapObjectConfig[K]) => setDraft((current) => current ? { ...current, [key]: value } : current);
   const updateDoor = (index: number, key: "side" | "open" | "position", value: string | boolean) => setDraft((current) => {
     if (!current) return current;
@@ -306,7 +364,7 @@ export function AdminMapPanel({ initialObjectName = null }: { initialObjectName?
               objectConfigs={configs}
             />
           </Suspense>
-          <AdminCamera bounds={bounds} controlRef={cameraControlRef} />
+          <AdminCamera bounds={bounds} controlRef={cameraControlRef} focusTarget={focusTarget} />
         </Canvas>
         <div className="admin-map-controls" aria-label="Kontrol zoom peta terminal">
           <button
@@ -348,8 +406,13 @@ export function AdminMapPanel({ initialObjectName = null }: { initialObjectName?
               <button
                 type="button"
                 key={record.uuid}
+                ref={record.uuid === selected?.uuid ? selectedButtonRef : undefined}
                 className={record.uuid === selected?.uuid ? "is-selected" : ""}
-                onClick={() => selectRecord(record)}
+                onClick={() => {
+                  selectRecord(record);
+                  setFocusTarget(record.object);
+                  cameraControlRef.current?.focusOn(record.object);
+                }}
               >
                 <strong>{configs[record.name]?.displayName || record.selectableLabel || record.name}</strong>
                 <small>
