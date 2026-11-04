@@ -12,6 +12,7 @@ import {
   PanelLeftOpen,
   BarChart3,
   Building2,
+  Calendar,
   CheckCircle2,
   CirclePause,
   CirclePlay,
@@ -32,6 +33,7 @@ import {
   Store,
   Tags,
   Trash2,
+  UserPlus,
   Users,
   X,
 } from "lucide-react";
@@ -55,7 +57,8 @@ type AdminUserRow = {
   email: string;
   role: AdminRole;
   status: string;
-  lastLogin: string;
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 function mapObjectCategory(config: MapObjectConfig) {
@@ -89,8 +92,8 @@ function mapConfigsToDirectory(configs: MapObjectConfigByName): TenantRow[] {
 }
 
 const INITIAL_USERS: AdminUserRow[] = [
-  { id: "fallback-super-admin", name: "Super Administrator Juanda", email: "superadmin@juanda-airport.local", role: "SUPER_ADMIN" as AdminRole, status: "ACTIVE", lastLogin: "Data akun aktif" },
-  { id: "fallback-commercial-admin", name: "Admin Komersil Juanda", email: "admin.komersil@juanda-airport.local", role: "AIRPORT_ADMIN" as AdminRole, status: "ACTIVE", lastLogin: "Data akun aktif" },
+  { id: "fallback-super-admin", name: "Super Administrator Juanda", email: "superadmin@juanda-airport.local", role: "SUPER_ADMIN" as AdminRole, status: "ACTIVE" },
+  { id: "fallback-commercial-admin", name: "Admin Komersil Juanda", email: "admin.komersil@juanda-airport.local", role: "AIRPORT_ADMIN" as AdminRole, status: "ACTIVE" },
 ];
 
 type AuditLogRow = {
@@ -130,6 +133,21 @@ function formatAuditTime(iso: string) {
   }
 }
 
+function formatUserDate(iso?: string) {
+  if (!iso) return "Tersimpan";
+  try {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return iso;
+    return d.toLocaleDateString("id-ID", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  } catch {
+    return iso;
+  }
+}
+
 export function AdminDashboardClient({
   user,
 }: {
@@ -154,7 +172,12 @@ export function AdminDashboardClient({
   const [mapObjectToEdit, setMapObjectToEdit] = useState<string | null>(null);
   const [mapEditNonce, setMapEditNonce] = useState(0);
   const [tenants, setTenants] = useState<TenantRow[]>([]);
-  const [users, setUsers] = useState(INITIAL_USERS);
+  const [users, setUsers] = useState<AdminUserRow[]>(INITIAL_USERS);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [showAddUserModal, setShowAddUserModal] = useState(false);
+  const [newAdmin, setNewAdmin] = useState({ name: "", email: "", password: "", role: "AIRPORT_ADMIN" as AdminRole });
+  const [newAdminError, setNewAdminError] = useState<string | null>(null);
+  const [creatingAdmin, setCreatingAdmin] = useState(false);
   const [editingUser, setEditingUser] = useState<AdminUserRow | null>(null);
   const [editingPassword, setEditingPassword] = useState("");
   const [deletingUser, setDeletingUser] = useState<AdminUserRow | null>(null);
@@ -223,16 +246,48 @@ export function AdminDashboardClient({
     return () => window.removeEventListener("todjuanda-map-config-change", handleConfigChange);
   }, []);
 
+  const fetchUsers = async () => {
+    setUsersLoading(true);
+    try {
+      const response = await fetch("/api/admin/users", { cache: "no-store" });
+      if (!response.ok) throw new Error("Gagal mengambil data akun");
+      const payload = (await response.json()) as { users?: AdminUserRow[] };
+      if (Array.isArray(payload.users)) setUsers(payload.users);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setUsersLoading(false);
+    }
+  };
+
   useEffect(() => {
-    if (activeRole !== "SUPER_ADMIN") return;
-    fetch("/api/admin/users", { cache: "no-store" })
-      .then(async (response) => {
-        if (!response.ok) throw new Error("users unavailable");
-        const payload = await response.json() as { users?: typeof INITIAL_USERS };
-        if (Array.isArray(payload.users)) setUsers(payload.users);
-      })
-      .catch(() => undefined);
-  }, [activeRole]);
+    if (activeRole === "SUPER_ADMIN") {
+      fetchUsers();
+    }
+  }, [activeRole, activeTab]);
+
+  const handleCreateAdmin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCreatingAdmin(true);
+    setNewAdminError(null);
+    try {
+      const res = await fetch("/api/admin/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newAdmin),
+      });
+      const data = (await res.json()) as { user?: AdminUserRow; error?: string };
+      if (!res.ok || !data.user) throw new Error(data.error ?? "Gagal membuat akun");
+      setUsers((current) => [data.user!, ...current]);
+      setShowAddUserModal(false);
+      setNewAdmin({ name: "", email: "", password: "", role: "AIRPORT_ADMIN" });
+      fetchAuditLogs();
+    } catch (err) {
+      setNewAdminError(err instanceof Error ? err.message : "Gagal membuat akun");
+    } finally {
+      setCreatingAdmin(false);
+    }
+  };
 
   const occupiedSpaceCodes = useMemo(() => new Set(tenants.map((tenant) => tenant.spaceCode).filter(Boolean)), [tenants]);
   const placementFloorId = `${newTenant.terminal}-${newTenant.floor.endsWith("2") ? "L2" : "L1"}`;
@@ -304,13 +359,20 @@ export function AdminDashboardClient({
       const response = await fetch("/api/admin/users", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: editingUser.id, name: editingUser.name, email: editingUser.email, password: editingPassword || undefined }),
+        body: JSON.stringify({
+          id: editingUser.id,
+          name: editingUser.name,
+          email: editingUser.email,
+          role: editingUser.role,
+          password: editingPassword || undefined,
+        }),
       });
-      const payload = await response.json() as { user?: AdminUserRow; error?: string };
+      const payload = (await response.json()) as { user?: AdminUserRow; error?: string };
       if (!response.ok || !payload.user) throw new Error(payload.error ?? "Gagal memperbarui akun");
-      setUsers((current) => current.map((account) => account.id === payload.user?.id ? payload.user : account));
+      setUsers((current) => current.map((account) => (account.id === payload.user?.id ? payload.user! : account)));
       setEditingUser(null);
       setEditingPassword("");
+      fetchAuditLogs();
     } catch (error) {
       setUserActionError(error instanceof Error ? error.message : "Gagal memperbarui akun");
     } finally {
@@ -323,11 +385,16 @@ export function AdminDashboardClient({
     setSavingUser(true);
     setUserActionError(null);
     try {
-      const response = await fetch("/api/admin/users", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: deletingUser.id }) });
-      const payload = await response.json() as { deletedId?: string; error?: string };
+      const response = await fetch("/api/admin/users", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: deletingUser.id }),
+      });
+      const payload = (await response.json()) as { deletedId?: string; error?: string };
       if (!response.ok || !payload.deletedId) throw new Error(payload.error ?? "Gagal menghapus akun");
       setUsers((current) => current.filter((account) => account.id !== payload.deletedId));
       setDeletingUser(null);
+      fetchAuditLogs();
     } catch (error) {
       setUserActionError(error instanceof Error ? error.message : "Gagal menghapus akun");
     } finally {
@@ -956,69 +1023,239 @@ export function AdminDashboardClient({
           {/* SUPERADMIN: USERS TAB */}
           {activeRole === "SUPER_ADMIN" && activeTab === "users" && (
             <div className="content-box">
-              <div className="box-header">
+              <div className="box-header" style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: "14px" }}>
                 <div className="box-title">
                   <h2>Akun & Hak Akses Administrator</h2>
-                  <p>Terintegrasi dengan akun autentikasi aktif: Super Admin dan Admin Komersial</p>
+                  <p>Pusat kendali akun resmi pengelola bandara, otorisasi peran, dan kredensial login portal</p>
                 </div>
-                <div className="report-command-count" aria-label="Jumlah akun administrator">
-                  <strong>{users.length}</strong>
-                  <span>akun terintegrasi</span>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNewAdminError(null);
+                      setNewAdmin({ name: "", email: "", password: "", role: "AIRPORT_ADMIN" });
+                      setShowAddUserModal(true);
+                    }}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      padding: "8px 18px",
+                      borderRadius: "10px",
+                      border: "none",
+                      background: "#00a8bd",
+                      color: "#ffffff",
+                      fontSize: "13px",
+                      fontWeight: "750",
+                      cursor: "pointer",
+                      boxShadow: "0 2px 10px rgba(0, 168, 189, 0.3)",
+                      transition: "all 0.15s ease",
+                    }}
+                  >
+                    <UserPlus size={16} />
+                    <span>Tambah Admin Baru</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={fetchUsers}
+                    disabled={usersLoading}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      padding: "8px 14px",
+                      borderRadius: "10px",
+                      border: "1px solid #cbd5e1",
+                      background: "#ffffff",
+                      color: "#334155",
+                      fontSize: "13px",
+                      fontWeight: "700",
+                      cursor: usersLoading ? "wait" : "pointer",
+                    }}
+                    title="Perbarui daftar akun dari database"
+                  >
+                    <RefreshCw size={14} style={{ animation: usersLoading ? "spin 1s linear infinite" : "none" }} />
+                    <span>{usersLoading ? "Memuat..." : "Muat Ulang"}</span>
+                  </button>
                 </div>
               </div>
 
-              <div className="table-responsive">
+              <div className="table-responsive" style={{ background: "#ffffff", borderRadius: "14px", border: "1px solid #e2e8f0", overflow: "hidden" }}>
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>Nama Pengguna</th>
-                      <th>Email</th>
-                      <th>Role Hak Akses</th>
-                      <th>Login Terakhir</th>
-                      <th>Status Akun</th>
-                      <th>Aksi</th>
+                      <th style={{ width: "280px" }}>Administrator</th>
+                      <th style={{ width: "180px" }}>Role Hak Akses</th>
+                      <th style={{ width: "140px" }}>Status Akun</th>
+                      <th style={{ width: "160px" }}>Terdaftar Pada</th>
+                      <th style={{ width: "240px" }}>Aksi</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {users.map((u) => (
-                      <tr key={u.id}>
-                        <td>
-                          <strong>{u.name}</strong>
-                        </td>
-                        <td>{u.email}</td>
-                        <td>
-                          <span className={`role-pill ${u.role === "SUPER_ADMIN" ? "super" : "airport"}`}>
-                            {u.role === "SUPER_ADMIN" ? "SUPER ADMIN" : "ADMIN KOMERSIAL"}
-                          </span>
-                        </td>
-                        <td>{u.lastLogin}</td>
-                        <td>
-                          <span className={`status-pill ${u.status === "ACTIVE" ? "active" : "closed"}`}>
-                            {u.status === "ACTIVE" ? "AKTIF" : "NONAKTIF"}
-                          </span>
-                        </td>
-                        <td>
-                          <div className="admin-user-actions">
-                            <button
-                              type="button"
-                              className={`status-action-button ${u.status === "ACTIVE" ? "deactivate" : "activate"}`}
-                              onClick={() => setPendingStatusChange({ entity: "user", id: u.id, name: u.name, currentStatus: u.status })}
-                              disabled={u.email === user.email || u.role === "SUPER_ADMIN"}
-                              aria-label={`${u.status === "ACTIVE" ? "Nonaktifkan" : "Aktifkan"} akun ${u.name}`}
+                    {users.map((u) => {
+                      const isSelf = u.email === user.email;
+                      const initials = u.name
+                        .split(" ")
+                        .map((w) => w[0])
+                        .slice(0, 2)
+                        .join("")
+                        .toUpperCase() || "AD";
+
+                      return (
+                        <tr key={u.id}>
+                          <td>
+                            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                              <div
+                                style={{
+                                  width: "36px",
+                                  height: "36px",
+                                  borderRadius: "50%",
+                                  background: u.role === "SUPER_ADMIN" ? "#00a8bd" : "#0284c7",
+                                  color: "#ffffff",
+                                  fontSize: "12px",
+                                  fontWeight: "800",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  flexShrink: 0,
+                                }}
+                              >
+                                {initials}
+                              </div>
+                              <div style={{ minWidth: 0 }}>
+                                <strong style={{ display: "block", color: "#0f172a", fontSize: "13.5px" }}>
+                                  {u.name}
+                                </strong>
+                                <span style={{ display: "block", color: "#64748b", fontSize: "11.5px" }}>
+                                  {u.email}
+                                </span>
+                              </div>
+                            </div>
+                          </td>
+
+                          <td>
+                            <span
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "4px",
+                                padding: "4px 10px",
+                                borderRadius: "6px",
+                                fontSize: "11px",
+                                fontWeight: "800",
+                                background: u.role === "SUPER_ADMIN" ? "#ede9fe" : "#e0f2fe",
+                                color: u.role === "SUPER_ADMIN" ? "#6d28d9" : "#0369a1",
+                                border: u.role === "SUPER_ADMIN" ? "1px solid #ddd6fe" : "1px solid #bae6fd",
+                              }}
                             >
-                              {u.email === user.email || u.role === "SUPER_ADMIN" ? <ShieldCheck size={15} /> : u.status === "ACTIVE" ? <CirclePause size={15} /> : <CirclePlay size={15} />}
-                              <span>{u.email === user.email ? "Akun saat ini" : u.role === "SUPER_ADMIN" ? "Dilindungi" : u.status === "ACTIVE" ? "Nonaktifkan" : "Aktifkan"}</span>
-                            </button>
-                            {u.role === "AIRPORT_ADMIN" && <>
-                              <button type="button" className="admin-user-action edit" onClick={() => { setUserActionError(null); setEditingPassword(""); setEditingUser({ ...u }); }} aria-label={`Edit akun ${u.name}`}><Pencil size={15} /> Edit</button>
-                              <button type="button" className="admin-user-action delete" onClick={() => { setUserActionError(null); setDeletingUser(u); }} aria-label={`Hapus akun ${u.name}`}><Trash2 size={15} /> Hapus</button>
-                            </>}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+                              <Shield size={12} />
+                              {u.role === "SUPER_ADMIN" ? "SUPER ADMIN" : "ADMIN KOMERSIAL"}
+                            </span>
+                          </td>
+
+                          <td>
+                            <span className={`status-pill ${u.status === "ACTIVE" ? "active" : "closed"}`}>
+                              {u.status === "ACTIVE" ? "AKTIF" : "NONAKTIF"}
+                            </span>
+                          </td>
+
+                          <td>
+                            <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12.5px", color: "#475569" }}>
+                              <Calendar size={13} style={{ color: "#94a3b8" }} />
+                              <span>{formatUserDate(u.createdAt)}</span>
+                            </div>
+                          </td>
+
+                          <td>
+                            <div className="admin-user-actions" style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                              {isSelf ? (
+                                <span
+                                  style={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "4px",
+                                    padding: "5px 12px",
+                                    borderRadius: "8px",
+                                    background: "#f0fdf4",
+                                    border: "1px solid #bbf7d0",
+                                    color: "#166534",
+                                    fontSize: "12px",
+                                    fontWeight: "750",
+                                  }}
+                                >
+                                  <CheckCircle2 size={13} />
+                                  Akun Saat Ini
+                                </span>
+                              ) : (
+                                <>
+                                  <button
+                                    type="button"
+                                    className={`status-action-button ${u.status === "ACTIVE" ? "deactivate" : "activate"}`}
+                                    onClick={() => setPendingStatusChange({ entity: "user", id: u.id, name: u.name, currentStatus: u.status })}
+                                    aria-label={`${u.status === "ACTIVE" ? "Nonaktifkan" : "Aktifkan"} akun ${u.name}`}
+                                    style={{ padding: "5px 10px", fontSize: "11.5px" }}
+                                  >
+                                    {u.status === "ACTIVE" ? <CirclePause size={13} /> : <CirclePlay size={13} />}
+                                    <span>{u.status === "ACTIVE" ? "Nonaktifkan" : "Aktifkan"}</span>
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    className="admin-user-action edit"
+                                    onClick={() => {
+                                      setUserActionError(null);
+                                      setEditingPassword("");
+                                      setEditingUser({ ...u });
+                                    }}
+                                    aria-label={`Edit akun ${u.name}`}
+                                    style={{ padding: "5px 10px", fontSize: "11.5px" }}
+                                  >
+                                    <Pencil size={13} /> Edit
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    className="admin-user-action delete"
+                                    onClick={() => {
+                                      setUserActionError(null);
+                                      setDeletingUser(u);
+                                    }}
+                                    aria-label={`Hapus akun ${u.name}`}
+                                    style={{ padding: "5px 10px", fontSize: "11.5px" }}
+                                  >
+                                    <Trash2 size={13} /> Hapus
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Catatan Terintegrasi dengan Audit Logs */}
+              <div
+                style={{
+                  marginTop: "14px",
+                  padding: "10px 16px",
+                  borderRadius: "10px",
+                  background: "#f8fafc",
+                  border: "1px solid #e2e8f0",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  color: "#64748b",
+                  fontSize: "12px",
+                }}
+              >
+                <Clock size={14} style={{ color: "#00a8bd", flexShrink: 0 }} />
+                <span>
+                  <strong>Keamanan Akun:</strong> Rekam jejak waktu setiap kali administrator berhasil login atau mengubah data tersimpan otomatis di menu <strong>Audit Logs & Log Keamanan</strong>.
+                </span>
               </div>
             </div>
           )}
@@ -1478,18 +1715,111 @@ export function AdminDashboardClient({
         </div>
       )}
 
+      {showAddUserModal && (
+        <div className="modal-overlay" onClick={() => { if (!creatingAdmin) setShowAddUserModal(false); }}>
+          <div className="admin-modal-card" onClick={(event) => event.stopPropagation()} style={{ maxWidth: "480px" }}>
+            <div className="modal-header">
+              <div>
+                <h3>Tambah Administrator Baru</h3>
+                <p>Buat akun baru untuk mengelola portal operasional bandara.</p>
+              </div>
+              <button type="button" onClick={() => setShowAddUserModal(false)} disabled={creatingAdmin}>
+                <X size={18} />
+              </button>
+            </div>
+            <form className="admin-form" onSubmit={handleCreateAdmin}>
+              <label>
+                <span>Nama Lengkap</span>
+                <input
+                  type="text"
+                  required
+                  minLength={2}
+                  placeholder="Misal: Budi Santoso"
+                  value={newAdmin.name}
+                  onChange={(e) => setNewAdmin({ ...newAdmin, name: e.target.value })}
+                />
+              </label>
+
+              <label>
+                <span>Email Login</span>
+                <input
+                  type="email"
+                  required
+                  placeholder="Misal: budi@juanda-airport.com"
+                  value={newAdmin.email}
+                  onChange={(e) => setNewAdmin({ ...newAdmin, email: e.target.value })}
+                />
+              </label>
+
+              <label>
+                <span>Peran Hak Akses</span>
+                <select
+                  value={newAdmin.role}
+                  onChange={(e) => setNewAdmin({ ...newAdmin, role: e.target.value as AdminRole })}
+                >
+                  <option value="AIRPORT_ADMIN">Admin Komersial (Kelola Tenant, Fasilitas, & Peta 3D)</option>
+                  <option value="SUPER_ADMIN">Super Admin (Akses Penuh Manajemen Sistem & Akun)</option>
+                </select>
+              </label>
+
+              <label>
+                <span>Kata Sandi Awal (Minimal 8 Karakter)</span>
+                <input
+                  type="password"
+                  required
+                  minLength={8}
+                  placeholder="Minimal 8 karakter aman"
+                  value={newAdmin.password}
+                  onChange={(e) => setNewAdmin({ ...newAdmin, password: e.target.value })}
+                />
+              </label>
+
+              {newAdminError && (
+                <p className="admin-user-action-error" role="alert">
+                  {newAdminError}
+                </p>
+              )}
+
+              <div className="form-actions">
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => setShowAddUserModal(false)}
+                  disabled={creatingAdmin}
+                >
+                  Batal
+                </button>
+                <button type="submit" className="btn-primary" disabled={creatingAdmin}>
+                  {creatingAdmin ? "Menyimpan..." : "Buat Akun Administrator"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {editingUser && (
         <div className="modal-overlay" onClick={() => { if (!savingUser) setEditingUser(null); }}>
-          <div className="admin-modal-card" onClick={(event) => event.stopPropagation()}>
+          <div className="admin-modal-card" onClick={(event) => event.stopPropagation()} style={{ maxWidth: "480px" }}>
             <div className="modal-header">
-              <div><h3>Edit Admin Komersial</h3><p>Perubahan langsung digunakan untuk login berikutnya.</p></div>
+              <div><h3>Edit Akun Administrator</h3><p>Perubahan langsung disimpan ke database dan aktif saat login berikutnya.</p></div>
               <button type="button" onClick={() => setEditingUser(null)} disabled={savingUser}><X size={18} /></button>
             </div>
             <form className="admin-form" onSubmit={saveEditedUser}>
               <label><span>Nama administrator</span><input required minLength={2} value={editingUser.name} onChange={(event) => setEditingUser({ ...editingUser, name: event.target.value })} /></label>
               <label><span>Email login</span><input required type="email" value={editingUser.email} onChange={(event) => setEditingUser({ ...editingUser, email: event.target.value })} /></label>
-              <label><span>Hak akses</span><input value="Admin Komersial" readOnly /></label>
-              <label><span>Password baru (opsional)</span><input type="password" minLength={8} value={editingPassword} onChange={(event) => setEditingPassword(event.target.value)} placeholder="Kosongkan jika tidak diubah" /></label>
+              <label>
+                <span>Hak akses</span>
+                <select
+                  value={editingUser.role}
+                  onChange={(event) => setEditingUser({ ...editingUser, role: event.target.value as AdminRole })}
+                  disabled={editingUser.email === user.email}
+                >
+                  <option value="AIRPORT_ADMIN">Admin Komersial (Kelola Tenant, Fasilitas, & Peta 3D)</option>
+                  <option value="SUPER_ADMIN">Super Admin (Akses Penuh Manajemen Sistem & Akun)</option>
+                </select>
+              </label>
+              <label><span>Password baru (opsional)</span><input type="password" minLength={8} value={editingPassword} onChange={(event) => setEditingPassword(event.target.value)} placeholder="Kosongkan jika password tidak diubah" /></label>
               {userActionError && <p className="admin-user-action-error" role="alert">{userActionError}</p>}
               <div className="form-actions"><button type="button" className="btn-secondary" onClick={() => setEditingUser(null)} disabled={savingUser}>Batal</button><button type="submit" className="btn-primary" disabled={savingUser}>{savingUser ? "Menyimpan..." : "Simpan Perubahan"}</button></div>
             </form>
@@ -1499,9 +1829,9 @@ export function AdminDashboardClient({
 
       {deletingUser && (
         <div className="modal-overlay" onClick={() => { if (!savingUser) setDeletingUser(null); }}>
-          <div className="admin-modal-card status-confirmation-card" onClick={(event) => event.stopPropagation()}>
+          <div className="admin-modal-card status-confirmation-card" onClick={(event) => event.stopPropagation()} style={{ maxWidth: "440px" }}>
             <div className="status-confirmation-icon deactivate"><Trash2 size={24} /></div>
-            <div className="status-confirmation-copy"><span>KONFIRMASI HAPUS AKUN</span><h3>Hapus Admin Komersial?</h3><p>Akun <strong>{deletingUser.name}</strong> ({deletingUser.email}) akan dihapus permanen dan tidak dapat digunakan untuk login.</p></div>
+            <div className="status-confirmation-copy"><span>KONFIRMASI HAPUS AKUN</span><h3>Hapus Akun Administrator?</h3><p>Akun <strong>{deletingUser.name}</strong> ({deletingUser.email}) akan dihapus permanen dari database dan tidak dapat digunakan lagi.</p></div>
             {userActionError && <p className="admin-user-action-error" role="alert">{userActionError}</p>}
             <div className="form-actions"><button type="button" className="btn-secondary" onClick={() => setDeletingUser(null)} disabled={savingUser}>Batal</button><button type="button" className="status-confirm-button deactivate" onClick={confirmDeleteUser} disabled={savingUser}>{savingUser ? "Menghapus..." : "Ya, hapus akun"}</button></div>
           </div>

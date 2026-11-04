@@ -25,6 +25,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       const valid = await bcrypt.compare(credentials.password, user?.passwordHash ?? fallbackHash);
       if (!user || !user.active || !valid) { recordLoginFailure(email); return null; }
       clearLoginFailures(email);
+      await prisma.auditLog.create({
+        data: {
+          actorId: user.id,
+          action: "USER_LOGIN",
+          entityType: "User",
+          entityId: user.email,
+          after: { name: user.name, role: user.role },
+        },
+      }).catch(() => undefined);
       return { id: user.id, name: user.name, email: user.email, role: user.role };
     },
   })],
