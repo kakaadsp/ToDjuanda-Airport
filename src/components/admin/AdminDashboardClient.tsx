@@ -34,6 +34,7 @@ import type { AdminRole } from "@/types";
 // @ts-ignore
 type SheetData = any;
 import { AdminMapPanel } from "@/components/admin/AdminMapPanel";
+import { AdminNavigationGraphMap } from "@/components/admin/AdminNavigationGraphMap";
 import { DashboardAnalytics } from "@/components/admin/DashboardAnalytics";
 import { MapStage } from "@/components/wayfinding/MapStage";
 import { routeEdges, routeNodes, spaces } from "@/data/demo-wayfinding";
@@ -53,7 +54,18 @@ type AdminUserRow = {
   lastLogin: string;
 };
 
-type GraphEdgeRow = { id: string; label: string; from: string; to: string; floorId: string };
+type GraphEdgeRow = {
+  id: string;
+  label: string;
+  from: string;
+  to: string;
+  floorId: string;
+  floorCode?: string;
+  toFloorCode?: string;
+  type?: string;
+  accessible?: boolean;
+  distanceMeters?: number;
+};
 type GraphMetrics = { nodes: number; edges: number; connectors: number; accessiblePercent: number };
 
 function mapObjectCategory(config: MapObjectConfig) {
@@ -1017,9 +1029,19 @@ export function AdminDashboardClient({
               <div className="box-header">
                 <div className="box-title">
                   <h2>Navigation Graph Engineering (A*)</h2>
-                  <p>Pemantauan kesehatan node, edge, dan penutupan jalur darurat untuk rute navigasi</p>
+                  <p>Pemantauan visual peta koridor terminal, kesehatan node, dan penutupan jalur darurat untuk rute navigasi A*</p>
                 </div>
               </div>
+
+              {/* Peta Interaktif Koridor & Status Jalur Buka/Tutup */}
+              <AdminNavigationGraphMap
+                availableEdges={graphEdges}
+                closures={graphClosures}
+                selectedEdgeId={selectedGraphEdge}
+                onSelectEdge={setSelectedGraphEdge}
+                onToggleEdge={toggleGraphEdge}
+                isToggling={graphToggling}
+              />
 
               <div className="graph-engineering-grid">
                 <div className="graph-card" style={{ background: "#ffffff", borderRadius: "16px", border: "1px solid #dfe7e9", padding: "22px" }}>

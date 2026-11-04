@@ -154,13 +154,13 @@ export async function GET() {
       prisma.routeEdge.findMany({
         where: { active: false },
         orderBy: { updatedAt: "desc" },
-        take: 50,
+        take: 500,
         include: { fromNode: { include: { floor: true } }, toNode: { include: { floor: true } } },
       }),
       prisma.routeEdge.findMany({
         where: { active: true },
         orderBy: { updatedAt: "desc" },
-        take: 100,
+        take: 1000,
         include: { fromNode: { include: { floor: true } }, toNode: { include: { floor: true } } },
       }),
     ]);
@@ -185,6 +185,11 @@ export async function GET() {
         from: edge.fromNode.code,
         to: edge.toNode.code,
         floorId: edge.fromNode.floor?.label ?? edge.fromNode.floor?.code ?? "Lantai 1",
+        floorCode: edge.fromNode.floor?.code ?? "T1-L1",
+        toFloorCode: edge.toNode.floor?.code ?? edge.fromNode.floor?.code ?? "T1-L1",
+        type: edge.type,
+        accessible: edge.accessible,
+        distanceMeters: edge.distanceMeters,
       })),
       availableEdges: availableEdges.map((edge) => ({
         id: edge.id,
@@ -192,6 +197,11 @@ export async function GET() {
         from: edge.fromNode.code,
         to: edge.toNode.code,
         floorId: edge.fromNode.floor?.label ?? edge.fromNode.floor?.code ?? "Lantai 1",
+        floorCode: edge.fromNode.floor?.code ?? "T1-L1",
+        toFloorCode: edge.toNode.floor?.code ?? edge.fromNode.floor?.code ?? "T1-L1",
+        type: edge.type,
+        accessible: edge.accessible,
+        distanceMeters: edge.distanceMeters,
       })),
     }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
@@ -242,6 +252,11 @@ export async function PATCH(request: Request) {
         active: edge.active,
         label: formatEdgeLabel(existing),
         floorId: existing.fromNode.floor?.label ?? existing.fromNode.floor?.code ?? "Lantai 1",
+        floorCode: existing.fromNode.floor?.code ?? "T1-L1",
+        toFloorCode: existing.toNode.floor?.code ?? existing.fromNode.floor?.code ?? "T1-L1",
+        type: existing.type,
+        accessible: existing.accessible,
+        distanceMeters: existing.distanceMeters,
       },
     });
   } catch (error) {
