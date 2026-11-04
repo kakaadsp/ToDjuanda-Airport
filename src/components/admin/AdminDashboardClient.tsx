@@ -803,29 +803,6 @@ export function AdminDashboardClient({
               <span>Direktori Peta</span>
             </button>
 
-            {activeRole === "AIRPORT_ADMIN" && (
-              <>
-                <button
-                  type="button"
-                  className="nav-item"
-                  data-active={activeTab === "spaces"}
-                  onClick={() => setActiveTab("spaces")}
-                >
-                  <Building2 size={18} />
-                  <span>Alokasi Space & Ruang</span>
-                </button>
-                <button
-                  type="button"
-                  className="nav-item"
-                  data-active={activeTab === "facilities"}
-                  onClick={() => setActiveTab("facilities")}
-                >
-                  <Map size={18} />
-                  <span>Fasilitas & POI Bandara</span>
-                </button>
-              </>
-            )}
-
             {activeRole === "SUPER_ADMIN" && (
               <>
                 <button
@@ -1099,71 +1076,6 @@ export function AdminDashboardClient({
                     )}
                   </tbody>
                 </table>
-              </div>
-            </div>
-          )}
-
-          {/* AIRPORT ADMIN: SPACES TAB */}
-          {activeRole === "AIRPORT_ADMIN" && activeTab === "spaces" && (
-            <div className="content-box">
-              <div className="box-header">
-                <div className="box-title">
-                  <h2>Alokasi Ruang & Unit Space Terminal</h2>
-                  <p>Pemetaan unit polygon ruang visual terhadap tenant dan fungsi publik</p>
-                </div>
-              </div>
-
-              <div className="space-grid-container">
-                {["T1-L1", "T1-L2", "T2-L1", "T2-L2"].map((floor) => (
-                  <div key={floor} className="floor-space-card">
-                    <h3>
-                      <Building2 size={18} /> {floor.replace("-", " • ")}
-                    </h3>
-                    <div className="space-chips-list">
-                      {tenants
-                        .filter((t) => `${t.terminal}-${t.floor.endsWith("1") ? "L1" : "L2"}` === floor)
-                        .map((t) => (
-                          <div key={t.id} className="space-item-pill">
-                            <code>{t.spaceCode}</code>
-                            <strong>{t.name}</strong>
-                            <small>{t.category}</small>
-                          </div>
-                        ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* AIRPORT ADMIN: FACILITIES TAB */}
-          {activeRole === "AIRPORT_ADMIN" && activeTab === "facilities" && (
-            <div className="content-box">
-              <div className="box-header">
-                <div className="box-title">
-                  <h2>Status POI & Fasilitas Bandara</h2>
-                  <p>Pengelolaan toilet, musala, ATM center, lift, dan gate bandara</p>
-                </div>
-              </div>
-
-              <div className="facility-status-list">
-                {[
-                  { name: "Toilet Publik Utama T1-L1", type: "Toilet", status: "ACTIVE" },
-                  { name: "Mushola Al-Ikhlas T1-L1", type: "Musala", status: "ACTIVE" },
-                  { name: "ATM Center Mandiri/BCA T1-L1", type: "ATM", status: "ACTIVE" },
-                  { name: "Boarding Gate 01 - 08 T1-L2", type: "Gate", status: "ACTIVE" },
-                  { name: "Toilet Keberangkatan T2-L2", type: "Toilet", status: "MAINTENANCE" },
-                ].map((fac, idx) => (
-                  <div key={idx} className="facility-row-card">
-                    <div>
-                      <strong>{fac.name}</strong>
-                      <span className="badge-cat">{fac.type}</span>
-                    </div>
-                    <span className={`status-pill ${fac.status === "ACTIVE" ? "active" : "closed"}`}>
-                      {fac.status === "ACTIVE" ? "SIAP DIGUNAKAN" : "PERBAIKAN / MAINTENANCE"}
-                    </span>
-                  </div>
-                ))}
               </div>
             </div>
           )}
