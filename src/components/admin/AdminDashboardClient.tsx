@@ -898,24 +898,6 @@ export function AdminDashboardClient({
               </button>
             </div>
           )}
-          {/* Dashboard Header Bar */}
-          <div className="view-banner">
-            <div>
-              <span className="badge-role-pill">
-                {activeRole === "SUPER_ADMIN" ? "SUPERADMIN DASHBOARD" : "ADMIN KOMERSIL DASHBOARD"}
-              </span>
-              <h1>
-                {activeRole === "SUPER_ADMIN"
-                  ? "Manajemen Sistem & Keamanan Wayfinding"
-                  : "Kelola Direktori Bangunan & Fasilitas Peta Bandara Juanda"}
-              </h1>
-              <p>
-                {activeRole === "SUPER_ADMIN"
-                  ? "Pusat kendali hak akses pengguna, pemantauan graph rute A*, serta audit log log aktivitas sistem."
-                  : "Kelola nama, kategori, kode objek, dan jam operasional langsung dari model terminal."}
-              </p>
-            </div>
-          </div>
 
           {/* Dynamic Content Views */}
           {activeTab === "overview" && <DashboardAnalytics tenants={tenants} />}
