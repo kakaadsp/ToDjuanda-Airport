@@ -781,7 +781,7 @@ export function AdminDashboardClient({
               onClick={() => setActiveTab("overview")}
             >
               <BarChart3 size={18} />
-              <span>Ringkasan Dashboard</span>
+              <span>Dashboard</span>
             </button>
             <button
               type="button"
