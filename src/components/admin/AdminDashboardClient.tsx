@@ -456,6 +456,31 @@ export function AdminDashboardClient({
       {/* Admin Top Header Navigation */}
       <header className="admin-header-bar">
         <div className="admin-header-left">
+          {isSidebarCollapsed && (
+            <button
+              type="button"
+              className="admin-sidebar-reopen-header-btn"
+              onClick={() => setIsSidebarCollapsed(false)}
+              title="Buka Menu Navigasi"
+              aria-label="Buka Menu Navigasi"
+              style={{
+                width: "40px",
+                height: "40px",
+                display: "grid",
+                placeItems: "center",
+                borderRadius: "10px",
+                border: "none",
+                background: "#00a8bd",
+                color: "#ffffff",
+                cursor: "pointer",
+                marginRight: "12px",
+                flexShrink: 0,
+                boxShadow: "0 2px 10px rgba(0, 168, 189, 0.35)",
+              }}
+            >
+              <PanelLeftOpen size={20} />
+            </button>
+          )}
           <Link href="/" className="admin-brand-link">
             <Image src="/injourney-airports.png" width={180} height={52} priority alt="InJourney Airports" />
           </Link>

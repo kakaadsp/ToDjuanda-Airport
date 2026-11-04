@@ -229,16 +229,16 @@ export function AdminMapPanel({ initialObjectName = null }: { initialObjectName?
     selectRecord(record);
   }, [initialObjectName, objects, selectRecord, selected?.name]);
   const updateDraft = <K extends keyof MapObjectConfig>(key: K, value: MapObjectConfig[K]) => setDraft((current) => current ? { ...current, [key]: value } : current);
-    const updateDoor = (index: number, key: "side" | "open" | "position", value: string | boolean) => setDraft((current) => {
-      if (!current) return current;
-      const entryDoors = current.entryDoors.map((door, doorIndex) => {
-        if (doorIndex !== index) return door;
-        if (key === "side") return { ...door, side: value as MapObjectDoorSide };
-        if (key === "open") return { ...door, open: Boolean(value) };
-        return { ...door, position: Number(value) };
-      });
-      return { ...current, entryDoors };
+  const updateDoor = (index: number, key: "side" | "open" | "position", value: string | boolean) => setDraft((current) => {
+    if (!current) return current;
+    const entryDoors = current.entryDoors.map((door, doorIndex) => {
+      if (doorIndex !== index) return door;
+      if (key === "side") return { ...door, side: value as MapObjectDoorSide };
+      if (key === "open") return { ...door, open: Boolean(value) };
+      return { ...door, position: Number(value) };
     });
+    return { ...current, entryDoors };
+  });
   const saveDraft = async () => {
     if (!draft || saving) return;
     setSaving(true);
@@ -261,50 +261,502 @@ export function AdminMapPanel({ initialObjectName = null }: { initialObjectName?
     }
   };
 
-  return <div className="content-box admin-map-box admin-object-editor">
-    <div className="box-header admin-map-header"><div className="box-title"><h2>Editor lokasi 3D Terminal 1</h2><p>Pilih tenant, fasilitas, gate, area keberangkatan, atau struktur yang dapat dikonfigurasi pada kedua lantai.</p></div><div className="admin-map-summary"><span><Layers3 size={15} /> T1 &bull; {FLOOR_LABELS[floorView]}</span><strong>{editableObjects.length} objek dapat diatur</strong></div></div>
-    <div className="admin-map-selectors admin-3d-floor-selector" aria-label="Pilih lantai editor 3D">{(["L1", "L2"] as FloorId[]).map((floor) => <button key={floor} type="button" aria-pressed={floorView === floor} onClick={() => { setFloorView(floor); setSelected(null); setDraft(null); setSaved(false); }}>{FLOOR_LABELS[floor]}</button>)}</div>
-    <div className="admin-map-canvas admin-3d-editor-canvas"><Canvas dpr={[1, 1.5]} camera={{ fov: 55, near: 0.01, far: 100000, position: [20, 20, 20] }}><color attach="background" args={["#102d3d"]} /><ambientLight intensity={0.9} /><hemisphereLight intensity={1.1} color="#ffffff" groundColor="#65747d" /><directionalLight position={[12, 24, 10]} intensity={1.7} /><Suspense fallback={null}><SceneModel modelUrl={TERMINAL_MODEL_URL} floorView={floorView} showObjectLabels selectedUuid={selected?.uuid ?? null} onSelect={selectObject} onSelectFloor={(_, objectName) => { const record = objectName ? objects.find((item) => item.floor === floorView && item.name === objectName) : undefined; if (record) selectRecord(record); }} onReady={handleReady} objectConfigs={configs} /></Suspense><AdminCamera bounds={bounds} controlRef={cameraControlRef} />
-    </Canvas>
-    <div className="admin-map-controls" aria-label="Kontrol zoom peta terminal">
-      <button
-        type="button"
-        onClick={() => cameraControlRef.current?.zoomIn()}
-        title="Zoom In (Perbesar hingga maksimal)"
-        aria-label="Zoom in"
-      >
-        <Plus size={18} />
-      </button>
-      <button
-        type="button"
-        onClick={() => cameraControlRef.current?.zoomOut()}
-        title="Zoom Out (Perkecil hingga maksimal)"
-        aria-label="Zoom out"
-      >
-        <Minus size={18} />
-      </button>
-      <button
-        type="button"
-        onClick={() => cameraControlRef.current?.reset()}
-        title="Reset Sudut & Posisi Kamera"
-        aria-label="Reset kamera"
-      >
-        <RotateCcw size={16} />
-      </button>
-    </div>
-    {!bounds && <div className="admin-3d-loading">Memuat model gabungan Terminal 1...</div>}
-  </div>
-    <div className="admin-object-editor-layout"><aside className="admin-object-list"><div className="admin-object-list-header"><strong>Objek editable · {FLOOR_LABELS[floorView]}</strong><span>{editableObjects.length}</span></div><div className="admin-object-list-scroll">{editableObjects.map((record) => <button type="button" key={record.uuid} className={record.uuid === selected?.uuid ? "is-selected" : ""} onClick={() => selectRecord(record)}><strong>{configs[record.name]?.displayName || record.selectableLabel || record.name}</strong><small>{record.name} &bull; {configs[record.name]?.occupancy === "WALKABLE" ? "Bisa dilalui" : configs[record.name]?.occupancy === "OBSTACLE" ? "Obstacle" : record.metadata.category}</small></button>)}{!editableObjects.length && <div className="admin-object-empty"><strong>Belum ada objek editable</strong><span>Objek Lantai 2 yang dapat dikonfigurasi akan muncul setelah model selesai dimuat.</span></div>}</div></aside>
-      <section className="admin-object-form">{!draft ? <div className="admin-object-empty"><ImageIcon size={22} /><strong>Pilih objek dari model</strong><span>Data tenant/fasilitas, jam aktif, foto, dan status rute akan muncul di sini.</span></div> : <><div className="admin-object-form-heading"><div><small>OBJEK TERPILIH</small><h3>{draft.displayName.trim() || selected?.name}</h3>{draft.displayName.trim() && <small style={{ color: "#7c93a0", display: "block", marginTop: "2px" }}>Kode Blok: {selected?.name}</small>}</div><span className="admin-object-pill">{draft.entityType === "TENANT" ? "Tenant" : "Fasilitas"}</span></div><div className="admin-object-form-grid">
-        <EditorField label="Nama tampilan"><input value={draft.displayName} onChange={(event) => updateDraft("displayName", event.target.value)} placeholder="Contoh: Kopi Juanda" /></EditorField>
-        <EditorField label="Jenis data"><select value={draft.entityType} onChange={(event) => updateDraft("entityType", event.target.value as MapObjectConfig["entityType"])}><option value="TENANT">Tenant komersial</option><option value="FACILITY">Fasilitas / layanan</option></select></EditorField><EditorField label="Warna objek"><span className="admin-object-color-field"><input type="color" value={draft.color || "#D8C7A7"} onChange={(event) => updateDraft("color", event.target.value)} /><input value={draft.color} onChange={(event) => updateDraft("color", event.target.value)} placeholder="#D8C7A7" pattern="^#[0-9a-fA-F]{6}$" /></span></EditorField>
-        <EditorField label="Status bentuk lokasi"><select value={draft.occupancy} onChange={(event) => updateDraft("occupancy", event.target.value as MapObjectOccupancy)}>{OCCUPANCY_OPTIONS.map((option) => <option value={option.value} key={option.value}>{option.label}</option>)}</select></EditorField><div className="admin-object-occupancy-help">{OCCUPANCY_OPTIONS.find((option) => option.value === draft.occupancy)?.help}</div>
-        <div className="admin-object-doors"><div className="admin-object-doors-heading"><strong>Pintu masuk (maksimal 4)</strong><span>Rute hanya boleh masuk dari pintu yang terbuka. Posisi 0% dan 100% adalah kedua ujung sisi; 50% adalah titik tengah sisi.</span></div>{draft.entryDoors.map((door, index) => <div className="admin-object-door-row" key={`${draft.objectName}-door-${index}`}><strong>Pintu {index + 1}</strong><select value={door.side} onChange={(event) => updateDoor(index, "side", event.target.value as MapObjectDoorSide)}><option value="NORTH">Utara</option><option value="EAST">Timur</option><option value="SOUTH">Selatan</option><option value="WEST">Barat</option></select><label><input type="checkbox" checked={door.open} onChange={(event) => updateDoor(index, "open", event.target.checked)} /> Buka</label><label className="admin-object-door-position">Posisi <input type="range" min="0" max="100" value={door.position} aria-label={`Posisi pintu ${index + 1}`} onChange={(event) => updateDoor(index, "position", event.target.value)} /><span>{door.position}%</span></label></div>)}</div>
-        <EditorField label="Deskripsi / detail"><textarea rows={4} value={draft.description} onChange={(event) => updateDraft("description", event.target.value)} placeholder="Layanan, akses, dan informasi penting." /></EditorField>
-        <EditorField label="Foto tampak depan (URL)"><input type="url" value={draft.photoUrl} onChange={(event) => updateDraft("photoUrl", event.target.value)} placeholder="URL gambar langsung atau link Google Drive" /><small className="admin-object-field-help">Untuk Google Drive, ubah akses file menjadi â€œAnyone with the link / Siapa saja yang memiliki link dapat melihatâ€.</small></EditorField>
-        <EditorField label="Website / sosial media"><input type="url" value={draft.websiteUrl} onChange={(event) => updateDraft("websiteUrl", event.target.value)} placeholder="https://..." /></EditorField><EditorField label="Instagram / link lain"><input type="url" value={draft.instagramUrl} onChange={(event) => updateDraft("instagramUrl", event.target.value)} placeholder="https://instagram.com/..." /></EditorField>
-        <EditorField label="Kontak"><input value={draft.contact} onChange={(event) => updateDraft("contact", event.target.value)} placeholder="Telepon / email" /></EditorField><EditorField label="Jam buka"><input type="time" value={draft.openTime} onChange={(event) => updateDraft("openTime", event.target.value)} /></EditorField><EditorField label="Jam tutup"><input type="time" value={draft.closeTime} onChange={(event) => updateDraft("closeTime", event.target.value)} /></EditorField><EditorField label="Masa aktif mulai"><input type="date" value={draft.activeFrom} onChange={(event) => updateDraft("activeFrom", event.target.value)} /></EditorField><EditorField label="Masa aktif sampai"><input type="date" value={draft.activeUntil} onChange={(event) => updateDraft("activeUntil", event.target.value)} /></EditorField>
-      </div>{getMapObjectPhotoUrl(draft.photoUrl) && <img className="admin-object-photo-preview" src={getMapObjectPhotoUrl(draft.photoUrl)} alt={`Foto ${draft.displayName || draft.objectName}`} onError={(event) => { event.currentTarget.style.display = "none"; }} />}<div className="admin-object-form-actions"><button type="button" className="primary-button" onClick={saveDraft} disabled={saving}><Save size={15} /> {saving ? "Menyimpan..." : "Simpan konfigurasi"}</button>{saved && !saveError && <span className="admin-object-saved"><Check size={14} /> Tersimpan ke database</span>}{saveError && <span className="admin-object-saved" style={{color:"#e05252",fontSize:"12px"}}>{saveError} (tersimpan lokal)</span>}</div></>}</section></div>
-  </div>;
-}
+  return (
+    <div className="content-box admin-map-box admin-object-editor">
+      <div className="box-header admin-map-header">
+        <div className="box-title">
+          <h2>Editor lokasi 3D Terminal 1</h2>
+          <p>Pilih tenant, fasilitas, gate, area keberangkatan, atau struktur yang dapat dikonfigurasi pada kedua lantai.</p>
+        </div>
+        <div className="admin-map-summary">
+          <span><Layers3 size={15} /> T1 &bull; {FLOOR_LABELS[floorView]}</span>
+          <strong>{editableObjects.length} objek dapat diatur</strong>
+        </div>
+      </div>
+      <div className="admin-map-selectors admin-3d-floor-selector" aria-label="Pilih lantai editor 3D">
+        {(["L1", "L2"] as FloorId[]).map((floor) => (
+          <button
+            key={floor}
+            type="button"
+            aria-pressed={floorView === floor}
+            onClick={() => { setFloorView(floor); setSelected(null); setDraft(null); setSaved(false); }}
+          >
+            {FLOOR_LABELS[floor]}
+          </button>
+        ))}
+      </div>
+      <div className="admin-map-canvas admin-3d-editor-canvas">
+        <Canvas dpr={[1, 1.5]} camera={{ fov: 55, near: 0.01, far: 100000, position: [20, 20, 20] }}>
+          <color attach="background" args={["#102d3d"]} />
+          <ambientLight intensity={0.9} />
+          <hemisphereLight intensity={1.1} color="#ffffff" groundColor="#65747d" />
+          <directionalLight position={[12, 24, 10]} intensity={1.7} />
+          <Suspense fallback={null}>
+            <SceneModel
+              modelUrl={TERMINAL_MODEL_URL}
+              floorView={floorView}
+              showObjectLabels
+              selectedUuid={selected?.uuid ?? null}
+              onSelect={selectObject}
+              onSelectFloor={(_, objectName) => {
+                const record = objectName ? objects.find((item) => item.floor === floorView && item.name === objectName) : undefined;
+                if (record) selectRecord(record);
+              }}
+              onReady={handleReady}
+              objectConfigs={configs}
+            />
+          </Suspense>
+          <AdminCamera bounds={bounds} controlRef={cameraControlRef} />
+        </Canvas>
+        <div className="admin-map-controls" aria-label="Kontrol zoom peta terminal">
+          <button
+            type="button"
+            onClick={() => cameraControlRef.current?.zoomIn()}
+            title="Zoom In (Perbesar hingga maksimal)"
+            aria-label="Zoom in"
+          >
+            <Plus size={18} />
+          </button>
+          <button
+            type="button"
+            onClick={() => cameraControlRef.current?.zoomOut()}
+            title="Zoom Out (Perkecil hingga maksimal)"
+            aria-label="Zoom out"
+          >
+            <Minus size={18} />
+          </button>
+          <button
+            type="button"
+            onClick={() => cameraControlRef.current?.reset()}
+            title="Reset Sudut & Posisi Kamera"
+            aria-label="Reset kamera"
+          >
+            <RotateCcw size={16} />
+          </button>
+        </div>
+        {!bounds && <div className="admin-3d-loading">Memuat model gabungan Terminal 1...</div>}
+      </div>
 
+      <div className="admin-object-editor-layout">
+        <aside className="admin-object-list">
+          <div className="admin-object-list-header">
+            <strong>Objek editable · {FLOOR_LABELS[floorView]}</strong>
+            <span>{editableObjects.length}</span>
+          </div>
+          <div className="admin-object-list-scroll">
+            {editableObjects.map((record) => (
+              <button
+                type="button"
+                key={record.uuid}
+                className={record.uuid === selected?.uuid ? "is-selected" : ""}
+                onClick={() => selectRecord(record)}
+              >
+                <strong>{configs[record.name]?.displayName || record.selectableLabel || record.name}</strong>
+                <small>
+                  {record.name} &bull; {configs[record.name]?.occupancy === "WALKABLE" ? "Bisa dilalui" : configs[record.name]?.occupancy === "OBSTACLE" ? "Obstacle" : record.metadata.category}
+                </small>
+              </button>
+            ))}
+            {!editableObjects.length && (
+              <div className="admin-object-empty">
+                <strong>Belum ada objek editable</strong>
+                <span>Objek yang dapat dikonfigurasi akan muncul setelah model selesai dimuat.</span>
+              </div>
+            )}
+          </div>
+        </aside>
+
+        <section className="admin-object-form">
+          {!draft ? (
+            <div className="admin-object-empty">
+              <ImageIcon size={22} />
+              <strong>Pilih objek dari model</strong>
+              <span>Data tenant/fasilitas, jam aktif, foto, dan status rute akan muncul di sini.</span>
+            </div>
+          ) : (
+            <>
+              <div className="admin-object-form-heading">
+                <div>
+                  <small>OBJEK TERPILIH</small>
+                  <h3>{draft.displayName.trim() || selected?.name}</h3>
+                  {draft.displayName.trim() && (
+                    <small style={{ color: "#7c93a0", display: "block", marginTop: "2px" }}>
+                      Kode Blok: {selected?.name}
+                    </small>
+                  )}
+                </div>
+                <span className="admin-object-pill">
+                  {draft.entityType === "TENANT" ? "Tenant" : "Fasilitas"}
+                </span>
+              </div>
+
+              <div className="admin-object-form-grid">
+                <EditorField label="Nama tampilan">
+                  <input
+                    value={draft.displayName}
+                    onChange={(event) => updateDraft("displayName", event.target.value)}
+                    placeholder="Contoh: Kopi Juanda"
+                  />
+                </EditorField>
+
+                <EditorField label="Jenis data">
+                  <select
+                    value={draft.entityType}
+                    onChange={(event) => updateDraft("entityType", event.target.value as MapObjectConfig["entityType"])}
+                  >
+                    <option value="TENANT">Tenant komersial</option>
+                    <option value="FACILITY">Fasilitas / layanan</option>
+                  </select>
+                </EditorField>
+
+                <EditorField label="Warna objek">
+                  <span className="admin-object-color-field">
+                    <input
+                      type="color"
+                      value={draft.color || "#D8C7A7"}
+                      onChange={(event) => updateDraft("color", event.target.value)}
+                    />
+                    <input
+                      value={draft.color}
+                      onChange={(event) => updateDraft("color", event.target.value)}
+                      placeholder="#D8C7A7"
+                      pattern="^#[0-9a-fA-F]{6}$"
+                    />
+                  </span>
+                </EditorField>
+
+                <EditorField label="Status bentuk lokasi">
+                  <select
+                    value={draft.occupancy}
+                    onChange={(event) => updateDraft("occupancy", event.target.value as MapObjectOccupancy)}
+                  >
+                    {OCCUPANCY_OPTIONS.map((option) => (
+                      <option value={option.value} key={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </EditorField>
+                <div className="admin-object-occupancy-help">
+                  {OCCUPANCY_OPTIONS.find((option) => option.value === draft.occupancy)?.help}
+                </div>
+
+                {/* Status Operasional saat Ditempati (OCCUPIED) */}
+                {draft.occupancy === "OCCUPIED" && (
+                  <div className="admin-operational-panel">
+                    <div className="admin-operational-heading">
+                      <small>STATUS OPERASIONAL</small>
+                      <strong>Jadwal & Ketersediaan Layanan</strong>
+                    </div>
+
+                    {/* Tombol Buka / Tutup */}
+                    <div className="admin-status-toggle-row">
+                      <button
+                        type="button"
+                        className={`admin-status-btn open ${draft.openTime !== "CLOSED" ? "is-active" : ""}`}
+                        onClick={() => {
+                          if (draft.openTime === "CLOSED") {
+                            updateDraft("openTime", "08:00");
+                            updateDraft("closeTime", "22:00");
+                          }
+                        }}
+                      >
+                        <CheckCircle2 size={18} />
+                        <span>Buka</span>
+                      </button>
+                      <button
+                        type="button"
+                        className={`admin-status-btn closed ${draft.openTime === "CLOSED" ? "is-active" : ""}`}
+                        onClick={() => {
+                          updateDraft("openTime", "CLOSED");
+                          updateDraft("closeTime", "CLOSED");
+                        }}
+                      >
+                        <XCircle size={18} />
+                        <span>Tutup</span>
+                      </button>
+                    </div>
+
+                    {/* Konfigurasi saat status BUKA */}
+                    {draft.openTime !== "CLOSED" && (
+                      <div className="admin-open-hours-config">
+                        {/* Tombol Buka 24 Jam */}
+                        <div className="admin-24h-row">
+                          <button
+                            type="button"
+                            className={`admin-24h-btn ${
+                              ((draft.openTime === "00:00" && (draft.closeTime === "23:59" || draft.closeTime === "24:00" || draft.closeTime === "00:00")) || draft.openTime === "24 Jam")
+                                ? "is-active"
+                                : ""
+                            }`}
+                            onClick={() => {
+                              const isCurrently24 =
+                                (draft.openTime === "00:00" && (draft.closeTime === "23:59" || draft.closeTime === "24:00" || draft.closeTime === "00:00")) ||
+                                draft.openTime === "24 Jam";
+
+                              if (isCurrently24) {
+                                updateDraft("openTime", "08:00");
+                                updateDraft("closeTime", "22:00");
+                              } else {
+                                updateDraft("openTime", "00:00");
+                                updateDraft("closeTime", "23:59");
+                              }
+                            }}
+                          >
+                            <Clock size={16} />
+                            <span>
+                              {((draft.openTime === "00:00" && (draft.closeTime === "23:59" || draft.closeTime === "24:00" || draft.closeTime === "00:00")) || draft.openTime === "24 Jam")
+                                ? "✓ Buka 24 Jam (Aktif)"
+                                : "Buka 24 Jam"}
+                            </span>
+                          </button>
+                          <small className="admin-24h-note">
+                            {((draft.openTime === "00:00" && (draft.closeTime === "23:59" || draft.closeTime === "24:00" || draft.closeTime === "00:00")) || draft.openTime === "24 Jam")
+                              ? "Lokasi buka nonstop 24 jam sehari."
+                              : "Klik jika beroperasi 24 jam nonstop."}
+                          </small>
+                        </div>
+
+                        {/* Input Jam Buka & Jam Tutup jika BUKAN 24 Jam */}
+                        {!((draft.openTime === "00:00" && (draft.closeTime === "23:59" || draft.closeTime === "24:00" || draft.closeTime === "00:00")) || draft.openTime === "24 Jam") && (
+                          <div className="admin-time-inputs-row">
+                            <EditorField label="Jam buka">
+                              <input
+                                type="time"
+                                value={draft.openTime === "CLOSED" ? "" : (draft.openTime || "08:00")}
+                                onChange={(event) => updateDraft("openTime", event.target.value)}
+                              />
+                            </EditorField>
+                            <EditorField label="Jam tutup">
+                              <input
+                                type="time"
+                                value={draft.closeTime === "CLOSED" ? "" : (draft.closeTime || "22:00")}
+                                onChange={(event) => updateDraft("closeTime", event.target.value)}
+                              />
+                            </EditorField>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Peringatan jika status TUTUP */}
+                    {draft.openTime === "CLOSED" && (
+                      <div className="admin-closed-alert">
+                        <AlertCircle size={16} />
+                        <span>
+                          Lokasi ditandai <strong>Tutup</strong> (tidak beroperasi untuk pengunjung).
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Pintu Masuk */}
+                <div className="admin-object-doors">
+                  <div className="admin-object-doors-heading">
+                    <strong>Pintu masuk (maksimal 4)</strong>
+                    <span>
+                      Rute hanya boleh masuk dari pintu yang terbuka. Posisi 0% dan 100% adalah kedua ujung sisi; 50% adalah titik tengah sisi.
+                    </span>
+                  </div>
+                  {draft.entryDoors.map((door, index) => (
+                    <div className="admin-object-door-row" key={`${draft.objectName}-door-${index}`}>
+                      <strong>Pintu {index + 1}</strong>
+                      <select
+                        value={door.side}
+                        onChange={(event) => updateDoor(index, "side", event.target.value as MapObjectDoorSide)}
+                      >
+                        <option value="NORTH">Utara</option>
+                        <option value="EAST">Timur</option>
+                        <option value="SOUTH">Selatan</option>
+                        <option value="WEST">Barat</option>
+                      </select>
+                      <label>
+                        <input
+                          type="checkbox"
+                          checked={door.open}
+                          onChange={(event) => updateDoor(index, "open", event.target.checked)}
+                        />{" "}
+                        Buka
+                      </label>
+                      <label className="admin-object-door-position">
+                        Posisi{" "}
+                        <input
+                          type="range"
+                          min="0"
+                          max="100"
+                          value={door.position}
+                          aria-label={`Posisi pintu ${index + 1}`}
+                          onChange={(event) => updateDoor(index, "position", event.target.value)}
+                        />
+                        <span>{door.position}%</span>
+                      </label>
+                    </div>
+                  ))}
+                </div>
+
+                <EditorField label="Deskripsi / detail">
+                  <textarea
+                    rows={4}
+                    value={draft.description}
+                    onChange={(event) => updateDraft("description", event.target.value)}
+                    placeholder="Layanan, akses, dan informasi penting."
+                  />
+                </EditorField>
+
+                <EditorField label="Foto tampak depan (URL)">
+                  <input
+                    type="url"
+                    value={draft.photoUrl}
+                    onChange={(event) => updateDraft("photoUrl", event.target.value)}
+                    placeholder="URL gambar langsung atau link Google Drive"
+                  />
+                  <small className="admin-object-field-help">
+                    Untuk Google Drive, ubah akses file menjadi "Anyone with the link / Siapa saja yang memiliki link dapat melihat".
+                  </small>
+                </EditorField>
+
+                <EditorField label="Website / sosial media">
+                  <input
+                    type="url"
+                    value={draft.websiteUrl}
+                    onChange={(event) => updateDraft("websiteUrl", event.target.value)}
+                    placeholder="https://..."
+                  />
+                </EditorField>
+
+                <EditorField label="Instagram / link lain">
+                  <input
+                    type="url"
+                    value={draft.instagramUrl}
+                    onChange={(event) => updateDraft("instagramUrl", event.target.value)}
+                    placeholder="https://instagram.com/..."
+                  />
+                </EditorField>
+
+                <EditorField label="Kontak">
+                  <input
+                    value={draft.contact}
+                    onChange={(event) => updateDraft("contact", event.target.value)}
+                    placeholder="Telepon / email"
+                  />
+                </EditorField>
+
+                {draft.occupancy !== "OCCUPIED" && (
+                  <>
+                    <EditorField label="Jam buka">
+                      <input
+                        type="time"
+                        value={draft.openTime === "CLOSED" ? "" : draft.openTime}
+                        onChange={(event) => updateDraft("openTime", event.target.value)}
+                      />
+                    </EditorField>
+                    <EditorField label="Jam tutup">
+                      <input
+                        type="time"
+                        value={draft.closeTime === "CLOSED" ? "" : draft.closeTime}
+                        onChange={(event) => updateDraft("closeTime", event.target.value)}
+                      />
+                    </EditorField>
+                  </>
+                )}
+
+                <EditorField label="Masa aktif mulai">
+                  <input
+                    type="date"
+                    value={draft.activeFrom}
+                    onChange={(event) => updateDraft("activeFrom", event.target.value)}
+                  />
+                </EditorField>
+
+                <EditorField label="Masa aktif sampai">
+                  <input
+                    type="date"
+                    value={draft.activeUntil}
+                    onChange={(event) => updateDraft("activeUntil", event.target.value)}
+                  />
+                </EditorField>
+              </div>
+
+              {getMapObjectPhotoUrl(draft.photoUrl) && (
+                <img
+                  className="admin-object-photo-preview"
+                  src={getMapObjectPhotoUrl(draft.photoUrl)}
+                  alt={`Foto ${draft.displayName || draft.objectName}`}
+                  onError={(event) => {
+                    event.currentTarget.style.display = "none";
+                  }}
+                />
+              )}
+
+              {/* Tombol Simpan Konfigurasi - Full Besar & Hijau */}
+              <div className="admin-object-form-actions" style={{ width: "100%", marginTop: "24px" }}>
+                <button
+                  type="button"
+                  className="admin-save-button-full"
+                  onClick={saveDraft}
+                  disabled={saving}
+                  style={{
+                    width: "100%",
+                    minHeight: "52px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "10px",
+                    padding: "14px 24px",
+                    borderRadius: "14px",
+                    border: "none",
+                    background: "#16a34a",
+                    color: "#ffffff",
+                    fontSize: "16px",
+                    fontWeight: "800",
+                    cursor: saving ? "wait" : "pointer",
+                    boxShadow: "0 6px 20px rgba(22, 163, 74, 0.4)",
+                    transition: "all 0.18s ease",
+                  }}
+                >
+                  <Save size={20} />
+                  <span>{saving ? "Menyimpan konfigurasi..." : "Simpan konfigurasi"}</span>
+                </button>
+                {saved && !saveError && (
+                  <span
+                    className="admin-object-saved"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "6px",
+                      color: "#16a34a",
+                      fontSize: "14px",
+                      fontWeight: "750",
+                      marginTop: "10px",
+                    }}
+                  >
+                    <Check size={18} /> Tersimpan ke database
+                  </span>
+                )}
+                {saveError && (
+                  <span
+                    className="admin-object-saved"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "6px",
+                      color: "#dc2626",
+                      fontSize: "14px",
+                      fontWeight: "750",
+                      marginTop: "10px",
+                    }}
+                  >
+                    {saveError} (tersimpan lokal)
+                  </span>
+                )}
+              </div>
+            </>
+          )}
+        </section>
+      </div>
+    </div>
+  );
+}
