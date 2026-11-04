@@ -5,7 +5,7 @@ import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import * as THREE from "three";
-import { Check, Image as ImageIcon, Layers3, MapPin, Maximize, Minimize, Minus, Plus, RotateCcw, Save } from "lucide-react";
+import { Check, Image as ImageIcon, Layers3, MapPin, Minus, Plus, RotateCcw, Save } from "lucide-react";
 import { MapStage } from "@/components/wayfinding/MapStage";
 import { floors, spaces } from "@/data/demo-wayfinding";
 import type { MapSpace, TerminalCode } from "@/types";
@@ -191,18 +191,6 @@ function EditorField({ label, children }: { label: string; children: React.React
 
 export function AdminMapPanel({ initialObjectName = null }: { initialObjectName?: string | null }) {
   const cameraControlRef = useRef<{ zoomIn: () => void; zoomOut: () => void; reset: () => void } | null>(null);
-  const [isMapFullscreen, setIsMapFullscreen] = useState(false);
-
-  useEffect(() => {
-    if (!isMapFullscreen) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setIsMapFullscreen(false);
-      }
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [isMapFullscreen]);
   const [bounds, setBounds] = useState<SceneBounds | null>(null);
   const [objects, setObjects] = useState<SceneObjectRecord[]>([]);
   const [floorView, setFloorView] = useState<FloorId>("L1");
@@ -276,26 +264,9 @@ export function AdminMapPanel({ initialObjectName = null }: { initialObjectName?
   return <div className="content-box admin-map-box admin-object-editor">
     <div className="box-header admin-map-header"><div className="box-title"><h2>Editor lokasi 3D Terminal 1</h2><p>Pilih tenant, fasilitas, gate, area keberangkatan, atau struktur yang dapat dikonfigurasi pada kedua lantai.</p></div><div className="admin-map-summary"><span><Layers3 size={15} /> T1 &bull; {FLOOR_LABELS[floorView]}</span><strong>{editableObjects.length} objek dapat diatur</strong></div></div>
     <div className="admin-map-selectors admin-3d-floor-selector" aria-label="Pilih lantai editor 3D">{(["L1", "L2"] as FloorId[]).map((floor) => <button key={floor} type="button" aria-pressed={floorView === floor} onClick={() => { setFloorView(floor); setSelected(null); setDraft(null); setSaved(false); }}>{FLOOR_LABELS[floor]}</button>)}</div>
-    <div className={`admin-map-canvas admin-3d-editor-canvas${isMapFullscreen ? " is-fullscreen" : ""}`}>
-      {isMapFullscreen && (
-        <button
-          type="button"
-          className="admin-map-fullscreen-exit-badge"
-          onClick={() => setIsMapFullscreen(false)}
-        >
-          Mode Layar Penuh Peta · Tekan ESC atau klik untuk keluar
-        </button>
-      )}<Canvas dpr={[1, 1.5]} camera={{ fov: 55, near: 0.01, far: 100000, position: [20, 20, 20] }}><color attach="background" args={["#102d3d"]} /><ambientLight intensity={0.9} /><hemisphereLight intensity={1.1} color="#ffffff" groundColor="#65747d" /><directionalLight position={[12, 24, 10]} intensity={1.7} /><Suspense fallback={null}><SceneModel modelUrl={TERMINAL_MODEL_URL} floorView={floorView} showObjectLabels selectedUuid={selected?.uuid ?? null} onSelect={selectObject} onSelectFloor={(_, objectName) => { const record = objectName ? objects.find((item) => item.floor === floorView && item.name === objectName) : undefined; if (record) selectRecord(record); }} onReady={handleReady} objectConfigs={configs} /></Suspense><AdminCamera bounds={bounds} controlRef={cameraControlRef} />
+    <div className="admin-map-canvas admin-3d-editor-canvas"><Canvas dpr={[1, 1.5]} camera={{ fov: 55, near: 0.01, far: 100000, position: [20, 20, 20] }}><color attach="background" args={["#102d3d"]} /><ambientLight intensity={0.9} /><hemisphereLight intensity={1.1} color="#ffffff" groundColor="#65747d" /><directionalLight position={[12, 24, 10]} intensity={1.7} /><Suspense fallback={null}><SceneModel modelUrl={TERMINAL_MODEL_URL} floorView={floorView} showObjectLabels selectedUuid={selected?.uuid ?? null} onSelect={selectObject} onSelectFloor={(_, objectName) => { const record = objectName ? objects.find((item) => item.floor === floorView && item.name === objectName) : undefined; if (record) selectRecord(record); }} onReady={handleReady} objectConfigs={configs} /></Suspense><AdminCamera bounds={bounds} controlRef={cameraControlRef} />
     </Canvas>
     <div className="admin-map-controls" aria-label="Kontrol zoom peta terminal">
-      <button
-        type="button"
-        onClick={() => setIsMapFullscreen((prev) => !prev)}
-        title={isMapFullscreen ? "Kecilkan Tampilan Peta (ESC)" : "Layar Penuh Peta 3D (Full Screen)"}
-        aria-label="Layar penuh peta"
-      >
-        {isMapFullscreen ? <Minimize size={18} /> : <Maximize size={18} />}
-      </button>
       <button
         type="button"
         onClick={() => cameraControlRef.current?.zoomIn()}
