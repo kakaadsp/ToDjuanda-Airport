@@ -1,11 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import {
+  useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
 import {
   AlertTriangle,
+  PanelLeftClose,
+  PanelLeftOpen,
   BarChart3,
   Building2,
   CirclePause,
@@ -102,7 +105,7 @@ export function AdminDashboardClient({
 }) {
   const activeRole = user.role;
   const [activeTab, setActiveTab] = useState<string>("overview");
-  // sidebar is always open and stable
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
   const handleLogout = async () => {
@@ -472,7 +475,7 @@ export function AdminDashboardClient({
         </div>
       </header>
 
-      <div className="admin-body-container" data-sidebar-collapsed="false">
+      <div className="admin-body-container" data-sidebar-collapsed={isSidebarCollapsed ? "true" : "false"}>
         {/* Sidebar Controls */}
         <aside className="admin-sidebar-nav" aria-label="Navigasi Menu Admin">
           <div className="user-profile-badge">
@@ -483,7 +486,16 @@ export function AdminDashboardClient({
               <strong>{user.name ?? (activeRole === "SUPER_ADMIN" ? "Super Administrator" : "Admin Komersil")}</strong>
               <small>{user.email ?? "Akun admin Juanda"}</small>
             </div>
-            </div>
+            <button
+              type="button"
+              className="sidebar-collapse-badge-btn"
+              onClick={() => setIsSidebarCollapsed(true)}
+              title="Geser / Sembunyikan Menu"
+              aria-label="Sembunyikan Menu"
+            >
+              <PanelLeftClose size={18} />
+            </button>
+          </div>
 
           <nav className="nav-menu-list">
             <button
@@ -606,6 +618,19 @@ export function AdminDashboardClient({
 
         {/* Main Content Area */}
         <section className="admin-main-view">
+          {isSidebarCollapsed && (
+            <div className="admin-sidebar-reopen-row">
+              <button
+                type="button"
+                className="admin-sidebar-reopen-btn"
+                onClick={() => setIsSidebarCollapsed(false)}
+                title="Buka Menu Navigasi"
+                aria-label="Buka Menu Navigasi"
+              >
+                <PanelLeftOpen size={20} />
+              </button>
+            </div>
+          )}
           {/* Dashboard Header Bar */}
           <div className="view-banner">
             <div>
