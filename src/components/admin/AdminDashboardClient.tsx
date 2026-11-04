@@ -8,7 +8,6 @@ import {
   AlertTriangle,
   BarChart3,
   Building2,
-  ChevronLeft,
   CirclePause,
   CirclePlay,
   FileSpreadsheet,
@@ -17,7 +16,6 @@ import {
   LogOut,
   Map,
   MapPinned,
-  PanelLeftOpen,
   Pencil,
   RotateCcw,
   Search,
@@ -104,7 +102,7 @@ export function AdminDashboardClient({
 }) {
   const activeRole = user.role;
   const [activeTab, setActiveTab] = useState<string>("overview");
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  // sidebar is always open and stable
   const [loggingOut, setLoggingOut] = useState(false);
 
   const handleLogout = async () => {
@@ -456,31 +454,6 @@ export function AdminDashboardClient({
       {/* Admin Top Header Navigation */}
       <header className="admin-header-bar">
         <div className="admin-header-left">
-          {isSidebarCollapsed && (
-            <button
-              type="button"
-              className="admin-sidebar-reopen-header-btn"
-              onClick={() => setIsSidebarCollapsed(false)}
-              title="Buka Menu Navigasi"
-              aria-label="Buka Menu Navigasi"
-              style={{
-                width: "40px",
-                height: "40px",
-                display: "grid",
-                placeItems: "center",
-                borderRadius: "10px",
-                border: "none",
-                background: "#00a8bd",
-                color: "#ffffff",
-                cursor: "pointer",
-                marginRight: "12px",
-                flexShrink: 0,
-                boxShadow: "0 2px 10px rgba(0, 168, 189, 0.35)",
-              }}
-            >
-              <PanelLeftOpen size={20} />
-            </button>
-          )}
           <Link href="/" className="admin-brand-link">
             <Image src="/injourney-airports.png" width={180} height={52} priority alt="InJourney Airports" />
           </Link>
@@ -499,7 +472,7 @@ export function AdminDashboardClient({
         </div>
       </header>
 
-      <div className="admin-body-container" data-sidebar-collapsed={isSidebarCollapsed ? "true" : "false"}>
+      <div className="admin-body-container" data-sidebar-collapsed="false">
         {/* Sidebar Controls */}
         <aside className="admin-sidebar-nav" aria-label="Navigasi Menu Admin">
           <div className="user-profile-badge">
@@ -510,16 +483,7 @@ export function AdminDashboardClient({
               <strong>{user.name ?? (activeRole === "SUPER_ADMIN" ? "Super Administrator" : "Admin Komersil")}</strong>
               <small>{user.email ?? "Akun admin Juanda"}</small>
             </div>
-            <button
-              type="button"
-              className="sidebar-collapse-badge-btn"
-              onClick={() => setIsSidebarCollapsed(true)}
-              title="Geser / Sembunyikan Sidebar"
-              aria-label="Sembunyikan Sidebar"
-            >
-              <ChevronLeft size={16} />
-            </button>
-          </div>
+            </div>
 
           <nav className="nav-menu-list">
             <button
@@ -642,31 +606,6 @@ export function AdminDashboardClient({
 
         {/* Main Content Area */}
         <section className="admin-main-view">
-          {isSidebarCollapsed && (
-            <div className="admin-sidebar-reopen-bar">
-              <button
-                type="button"
-                className="admin-sidebar-reopen-float"
-                onClick={() => setIsSidebarCollapsed(false)}
-                title="Buka Menu Navigasi"
-                aria-label="Buka Menu Navigasi"
-                style={{
-                  width: "42px",
-                  height: "42px",
-                  display: "grid",
-                  placeItems: "center",
-                  borderRadius: "12px",
-                  border: "none",
-                  background: "#00a8bd",
-                  color: "#ffffff",
-                  cursor: "pointer",
-                  boxShadow: "0 4px 14px rgba(0, 168, 189, 0.35)",
-                }}
-              >
-                <PanelLeftOpen size={20} />
-              </button>
-            </div>
-          )}
           {/* Dashboard Header Bar */}
           <div className="view-banner">
             <div>
