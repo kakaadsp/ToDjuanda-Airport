@@ -48,7 +48,16 @@ import { defaultMapObjectConfig, fetchMapObjectConfigsFromDb, readMapObjectConfi
 import type { TerminalCode } from "@/types";
 
 type TenantRow = {
-  id: string; name: string; category: string; terminal: TerminalCode; floor: string; floorCode?: string; spaceCode: string; status: string; hours: string;
+  id: string;
+  name: string;
+  category: string;
+  entityType?: "TENANT" | "FACILITY";
+  terminal: TerminalCode;
+  floor: string;
+  floorCode?: string;
+  spaceCode: string;
+  status: string;
+  hours: string;
 };
 
 type AdminUserRow = {
@@ -76,10 +85,13 @@ function mapConfigsToDirectory(configs: MapObjectConfigByName): TenantRow[] {
     .map((config) => {
       const floorCode = /-FF-/i.test(config.objectName) ? "FF" : "GF";
       const terminal = "T1";
+      const isFacility = /(?:-avsec-|-tl-|-atm-|-nr-|-man-|-mus-|toilet|mushola|restroom)|^(?:floor_|area_visitor)/i.test(config.objectName) || config.entityType === "FACILITY";
+      const entityType: "TENANT" | "FACILITY" = isFacility ? "FACILITY" : "TENANT";
       return {
         id: config.objectName,
         name: config.displayName.trim() || config.objectName,
         category: mapObjectCategory(config),
+        entityType,
         terminal,
         floor: floorCode === "FF" ? "Lantai 2" : "Lantai 1",
         floorCode,

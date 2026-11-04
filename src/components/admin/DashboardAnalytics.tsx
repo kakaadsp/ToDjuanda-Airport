@@ -19,6 +19,7 @@ export type TenantAnalyticsRow = {
   id?: string;
   name?: string;
   category: string;
+  entityType?: "TENANT" | "FACILITY";
   terminal: string;
   floor?: string;
   floorCode?: string;
@@ -26,6 +27,21 @@ export type TenantAnalyticsRow = {
   status: string;
   hours?: string;
 };
+
+// Deteksi apakah suatu objek denah adalah fasilitas & layanan publik
+function isFacilityItem(tenant: TenantAnalyticsRow): boolean {
+  if (tenant.entityType === "FACILITY") return true;
+  const name = `${tenant.name || ""} ${tenant.spaceCode || ""}`.toLowerCase();
+  const cat = (tenant.category || "").toLowerCase();
+  return (
+    cat.includes("fasilitas") ||
+    cat.includes("toilet") ||
+    cat.includes("mushola") ||
+    cat.includes("musala") ||
+    cat.includes("atm") ||
+    /(?:avsec|toilet|mushola|musala|nursery|restroom|atm|gate|door|taman|baggage|layanan|informasi|kesehatan|karantina|inspection)/i.test(name)
+  );
+}
 
 export function DashboardAnalytics({ tenants }: { tenants: TenantAnalyticsRow[] }) {
   const [selectedFloor, setSelectedFloor] = useState<"ALL" | "L1" | "L2">("ALL");
@@ -40,37 +56,45 @@ export function DashboardAnalytics({ tenants }: { tenants: TenantAnalyticsRow[] 
     );
   }, [tenants, selectedFloor]);
 
-  // Tenant vs Walkway metrics
-  const totalSpaces = filteredTenants.length;
-  const occupiedSpaces = filteredTenants.filter((tenant) => tenant.status !== "WALKWAY").length;
-  const vacantSpaces = filteredTenants.filter((tenant) => tenant.status === "WALKWAY").length;
+  // 1. Pisahkan Tenant Komersial (Unit Usaha) vs Fasilitas & Layanan Publik
+  const commercialSpaces = useMemo(() => filteredTenants.filter((t) => !isFacilityItem(t)), [filteredTenants]);
+  const facilitySpaces = useMemo(() => filteredTenants.filter((t) => isFacilityItem(t)), [filteredTenants]);
 
-  // Operational metrics of occupied commercial tenants
-  const activeCount = filteredTenants.filter((tenant) => tenant.status === "ACTIVE").length;
-  const closedCount = filteredTenants.filter((tenant) => tenant.status === "TEMPORARILY_CLOSED").length;
-  const inactiveCount = closedCount;
-  const activePercent = occupiedSpaces > 0 ? Math.round((activeCount / occupiedSpaces) * 100) : 0;
+  // Metrik Komersial
+  const commTotal = commercialSpaces.length;
+  const commOccupied = commercialSpaces.filter((t) => t.status !== "WALKWAY").length;
+  const commVacant = commercialSpaces.filter((t) => t.status === "WALKWAY").length;
+  const commActive = commercialSpaces.filter((t) => t.status === "ACTIVE").length;
+  const commClosed = commercialSpaces.filter((t) => t.status === "TEMPORARILY_CLOSED").length;
+  const commOccupancyPercent = commTotal > 0 ? Math.round((commOccupied / commTotal) * 100) : 0;
+  const commActivePercent = commOccupied > 0 ? Math.round((commActive / commOccupied) * 100) : 0;
 
-  // Space occupancy rate (excluding vacant / walkable hallway spaces)
-  const occupancyPercent = totalSpaces > 0 ? Math.round((occupiedSpaces / totalSpaces) * 100) : 0;
+  // Metrik Fasilitas & Layanan Publik
+  const facilityTotal = facilitySpaces.length;
+  const facilityActive = facilitySpaces.filter((t) => t.status === "ACTIVE" || t.status === "WALKWAY").length;
+  const facilityClosed = facilitySpaces.filter((t) => t.status === "TEMPORARILY_CLOSED").length;
+  const facilityActivePercent = facilityTotal > 0 ? Math.round((facilityActive / facilityTotal) * 100) : 0;
 
-  // Category composition
+  // Total yang membutuhkan atensi (tutup sementara)
+  const inactiveCount = commClosed + facilityClosed;
+
+  // Category composition (Murni untuk gerai komersial)
   const categoryRows = useMemo(() => {
-    const counts = filteredTenants.reduce<Record<string, number>>((result, tenant) => {
-      const cat = tenant.category || "Lainnya";
+    const counts = commercialSpaces.reduce<Record<string, number>>((result, tenant) => {
+      const cat = tenant.category || "Komersial Lainnya";
       result[cat] = (result[cat] ?? 0) + 1;
       return result;
     }, {});
     return Object.entries(counts).sort((a, b) => b[1] - a[1]);
-  }, [filteredTenants]);
+  }, [commercialSpaces]);
 
   const maxCategory = Math.max(1, ...categoryRows.map(([, count]) => count));
   const topCategory = categoryRows[0] || ["-", 0];
-  const topCategoryPercent = filteredTenants.length
-    ? Math.round((Number(topCategory[1]) / filteredTenants.length) * 100)
+  const topCategoryPercent = commOccupied > 0
+    ? Math.round((Number(topCategory[1]) / commOccupied) * 100)
     : 0;
 
-  // Floor distribution in Terminal 1
+  // Floor distribution in Terminal 1 (Breakdown per Lantai)
   const floorBreakdown = useMemo(() => {
     const floors = [
       { id: "T1-L1", label: "Terminal 1 • Lantai 1 (Ground Floor)", terminal: "T1", floor: "Lantai 1" },
@@ -83,18 +107,22 @@ export function DashboardAnalytics({ tenants }: { tenants: TenantAnalyticsRow[] 
         const matching = tenants.filter(
           (t) => t.floor?.includes(f.floor.slice(-1)) || t.floorCode?.includes(f.floor.slice(-1))
         );
-        const occupied = matching.filter((t) => t.status !== "WALKWAY").length;
-        const vacant = matching.filter((t) => t.status === "WALKWAY").length;
-        const active = matching.filter((t) => t.status === "ACTIVE").length;
-        const closed = matching.filter((t) => t.status === "TEMPORARILY_CLOSED").length;
-        const occRate = matching.length ? Math.round((occupied / matching.length) * 100) : 0;
+        const commMatching = matching.filter((t) => !isFacilityItem(t));
+        const facMatching = matching.filter((t) => isFacilityItem(t));
+        const commOccupiedCount = commMatching.filter((t) => t.status !== "WALKWAY").length;
+        const commVacantCount = commMatching.filter((t) => t.status === "WALKWAY").length;
+        const commActiveCount = commMatching.filter((t) => t.status === "ACTIVE").length;
+        const facActiveCount = facMatching.filter((t) => t.status === "ACTIVE" || t.status === "WALKWAY").length;
+        const occRate = commMatching.length ? Math.round((commOccupiedCount / commMatching.length) * 100) : 0;
         return {
           ...f,
           total: matching.length,
-          occupied,
-          vacant,
-          active,
-          closed,
+          commTotal: commMatching.length,
+          commOccupied: commOccupiedCount,
+          commVacant: commVacantCount,
+          commActive: commActiveCount,
+          facTotal: facMatching.length,
+          facActive: facActiveCount,
           occRate,
         };
       });
@@ -198,7 +226,7 @@ export function DashboardAnalytics({ tenants }: { tenants: TenantAnalyticsRow[] 
           gap: "16px",
         }}
       >
-        {/* KPI 1: TOTAL TENANT */}
+        {/* KPI 1: TENANT KOMERSIAL */}
         <div
           style={{
             background: "#ffffff",
@@ -213,7 +241,7 @@ export function DashboardAnalytics({ tenants }: { tenants: TenantAnalyticsRow[] 
         >
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
             <span style={{ fontSize: "12.5px", fontWeight: "750", color: "#64748b", textTransform: "uppercase" }}>
-              Total Tenant Komersial
+              Tenant Komersial
             </span>
             <div
               style={{
@@ -233,7 +261,7 @@ export function DashboardAnalytics({ tenants }: { tenants: TenantAnalyticsRow[] 
           <div>
             <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
               <strong style={{ fontSize: "28px", fontWeight: "850", color: "#0f172a" }}>
-                {occupiedSpaces}
+                {commOccupied}
               </strong>
               <span style={{ fontSize: "13px", color: "#64748b" }}>Unit Usaha</span>
             </div>
@@ -241,12 +269,12 @@ export function DashboardAnalytics({ tenants }: { tenants: TenantAnalyticsRow[] 
               <span style={{ padding: "2px 8px", borderRadius: "6px", background: "#f1f5f9", fontWeight: "700", color: "#334155" }}>
                 Terminal 1 • Bandara Juanda
               </span>
-              <span>{vacantSpaces > 0 ? `(+${vacantSpaces} area kosong/jalan)` : "Terdata di Wayfinding"}</span>
+              <span>{commActive} Buka • {commClosed} Tutup</span>
             </div>
           </div>
         </div>
 
-        {/* KPI 2: OPERASIONAL AKTIF */}
+        {/* KPI 2: OKUPANSI KAVLING KOMERSIAL */}
         <div
           style={{
             background: "#ffffff",
@@ -261,54 +289,7 @@ export function DashboardAnalytics({ tenants }: { tenants: TenantAnalyticsRow[] 
         >
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
             <span style={{ fontSize: "12.5px", fontWeight: "750", color: "#64748b", textTransform: "uppercase" }}>
-              Status Operasional
-            </span>
-            <div
-              style={{
-                width: "38px",
-                height: "38px",
-                borderRadius: "10px",
-                background: "#ecfdf5",
-                color: "#10b981",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <CheckCircle2 size={20} />
-            </div>
-          </div>
-          <div>
-            <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
-              <strong style={{ fontSize: "28px", fontWeight: "850", color: "#10b981" }}>
-                {activePercent}%
-              </strong>
-              <span style={{ fontSize: "13px", color: "#64748b" }}>Aktif Buka</span>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "8px", fontSize: "12px", color: "#64748b" }}>
-              <span style={{ color: "#10b981", fontWeight: "700" }}>{activeCount} Beroperasi</span>
-              <span>•</span>
-              <span style={{ color: inactiveCount > 0 ? "#e11d48" : "#94a3b8", fontWeight: "700" }}>{inactiveCount} Tutup Sementara</span>
-            </div>
-          </div>
-        </div>
-
-        {/* KPI 3: TINGKAT OKUPANSI */}
-        <div
-          style={{
-            background: "#ffffff",
-            borderRadius: "16px",
-            padding: "20px",
-            border: "1px solid #e2e8f0",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
-            <span style={{ fontSize: "12.5px", fontWeight: "750", color: "#64748b", textTransform: "uppercase" }}>
-              Tingkat Okupansi Ruang
+              Okupansi Ruang Komersial
             </span>
             <div
               style={{
@@ -328,24 +309,24 @@ export function DashboardAnalytics({ tenants }: { tenants: TenantAnalyticsRow[] 
           <div>
             <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
               <strong style={{ fontSize: "28px", fontWeight: "850", color: "#2563eb" }}>
-                {occupancyPercent}%
+                {commOccupancyPercent}%
               </strong>
               <span style={{ fontSize: "13px", color: "#64748b" }}>Kavling Terisi</span>
             </div>
             <div style={{ marginTop: "10px" }}>
               <div style={{ height: "6px", width: "100%", background: "#e2e8f0", borderRadius: "999px", overflow: "hidden" }}>
-                <div style={{ height: "100%", width: `${occupancyPercent}%`, background: "#2563eb", borderRadius: "999px" }} />
+                <div style={{ height: "100%", width: `${commOccupancyPercent}%`, background: "#2563eb", borderRadius: "999px" }} />
               </div>
               <span style={{ display: "block", fontSize: "11.5px", color: "#64748b", marginTop: "4px" }}>
-                {vacantSpaces > 0
-                  ? `${occupiedSpaces} dari ${totalSpaces} kavling terisi • ${vacantSpaces} kavling kosong/jalan`
-                  : `${occupiedSpaces} dari ${totalSpaces} unit kavling terisi penuh`}
+                {commVacant > 0
+                  ? `${commOccupied} dari ${commTotal} kavling terpakai (${commVacant} jalan/kosong)`
+                  : `${commOccupied} dari ${commTotal} kavling terisi penuh`}
               </span>
             </div>
           </div>
         </div>
 
-        {/* KPI 4: KATEGORI UNGGULAN */}
+        {/* KPI 3: FASILITAS & LAYANAN PUBLIK */}
         <div
           style={{
             background: "#ffffff",
@@ -360,32 +341,85 @@ export function DashboardAnalytics({ tenants }: { tenants: TenantAnalyticsRow[] 
         >
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
             <span style={{ fontSize: "12.5px", fontWeight: "750", color: "#64748b", textTransform: "uppercase" }}>
-              Kategori Terbanyak
+              Fasilitas & Layanan Publik
             </span>
             <div
               style={{
                 width: "38px",
                 height: "38px",
                 borderRadius: "10px",
-                background: "#faf5ff",
-                color: "#9333ea",
+                background: "#f5f3ff",
+                color: "#7c3aed",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              <Layers size={20} />
+              <Sparkles size={20} />
             </div>
           </div>
           <div>
-            <strong style={{ fontSize: "20px", fontWeight: "800", color: "#0f172a", display: "block", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-              {topCategory[0]}
-            </strong>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "6px", fontSize: "12px", color: "#64748b" }}>
-              <span style={{ padding: "2px 8px", borderRadius: "6px", background: "#faf5ff", color: "#7e22ce", fontWeight: "750" }}>
-                {topCategory[1]} Tenant
+            <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
+              <strong style={{ fontSize: "28px", fontWeight: "850", color: "#7c3aed" }}>
+                {facilityTotal}
+              </strong>
+              <span style={{ fontSize: "13px", color: "#64748b" }}>Titik Layanan</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "8px", fontSize: "12px", color: "#64748b" }}>
+              <span style={{ padding: "2px 8px", borderRadius: "6px", background: "#ede9fe", fontWeight: "750", color: "#6d28d9" }}>
+                {facilityActivePercent}% Siap Melayani
               </span>
-              <span>{topCategoryPercent}% dari total komersial</span>
+              <span>{facilityActive} Aktif • {facilityClosed} Pemeliharaan</span>
+            </div>
+          </div>
+        </div>
+
+        {/* KPI 4: STATUS OPERASIONAL TENANT */}
+        <div
+          style={{
+            background: "#ffffff",
+            borderRadius: "16px",
+            padding: "20px",
+            border: "1px solid #e2e8f0",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
+            <span style={{ fontSize: "12.5px", fontWeight: "750", color: "#64748b", textTransform: "uppercase" }}>
+              Reliabilitas Gerai
+            </span>
+            <div
+              style={{
+                width: "38px",
+                height: "38px",
+                borderRadius: "10px",
+                background: "#ecfdf5",
+                color: "#10b981",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <CheckCircle2 size={20} />
+            </div>
+          </div>
+          <div>
+            <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
+              <strong style={{ fontSize: "28px", fontWeight: "850", color: "#10b981" }}>
+                {commActivePercent}%
+              </strong>
+              <span style={{ fontSize: "13px", color: "#64748b" }}>Aktif Beroperasi</span>
+            </div>
+            <div style={{ marginTop: "10px" }}>
+              <div style={{ height: "6px", width: "100%", background: "#e2e8f0", borderRadius: "999px", overflow: "hidden" }}>
+                <div style={{ height: "100%", width: `${commActivePercent}%`, background: "#10b981", borderRadius: "999px" }} />
+              </div>
+              <span style={{ display: "block", fontSize: "11.5px", color: "#64748b", marginTop: "4px" }}>
+                {commActive} dari {commOccupied} gerai buka normal
+              </span>
             </div>
           </div>
         </div>
@@ -423,15 +457,15 @@ export function DashboardAnalytics({ tenants }: { tenants: TenantAnalyticsRow[] 
             <div
               className="donut-chart"
               style={{
-                "--chart-value": `${activePercent * 3.6}deg`,
+                "--chart-value": `${commActivePercent * 3.6}deg`,
                 width: "124px",
                 height: "124px",
               } as React.CSSProperties}
               role="img"
-              aria-label={`${activePercent} persen tenant aktif`}
+              aria-label={`${commActivePercent} persen tenant komersial aktif`}
             >
               <div>
-                <strong style={{ fontSize: "20px" }}>{activePercent}%</strong>
+                <strong style={{ fontSize: "20px" }}>{commActivePercent}%</strong>
                 <span style={{ fontSize: "10px" }}>Aktif</span>
               </div>
             </div>
@@ -440,20 +474,20 @@ export function DashboardAnalytics({ tenants }: { tenants: TenantAnalyticsRow[] 
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px" }}>
                   <i style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#10b981", display: "inline-block" }} />
-                  <strong style={{ color: "#0f172a" }}>{activeCount} Unit</strong>
+                  <strong style={{ color: "#0f172a" }}>{commActive} Unit Komersial</strong>
                 </div>
                 <span style={{ fontSize: "11.5px", color: "#64748b", paddingLeft: "18px" }}>
-                  Buka & Siap Melayani ({activePercent}%)
+                  Gerai Buka ({commActivePercent}%)
                 </span>
               </div>
 
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px" }}>
                   <i style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#f43f5e", display: "inline-block" }} />
-                  <strong style={{ color: "#0f172a" }}>{inactiveCount} Unit</strong>
+                  <strong style={{ color: "#0f172a" }}>{commClosed} Unit</strong>
                 </div>
                 <span style={{ fontSize: "11.5px", color: "#64748b", paddingLeft: "18px" }}>
-                  Tutup Sementara ({100 - activePercent}%)
+                  Tutup Sementara ({100 - commActivePercent}%)
                 </span>
               </div>
             </div>
@@ -482,7 +516,7 @@ export function DashboardAnalytics({ tenants }: { tenants: TenantAnalyticsRow[] 
 
           <div style={{ display: "flex", flexDirection: "column", gap: "10px", flex: 1, justifyContent: "center" }}>
             {categoryRows.map(([cat, count], idx) => {
-              const pct = filteredTenants.length ? Math.round((count / filteredTenants.length) * 100) : 0;
+              const pct = commOccupied > 0 ? Math.round((count / commOccupied) * 100) : 0;
               const barWidth = Math.round((count / maxCategory) * 100);
               const colors = ["#00a8bd", "#0284c7", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981"];
               const currentColor = colors[idx % colors.length];
@@ -537,7 +571,7 @@ export function DashboardAnalytics({ tenants }: { tenants: TenantAnalyticsRow[] 
                       {row.label}
                     </span>
                     <span style={{ fontSize: "11.5px", color: "#64748b" }}>
-                      <strong style={{ color: "#0f172a" }}>{row.occupied}</strong>/{row.total} kavling ({row.occRate}% terisi{row.vacant > 0 ? `, ${row.vacant} jalan/kosong` : ""})
+                      <strong style={{ color: "#0f172a" }}>{row.commOccupied}</strong>/{row.commTotal} tenant komersial ({row.occRate}% terisi{row.commVacant > 0 ? `, ${row.commVacant} jalan` : ""}) &bull; <strong style={{ color: "#7c3aed" }}>{row.facTotal}</strong> fasilitas
                     </span>
                   </div>
                   <div style={{ height: "8px", width: "100%", background: "#f1f5f9", borderRadius: "999px", overflow: "hidden" }}>
@@ -655,7 +689,7 @@ export function DashboardAnalytics({ tenants }: { tenants: TenantAnalyticsRow[] 
         <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
           <div style={{ textAlign: "right" }}>
             <strong style={{ fontSize: "22px", color: "#00a8bd", display: "block", fontWeight: "850" }}>
-              {activePercent}%
+              {commActivePercent}%
             </strong>
             <span style={{ fontSize: "11.5px", color: "#9eb4ba" }}>Service Reliability</span>
           </div>
