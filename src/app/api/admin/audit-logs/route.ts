@@ -74,21 +74,24 @@ export async function GET() {
       });
     }
 
-    // Ambil log aktivitas terbaru (maksimal 150)
-    const logs = await prisma.auditLog.findMany({
-      include: {
-        actor: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            role: true,
+    // Ambil log aktivitas terbaru dan jumlah akun admin aktif terdaftar
+    const [logs, activeUsersCount] = await Promise.all([
+      prisma.auditLog.findMany({
+        include: {
+          actor: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true,
+            },
           },
         },
-      },
-      orderBy: { createdAt: "desc" },
-      take: 150,
-    });
+        orderBy: { createdAt: "desc" },
+        take: 150,
+      }),
+      prisma.user.count({ where: { active: true } }),
+    ]);
 
     const now = new Date();
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -99,7 +102,9 @@ export async function GET() {
     const formattedLogs = logs.map((log) => {
       const email = log.actor?.email ?? "system@juanda-airport.local";
       const name = log.actor?.name ?? "Sistem Otomatis";
-      activeAdminEmails.add(email);
+      if (log.actor?.email) {
+        activeAdminEmails.add(log.actor.email);
+      }
 
       if (log.createdAt >= startOfToday) {
         todayLogsCount++;
@@ -180,7 +185,7 @@ export async function GET() {
       metrics: {
         total: logs.length,
         todayCount: todayLogsCount,
-        activeAdminsCount: activeAdminEmails.size,
+        activeAdminsCount: activeUsersCount || activeAdminEmails.size,
         lastActionTime: logs[0] ? logs[0].createdAt.toISOString() : null,
       },
     }, {
