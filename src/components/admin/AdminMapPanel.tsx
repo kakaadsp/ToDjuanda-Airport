@@ -687,25 +687,6 @@ export function AdminMapPanel({ initialObjectName = null, focusNonce = 0 }: { in
                   />
                 </EditorField>
 
-                {draft.occupancy !== "OCCUPIED" && (
-                  <>
-                    <EditorField label="Jam buka">
-                      <input
-                        type="time"
-                        value={draft.openTime === "CLOSED" ? "" : draft.openTime}
-                        onChange={(event) => updateDraft("openTime", event.target.value)}
-                      />
-                    </EditorField>
-                    <EditorField label="Jam tutup">
-                      <input
-                        type="time"
-                        value={draft.closeTime === "CLOSED" ? "" : draft.closeTime}
-                        onChange={(event) => updateDraft("closeTime", event.target.value)}
-                      />
-                    </EditorField>
-                  </>
-                )}
-
                 <EditorField label="Masa aktif mulai">
                   <input
                     type="date"
