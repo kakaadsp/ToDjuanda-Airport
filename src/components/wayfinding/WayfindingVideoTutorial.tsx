@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import {
   ArrowRight,
   Play,
-  Clock,
 } from "lucide-react";
 import { useMapStore } from "@/store/mapStore";
 import styles from "./WayfindingVideoTutorial.module.css";
@@ -99,7 +98,6 @@ export function WayfindingVideoTutorial({
                 {/* Top badges */}
                 <div className="vts-poster-topbar">
                   <span className="vts-badge-hd">{videoUrl ? "HD 1080p" : (lang === "ID" ? "PANDUAN INTERAKTIF" : "INTERACTIVE GUIDE")}</span>
-                  <span className="vts-badge-dur"><Clock size={11} />{videoUrl ? "01:30" : (lang === "ID" ? "±2 menit" : "about 2 min")}</span>
                 </div>
 
                 {/* Center play */}
