@@ -416,8 +416,31 @@ button:active { transform: translateY(1px); }
 
 .admin-header-right { display: flex; align-items: center; gap: 12px; }
 .session-role-badge { min-height: 34px; display: inline-flex; align-items: center; gap: 7px; padding: 0 12px; border-radius: 999px; background: #e3f7f9; border: 1px solid rgba(0, 168, 189, 0.3); color: #008ca2; font-size: 11px; font-weight: 800; }
-.admin-signout-button { min-height: 34px; display: inline-flex; align-items: center; gap: 7px; padding: 0 12px; border-radius: 999px; background: #ffffff; border: 1px solid #dfe7e9; color: #5e6f75; font-size: 11px; font-weight: 750; cursor: pointer; transition: all 0.15s ease; }
-.admin-signout-button:hover { color: #b91c1c; border-color: #fecaca; background: #fef2f2; }
+.admin-signout-button {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid #dfe7e9;
+  color: #4b5563;
+  font-size: 12px;
+  font-weight: 750;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+.admin-signout-button:hover {
+  color: #dc2626;
+  border-color: #fca5a5;
+  background: #fef2f2;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.08);
+}
+.admin-signout-button:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
 
 /* Admin Body & Sidebar Layout */
 
