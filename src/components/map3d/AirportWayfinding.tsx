@@ -14,28 +14,42 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls, useProgress } from "@react-three/drei";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import {
+  ArrowLeft,
+  ArrowUpDown,
+  Bath,
   Box,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
   ChevronUp,
-  Navigation,
-  MapPin,
-  Minus,
   Compass,
   Crosshair,
+  Globe,
+  HelpCircle,
+  Home,
+  Info,
+  Landmark,
+  Layers,
+  LoaderCircle,
   LocateFixed,
   LocateOff,
-  LoaderCircle,
+  MapPin,
+  Menu,
+  Minus,
   MousePointer2,
+  Navigation,
   Pause,
+  Plane,
   Play,
   Plus,
   RotateCcw,
   Search,
+  ShoppingBag,
   Trees,
+  Utensils,
   X,
 } from "lucide-react";
+import Link from "next/link";
 import * as THREE from "three";
 import { PassengerRoadmap } from "./PassengerRoadmap";
 import { FloorSwitcher } from "./FloorSwitcher";
@@ -528,7 +542,11 @@ export function AirportWayfinding() {
     }
   }, []);
 
+  const [directionsOpen, setDirectionsOpen] = useState(false);
+  const [menuDrawerOpen, setMenuDrawerOpen] = useState(false);
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const lang = useMapStore((state) => state.lang);
+  const setLang = useMapStore((state) => state.setLang);
   const copy = mapCopy[lang];
   useEffect(() => {
     // Muat dari DB terlebih dahulu, kemudian listen event localStorage
@@ -872,6 +890,7 @@ export function AirportWayfinding() {
         ? `${lang === "ID" ? "Rute melewati" : "Route via"} ${route.transitions.map((transition) => transition.label.toLocaleLowerCase(lang === "ID" ? "id-ID" : "en-US")).join(", ")}.`
         : copy.routeHint);
       setSelected(createSelectedObject(record.object));
+      setDirectionsOpen(true);
       // Mulai dari lantai titik awal. Lantai lain disembunyikan agar rute tidak
       // tertutup pelat lantai di atasnya.
       if (multiFloor) setFloorView(start.floor);
@@ -1003,17 +1022,45 @@ export function AirportWayfinding() {
     [calculateRoute, lang, mapObjectConfigs, objects, selectingStart, setBuildingAsStart, startPoint],
   );
 
+  const CATEGORIES = useMemo(
+    () => [
+      { id: "gate", label: "Gate", icon: Plane, query: "gate" },
+      { id: "food", label: lang === "EN" ? "Food" : "Kuliner", icon: Utensils, query: "makan" },
+      { id: "shop", label: lang === "EN" ? "Shopping" : "Belanja", icon: ShoppingBag, query: "toko" },
+      { id: "mosque", label: lang === "EN" ? "Mosque" : "Musala", icon: Landmark, query: "musala" },
+      { id: "toilet", label: "Toilet", icon: Bath, query: "toilet" },
+      { id: "atm", label: "ATM", icon: Landmark, query: "atm" },
+    ],
+    [lang],
+  );
+
+  const handleCategoryClick = useCallback(
+    (catId: string, catQuery: string) => {
+      if (activeCategory === catId) {
+        setActiveCategory(null);
+        setQuery("");
+        setSearchFocused(false);
+      } else {
+        setActiveCategory(catId);
+        setQuery(catQuery);
+        setSearchFocused(true);
+      }
+    },
+    [activeCategory],
+  );
+
   const searchResults = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase("id-ID");
     if (!normalizedQuery) return [];
     return selectableBuildings
       .filter((item) => {
         const displayName = mapObjectConfigs[item.name]?.displayName ?? "";
-        return `${item.name} ${item.selectableLabel ?? getSelectableLabel(item.name) ?? ""} ${displayName}`
+        const cat = item.metadata?.category ?? "";
+        return `${item.name} ${item.selectableLabel ?? getSelectableLabel(item.name) ?? ""} ${displayName} ${cat}`
           .toLocaleLowerCase("id-ID")
           .includes(normalizedQuery);
       })
-      .slice(0, 8);
+      .slice(0, 10);
   }, [mapObjectConfigs, query, selectableBuildings]);
 
   const chooseSearchResult = (record: SceneObjectRecord) => {
@@ -1021,15 +1068,48 @@ export function AirportWayfinding() {
       setQuery("");
       setSearchFocused(false);
       setBuildingAsStart(record);
+      setDirectionsOpen(true);
       return;
     }
-    if (startPoint) calculateRoute(record);
-    else setBuildingAsStart(record);
+    if (startPoint) {
+      calculateRoute(record);
+      setDirectionsOpen(true);
+    } else {
+      setSelected(createSelectedObject(record.object));
+      if (multiFloor) setFloorView(record.floor);
+      viewerApi.current?.focusObject(record.object);
+    }
     setQuery("");
     setSearchFocused(false);
-    if (multiFloor && !startPoint) setFloorView(record.floor);
-    viewerApi.current?.focusObject(record.object);
   };
+
+  const swapOriginDestination = useCallback(() => {
+    if (!destinationName) return;
+    const destRecord = objects.find(
+      (r) =>
+        r.name === destinationName ||
+        r.selectableLabel === destinationName ||
+        mapObjectConfigs[r.name]?.displayName === destinationName,
+    );
+    const startRecord = startName
+      ? objects.find(
+          (r) =>
+            r.name === startName ||
+            r.selectableLabel === startName ||
+            mapObjectConfigs[r.name]?.displayName === startName,
+        )
+      : null;
+    if (destRecord) {
+      setBuildingAsStart(destRecord);
+      if (startRecord) {
+        calculateRoute(startRecord);
+      } else {
+        setDestinationPoint(null);
+        setDestinationName(null);
+        clearRoute();
+      }
+    }
+  }, [calculateRoute, clearRoute, destinationName, mapObjectConfigs, objects, setBuildingAsStart, startName]);
 
   const beginStartSelection = useCallback(() => {
     setQuery("");
@@ -1151,6 +1231,7 @@ export function AirportWayfinding() {
     setSelected(null);
     setQuery("");
     setSelectingStart(false);
+    setDirectionsOpen(false);
     setViewMode("map");
     window.requestAnimationFrame(() => viewerApi.current?.resetView());
   }, [automaticLocation, clearRoute, copy.selectStartHint]);
@@ -1312,263 +1393,597 @@ export function AirportWayfinding() {
       <LoadingOverlay modelReady={bounds !== null} lang={lang} />
       <FloorSwitcher view={shownFloorView} floors={modelFloors.length ? modelFloors : ["L1"]} onSelect={changeFloor} />
 
-      <aside
-        className="sea-planner"
-        data-expanded={mobileSheetExpanded ? "true" : "false"}
-        data-route-active={routeSessionActive ? "true" : "false"}
-        data-view-mode={viewMode}
-        aria-label={lang === "ID" ? "Pencarian rute" : "Route search"}
-      >
-        <div
-          className="sea-sheet-handle"
-          onClick={() => setMobileSheetExpanded((prev) => !prev)}
-          onTouchStart={handleSheetTouchStart}
-          onTouchEnd={handleSheetTouchEnd}
-          aria-hidden="true"
-        />
-        <div
-          className="sea-planner-heading"
-          onClick={() => setMobileSheetExpanded((prev) => !prev)}
-          onTouchStart={handleSheetTouchStart}
-          onTouchEnd={handleSheetTouchEnd}
-        >
-          <div className="sea-planner-heading-titles">
-            <h1>{copy.directions}</h1>
-            <span>TERMINAL 1 · {floorViewLabel(shownFloorView, modelFloors.length ? modelFloors : ["L1"]).toLocaleUpperCase("id-ID")}</span>
-          </div>
-          <button
-            type="button"
-            className="sea-planner-mobile-toggle"
-            onClick={(e) => {
-              e.stopPropagation();
-              setMobileSheetExpanded((prev) => !prev);
-            }}
-            aria-label={mobileSheetExpanded ? "Kecilkan panel" : "Perbesar panel"}
-          >
-            {mobileSheetExpanded ? <ChevronDown size={18} /> : <ChevronUp size={18} />}
-          </button>
-        </div>
-        <div className="sea-planner-body">
-        <div className="sea-live-location" data-state={locationMapped ? "active" : passengerLocation.status} role="status" aria-live="polite">
-          <div className="sea-live-location-main">
-            {locationMapped ? <Crosshair size={16} /> : passengerLocation.status === "checking" ? <LoaderCircle size={16} className="sea-location-spinner" /> : <MapPin size={16} />}
-            <span>
-              <strong>{!automaticLocation ? (lang === "ID" ? "Pilih posisi Anda di peta" : "Choose your position on the map") : locationMapped ? copy.locationActive : passengerLocation.status === "checking" ? copy.locating : passengerLocation.status === "denied" ? copy.locationDenied : passengerLocation.status === "timeout" ? copy.locationTimeout : passengerLocation.status === "unavailable" ? copy.locationUnavailable : usableLocationReading ? copy.locationActive : (passengerLocation.reading ? (passengerLocation.reading.accuracy > T1_GEO_CALIBRATION.maximumUsableAccuracyMeters ? copy.locationInaccurate : copy.locationOutside) : copy.locating)}</strong>
-              <small>{usableLocationReading ? `±${Math.round(usableLocationReading.accuracy)} m${locationMapped ? ` · ${FLOOR_LABELS[passengerFloor]}` : ""}` : copy.locationFloorNote}</small>
-            </span>
-          </div>
-          <div className="sea-live-location-actions">
-            {modelFloors.length > 1 && (["L1", "L2"] as FloorId[]).filter((floor) => modelFloors.includes(floor)).map((floor) => (
-              <button key={floor} type="button" className={passengerFloor === floor ? "is-selected" : ""} onClick={() => { setPassengerFloor(floor); setAutomaticLocation(true); setLocationMapped(false); }} aria-pressed={passengerFloor === floor}>{FLOOR_LABELS[floor]}</button>
-            ))}
-          </div>
-        </div>
-        <div className="sea-trip-fields">
-          <button type="button" className={selectingStart ? "is-current" : ""} onClick={() => { beginStartSelection(); setMobileSheetExpanded(true); }} disabled={!navigation}>
-            <span className="sea-pin is-origin" />
-            <span><small>{copy.from}</small><strong>{startName ?? copy.chooseStart}</strong></span>
-          </button>
-          <button type="button" className={!selectingStart ? "is-current" : ""} onClick={() => { setSelectingStart(false); setQuery(""); setSearchFocused(true); setMobileSheetExpanded(true); }} disabled={!startPoint}>
-            <span className="sea-pin is-destination" />
-            <span><small>{copy.to}</small><strong>{routeSessionActive ? destinationName : copy.chooseDestination}</strong></span>
-          </button>
-        </div>
-        <div className="sea-search-wrap">
-          <label className="sea-search">
-            <Search size={18} />
-            <input value={query} onChange={(event) => { setQuery(event.target.value); setSearchFocused(true); }} onFocus={() => { setSearchFocused(true); setMobileSheetExpanded(true); }} onBlur={() => window.setTimeout(() => setSearchFocused(false), 140)} placeholder={`${selectingStart || !startPoint ? copy.searchStart : copy.searchDestination} (${searchPlaceholderExample})`} aria-label={selectingStart || !startPoint ? copy.searchStart : copy.searchDestination} />
-            {query && <button type="button" onClick={() => setQuery("")} aria-label={copy.clearSearch}><X size={16} /></button>}
-          </label>
-          {searchFocused && query && <div className="sea-search-results">
-            {searchResults.length ? searchResults.map((record) => {
-              const displayName = mapObjectConfigs[record.name]?.displayName?.trim();
-              const floorNote = multiFloor ? ` · ${FLOOR_LABELS[record.floor]}` : "";
-              return <button key={record.uuid} type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => chooseSearchResult(record)}><MapPin size={16} /><span><strong>{displayName || record.selectableLabel || record.name}</strong><small>{displayName || record.selectableLabel ? `${record.name} · ${record.metadata.category}` : record.metadata.category}{floorNote}</small></span></button>;
-            }) : <p>{copy.noResults}</p>}
-          </div>}
-        </div>
-        <p className="sea-hint" role="status">{gridError ?? routeMessage}</p>
-        {routeMetrics && routeSteps.length > 0 && <div className="sea-route-details">
-          <div className="sea-route-summary"><div><strong>{Math.round(remainingRouteDistance)} m</strong><span>Perkiraan {remainingRouteMinutes} menit{routeFloorsText ? ` · ${routeFloorsText}` : ""}</span></div><button type="button" onClick={resetRoute} aria-label="Hapus rute"><X size={18} /></button></div>
-          <div className="sea-step-header"><h2>{copy.stepTitle}</h2><span>{activeStepIndex + 1} / {routeSteps.length}</span></div>
-          <ol className="sea-step-list">{routeSteps.map((step, index) => <li key={`${step.kind}-${step.startIndex}`}><button type="button" className={index === activeStepIndex ? "is-active" : ""} onClick={() => selectRouteStep(index)} aria-current={index === activeStepIndex ? "step" : undefined}><span className="sea-step-number">{index + 1}</span><span><strong>{step.label}</strong><small>{step.kind === "arrive" ? destinationName : step.kind === "up" || step.kind === "down" ? "Ikuti papan petunjuk ke lantai tujuan" : `Sekitar ${Math.round(step.distance)} m${multiFloor && routePointFloors[step.startIndex] ? ` · ${FLOOR_LABELS[routePointFloors[step.startIndex]]}` : ""}`}</small></span></button></li>)}</ol>
-        </div>}
-        </div>
-        {routeMetrics && routeSteps.length > 0 && (
-          <div className="sea-route-actions">
-            <div className="sea-step-controls">
+      {/* Google Maps Floating Search Bar & Category Chips */}
+      <div className="gmaps-top-container">
+        <div className="gmaps-searchbox-wrapper">
+          <div className="gmaps-searchbox">
+            <button
+              type="button"
+              className="gmaps-icon-btn gmaps-menu-btn"
+              onClick={() => setMenuDrawerOpen(true)}
+              aria-label={lang === "EN" ? "Open menu" : "Buka menu navigasi"}
+              title={lang === "EN" ? "Menu" : "Menu"}
+            >
+              <Menu size={20} />
+            </button>
+            <input
+              type="text"
+              className="gmaps-search-input"
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setSearchFocused(true);
+              }}
+              onFocus={() => setSearchFocused(true)}
+              placeholder={lang === "EN" ? "Search Terminal 1 (Gate, food, ATM...)" : "Cari di Terminal 1 (Gate, kuliner, ATM...)"}
+              aria-label={lang === "EN" ? "Search map" : "Cari peta"}
+            />
+            {query && (
               <button
                 type="button"
-                className="sea-btn-card sea-btn-step-prev"
-                onClick={() => selectRouteStep(activeStepIndex - 1)}
-                disabled={activeStepIndex === 0}
+                className="gmaps-icon-btn gmaps-clear-btn"
+                onClick={() => {
+                  setQuery("");
+                  setActiveCategory(null);
+                }}
+                aria-label={lang === "EN" ? "Clear" : "Hapus"}
               >
-                <ChevronLeft size={13} />
-                <span>{copy.previous}</span>
+                <X size={18} />
               </button>
-              <button
-                type="button"
-                className="sea-btn-card sea-btn-step-next"
-                onClick={() => selectRouteStep(activeStepIndex + 1)}
-                disabled={activeStepIndex >= routeSteps.length - 1}
-              >
-                <span>{copy.next}</span>
-                <ChevronRight size={13} />
-              </button>
-            </div>
-            <div className={`sea-simulation-controls${viewMode === "pov" ? " is-pov" : ""}`}>
-              <button
-                type="button"
-                className={`sea-btn-card sea-btn-live-navigation${liveTracking ? " is-active" : ""}`}
-                onClick={toggleLiveTracking}
-                aria-pressed={liveTracking}
-                title={liveTracking ? "Hentikan navigasi GPS" : "Mulai navigasi GPS"}
-              >
-                <MousePointer2 size={13} />
-                <span>{liveTracking ? "Hentikan GPS" : "Mulai navigasi GPS"}</span>
-              </button>
-              {viewMode === "pov" ? (
-                <>
-                  <button
-                    type="button"
-                    className="sea-btn-card sea-btn-pov-map"
-                    onClick={showMapView}
-                  >
-                    <RotateCcw size={12} />
-                    <span>{copy.mapView}</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="sea-btn-card sea-btn-pov-pause"
-                    onClick={toggleRoutePause}
-                  >
-                    {routePaused ? <Play size={12} fill="currentColor" /> : <Pause size={12} />}
-                    <span>{routePaused ? copy.resume : copy.pause}</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="sea-btn-card sea-btn-pov-center"
-                    onClick={recenterActiveRoute}
-                  >
-                    <Compass size={12} />
-                    <span>{copy.center}</span>
-                  </button>
-                </>
+            )}
+            <button
+              type="button"
+              className="gmaps-icon-btn gmaps-search-btn"
+              onClick={() => setSearchFocused(true)}
+              aria-label={lang === "EN" ? "Search" : "Cari"}
+            >
+              <Search size={19} />
+            </button>
+            <div className="gmaps-search-divider" />
+            <button
+              type="button"
+              className="gmaps-directions-trigger"
+              onClick={() => {
+                setDirectionsOpen(true);
+                if (!startPoint) beginStartSelection();
+              }}
+              title={lang === "EN" ? "Directions" : "Petunjuk arah"}
+              aria-label={lang === "EN" ? "Directions" : "Petunjuk arah"}
+            >
+              <Navigation size={17} />
+            </button>
+          </div>
+
+          {/* Search Results Dropdown */}
+          {searchFocused && query && (
+            <div className="gmaps-search-dropdown">
+              {searchResults.length > 0 ? (
+                searchResults.map((record) => {
+                  const displayName = mapObjectConfigs[record.name]?.displayName?.trim();
+                  const floorNote = multiFloor ? ` · ${FLOOR_LABELS[record.floor]}` : "";
+                  return (
+                    <button
+                      key={record.uuid}
+                      type="button"
+                      className="gmaps-search-item"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => chooseSearchResult(record)}
+                    >
+                      <div className="gmaps-item-icon">
+                        <MapPin size={18} />
+                      </div>
+                      <div className="gmaps-item-info">
+                        <strong>{displayName || record.selectableLabel || record.name}</strong>
+                        <small>
+                          {record.metadata.category}
+                          {displayName || record.selectableLabel ? ` · ${record.name}` : ""}
+                          {floorNote}
+                        </small>
+                      </div>
+                    </button>
+                  );
+                })
               ) : (
-                <button
-                  type="button"
-                  className="sea-btn-card sea-btn-simulation-primary"
-                  onClick={startOrResumeRoute}
-                >
-                  <Play size={13} fill="currentColor" />
-                  <span>{routeProgress && routeProgress.progress < 1 ? copy.continueSimulation : copy.simulation}</span>
-                </button>
+                <div className="gmaps-search-empty">
+                  <p>{copy.noResults}</p>
+                </div>
               )}
             </div>
-          </div>
-        )}
-      </aside>
+          )}
+        </div>
 
-      <div className="sea-map-actions" aria-label={lang === "ID" ? "Kontrol peta" : "Map controls"}><button type="button" onClick={showMapView} disabled={!bounds} aria-label={copy.showMap}><RotateCcw size={18} /></button><button type="button" onClick={() => viewerApi.current?.zoomIn()} disabled={!bounds} aria-label={copy.zoomIn}><Plus size={18} /></button><button type="button" onClick={() => viewerApi.current?.zoomOut()} disabled={!bounds} aria-label={copy.zoomOut}><Minus size={18} /></button><button type="button" onClick={togglePassengerLocation} disabled={!bounds} aria-pressed={automaticLocation} aria-label={automaticLocation ? (lang === "ID" ? "Nonaktifkan lokasi GPS" : "Turn GPS location off") : (lang === "ID" ? "Aktifkan lokasi GPS" : "Turn GPS location on")} title={automaticLocation ? (lang === "ID" ? "Nonaktifkan lokasi GPS" : "Turn GPS location off") : (lang === "ID" ? "Aktifkan lokasi GPS" : "Turn GPS location on")}>{automaticLocation ? <LocateFixed size={18} /> : <LocateOff size={18} />}</button><button type="button" className="map-exterior-toggle" onClick={() => setShowExterior((value) => !value)} disabled={!bounds || shownFloorView === "L2"} aria-pressed={showExterior} aria-label={showExterior ? copy.hideExterior : copy.showExterior} title={lang === "ID" ? "Area luar gedung" : "Exterior area"}><Trees size={18} /></button></div>
-      {exteriorAttribution && <p className="map-attribution">Area luar: {exteriorAttribution}</p>}
-
-      <div className="map-compass" aria-label={copy.compass} style={{ transform: `rotate(${compassRotation}deg)` }}>
-        <span className="map-compass-label map-compass-north">{lang === "ID" ? "U" : "N"}</span>
-        <span className="map-compass-label map-compass-east">{lang === "ID" ? "T" : "E"}</span>
-        <span className="map-compass-label map-compass-south">S</span>
-        <span className="map-compass-label map-compass-west">{lang === "ID" ? "B" : "W"}</span>
-        <span className="map-compass-center">＋</span>
+        {/* Category Filter Chips ala Google Maps */}
+        <div className="gmaps-category-chips" role="tablist">
+          {CATEGORIES.map((cat) => {
+            const Icon = cat.icon;
+            const active = activeCategory === cat.id;
+            return (
+              <button
+                key={cat.id}
+                type="button"
+                className={`gmaps-chip ${active ? "is-active" : ""}`}
+                onClick={() => handleCategoryClick(cat.id, cat.query)}
+              >
+                <Icon size={14} className="gmaps-chip-icon" />
+                <span>{cat.label}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {selected && selectedLocationConfig && <aside className="sea-location-info" aria-label={`Informasi ${selectedLocationConfig.displayName || selected.name}`}>
-        <div className="sea-sheet-handle" aria-hidden="true" />
-        <button
-          type="button"
-          className="sea-location-close-btn"
-          onClick={() => setSelected(null)}
-          aria-label={lang === "ID" ? "Tutup informasi tempat" : "Close place information"}
+      {/* Floating Directions Panel */}
+      {(directionsOpen || routeSessionActive) && (
+        <aside
+          className="gmaps-directions-panel"
+          data-expanded={mobileSheetExpanded ? "true" : "false"}
+          data-view-mode={viewMode}
+          aria-label={copy.directions}
         >
-          <X size={18} />
-        </button>
-        {selectedLocationConfig.photoUrl?.trim() && (
-          <img
-            src={getMapObjectPhotoUrl(selectedLocationConfig.photoUrl)}
-            alt={`Tampak depan ${selectedLocationConfig.displayName || selected.name}`}
-            referrerPolicy="no-referrer"
-            crossOrigin="anonymous"
-            onError={(e) => {
-              const target = e.currentTarget;
-              if (!target.dataset.triedFallback) {
-                target.dataset.triedFallback = "true";
-                const match = selectedLocationConfig.photoUrl.match(/\/(?:file\/)?d\/([^/]+)/i);
-                const id = match?.[1] || (selectedLocationConfig.photoUrl.includes("id=") ? new URL(selectedLocationConfig.photoUrl).searchParams.get("id") : null);
-                if (id) {
-                  target.src = `https://drive.google.com/thumbnail?id=${id}&sz=w1200`;
-                  return;
-                }
-              }
-              target.style.display = "none";
-            }}
+          <div
+            className="gmaps-sheet-handle"
+            onClick={() => setMobileSheetExpanded((prev) => !prev)}
+            onTouchStart={handleSheetTouchStart}
+            onTouchEnd={handleSheetTouchEnd}
+            aria-hidden="true"
           />
-        )}
-        <div className="sea-location-info-body">
-          <span className="sea-location-kicker">{selectedLocationConfig.entityType === "FACILITY" ? copy.facility : copy.tenant}</span>
-          <h2>{selectedLocationConfig.displayName || selected.name}</h2>
-          {selectedLocationConfig.displayName?.trim() && (
-            <small style={{ display: "block", color: "#7c93a0", fontSize: "12px", marginTop: "2px", marginBottom: "4px" }}>
-              Blok: {selected.name}
-            </small>
-          )}
-          <span className="sea-location-category">{selected.category}{multiFloor ? ` · ${selected.location.replace(/^Terminal 1 - /, "")}` : ""}</span>
-          {selectedLocationConfig.description && <p>{selectedLocationConfig.description}</p>}
-          <div className="sea-location-hours"><strong>Jam operasional</strong><span>{selectedLocationConfig.entityType === "FACILITY" || (!selectedLocationConfig.openTime && !selectedLocationConfig.closeTime) ? "Buka 24 jam" : `${selectedLocationConfig.openTime} – ${selectedLocationConfig.closeTime}`}</span></div>
-          {(selectedLocationConfig.activeFrom || selectedLocationConfig.activeUntil) && <div className="sea-location-hours"><strong>Masa aktif</strong><span>{selectedLocationConfig.activeFrom || "Sekarang"} – {selectedLocationConfig.activeUntil || "Tidak ditentukan"}</span></div>}
-          {selectedLocationConfig.contact && <div className="sea-location-contact">{selectedLocationConfig.contact}</div>}
-          <div className="sea-location-links">{selectedLocationConfig.websiteUrl && <a href={selectedLocationConfig.websiteUrl} target="_blank" rel="noreferrer">Website</a>}{selectedLocationConfig.instagramUrl && <a href={selectedLocationConfig.instagramUrl} target="_blank" rel="noreferrer">Instagram</a>}</div>
-          <div className="sea-location-actions">
+
+          <div className="gmaps-directions-header">
             <button
               type="button"
-              className="sea-loc-action-route"
+              className="gmaps-icon-btn gmaps-back-btn"
               onClick={() => {
-                const record = objects.find((item) => item.uuid === selected.uuid);
-                if (record) {
-                  if (startPoint) {
-                    calculateRoute(record);
-                  } else {
-                    const departure = requiredDepartureForRecord(record);
-                    const entrance = departure !== null
-                      ? entranceForDeparture(record, departure)
-                      : nearestEntrance(record);
-                    if (entrance) {
-                      startPassengerRoute(entrance, entranceLabel(entrance.name), record);
-                    } else {
-                      setBuildingAsStart(record);
-                    }
-                  }
-                  setSelected(null);
-                }
+                setDirectionsOpen(false);
+                setSelectingStart(false);
+                setSearchFocused(false);
               }}
+              aria-label={lang === "EN" ? "Close directions" : "Tutup petunjuk arah"}
+              title={lang === "EN" ? "Back to map" : "Kembali ke peta"}
             >
-              <Navigation size={15} />
-              <span>{copy.directions}</span>
+              <ArrowLeft size={20} />
             </button>
+            <h2>{copy.directions}</h2>
             <button
               type="button"
-              className="sea-loc-action-start"
-              onClick={() => {
-                const record = objects.find((item) => item.uuid === selected.uuid);
-                if (record) {
-                  setBuildingAsStart(record);
-                  setSelected(null);
-                }
-              }}
+              className="gmaps-icon-btn gmaps-swap-btn"
+              onClick={swapOriginDestination}
+              disabled={!startPoint || !destinationPoint}
+              aria-label={lang === "EN" ? "Reverse starting point and destination" : "Tukar titik awal dan tujuan"}
+              title={lang === "EN" ? "Swap" : "Tukar"}
             >
-              <MapPin size={15} />
-              <span>{copy.chooseStart}</span>
+              <ArrowUpDown size={18} />
             </button>
           </div>
+
+          <div className="gmaps-directions-body">
+            {/* Origin & Destination Inputs */}
+            <div className="gmaps-inputs-container">
+              <div className="gmaps-input-row">
+                <span className="gmaps-dot gmaps-dot-origin" />
+                <button
+                  type="button"
+                  className={`gmaps-input-btn ${selectingStart ? "is-focused" : ""}`}
+                  onClick={() => {
+                    beginStartSelection();
+                    setMobileSheetExpanded(true);
+                  }}
+                >
+                  <small>{copy.from}</small>
+                  <span>{startName ?? (automaticLocation && locationMapped ? copy.yourLocation : copy.chooseStart)}</span>
+                </button>
+              </div>
+
+              <div className="gmaps-input-connector" />
+
+              <div className="gmaps-input-row">
+                <span className="gmaps-dot gmaps-dot-dest" />
+                <button
+                  type="button"
+                  className={`gmaps-input-btn ${!selectingStart ? "is-focused" : ""}`}
+                  onClick={() => {
+                    setSelectingStart(false);
+                    setQuery("");
+                    setSearchFocused(true);
+                    setMobileSheetExpanded(true);
+                  }}
+                >
+                  <small>{copy.to}</small>
+                  <span>{routeSessionActive ? destinationName : copy.chooseDestination}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* GPS Live Status Bar */}
+            <div className="gmaps-live-bar" data-state={locationMapped ? "active" : passengerLocation.status}>
+              <div className="gmaps-live-info">
+                {locationMapped ? <Crosshair size={15} /> : <MapPin size={15} />}
+                <span>
+                  <strong>
+                    {!automaticLocation
+                      ? (lang === "ID" ? "Posisi manual di peta" : "Manual position")
+                      : locationMapped
+                        ? copy.locationActive
+                        : passengerLocation.status === "checking"
+                          ? copy.locating
+                          : usableLocationReading
+                            ? copy.locationActive
+                            : copy.locationFloorNote}
+                  </strong>
+                  {usableLocationReading && <small>±{Math.round(usableLocationReading.accuracy)} m</small>}
+                </span>
+              </div>
+              {modelFloors.length > 1 && (
+                <div className="gmaps-floor-selector-inline">
+                  {(["L1", "L2"] as FloorId[]).filter((f) => modelFloors.includes(f)).map((f) => (
+                    <button
+                      key={f}
+                      type="button"
+                      className={passengerFloor === f ? "is-selected" : ""}
+                      onClick={() => {
+                        setPassengerFloor(f);
+                        setAutomaticLocation(true);
+                        setLocationMapped(false);
+                      }}
+                    >
+                      {FLOOR_LABELS[f]}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Route Status / Hint */}
+            <p className="gmaps-hint-msg" role="status">
+              {gridError ?? routeMessage}
+            </p>
+
+            {/* Route Summary & Steps */}
+            {routeMetrics && routeSteps.length > 0 && (
+              <div className="gmaps-route-card">
+                <div className="gmaps-route-time-row">
+                  <div className="gmaps-time-estimate">
+                    <strong>{remainingRouteMinutes} {copy.minutes}</strong>
+                    <span>({Math.round(remainingRouteDistance)} m{routeFloorsText ? ` · ${routeFloorsText}` : ""})</span>
+                  </div>
+                  <button
+                    type="button"
+                    className="gmaps-clear-route-btn"
+                    onClick={resetRoute}
+                    title={copy.resetRoute}
+                    aria-label={copy.resetRoute}
+                  >
+                    <X size={17} />
+                  </button>
+                </div>
+
+                <div className="gmaps-cta-row">
+                  {viewMode === "pov" ? (
+                    <button
+                      type="button"
+                      className="gmaps-action-primary"
+                      onClick={showMapView}
+                    >
+                      <RotateCcw size={15} />
+                      <span>{copy.mapView}</span>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="gmaps-action-primary"
+                      onClick={startOrResumeRoute}
+                    >
+                      <Play size={15} fill="currentColor" />
+                      <span>{routeProgress && routeProgress.progress < 1 ? copy.continueSimulation : copy.simulation}</span>
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className={`gmaps-action-secondary ${liveTracking ? "is-tracking" : ""}`}
+                    onClick={toggleLiveTracking}
+                  >
+                    <MousePointer2 size={15} />
+                    <span>{liveTracking ? "Stop GPS" : "GPS Nav"}</span>
+                  </button>
+                </div>
+
+                <div className="gmaps-steps-container">
+                  <div className="gmaps-steps-title">
+                    <h4>{copy.stepTitle}</h4>
+                    <span className="gmaps-steps-count">{activeStepIndex + 1}/{routeSteps.length}</span>
+                  </div>
+                  <ol className="gmaps-steps-list">
+                    {routeSteps.map((step, idx) => (
+                      <li key={`${step.kind}-${step.startIndex}`}>
+                        <button
+                          type="button"
+                          className={idx === activeStepIndex ? "is-active" : ""}
+                          onClick={() => selectRouteStep(idx)}
+                        >
+                          <span className="gmaps-step-idx">{idx + 1}</span>
+                          <div className="gmaps-step-text">
+                            <strong>{step.label}</strong>
+                            <small>
+                              {step.kind === "arrive"
+                                ? destinationName
+                                : step.kind === "up" || step.kind === "down"
+                                  ? copy.floorDirection
+                                  : `±${Math.round(step.distance)} m`}
+                            </small>
+                          </div>
+                        </button>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              </div>
+            )}
+          </div>
+        </aside>
+      )}
+
+      {/* Side Navigation Drawer */}
+      {menuDrawerOpen && (
+        <div className="gmaps-drawer-wrapper" role="dialog" aria-modal="true" aria-label="Menu navigasi bandara">
+          <div
+            className="gmaps-drawer-backdrop"
+            onClick={() => setMenuDrawerOpen(false)}
+            aria-hidden="true"
+          />
+          <aside className="gmaps-drawer">
+            <div className="gmaps-drawer-header">
+              <div className="gmaps-drawer-brand">
+                <span className="gmaps-drawer-logo">🛫</span>
+                <div>
+                  <h3>Juanda Airport</h3>
+                  <span>Terminal 1 Navigation</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="gmaps-icon-btn"
+                onClick={() => setMenuDrawerOpen(false)}
+                aria-label={lang === "EN" ? "Close menu" : "Tutup menu"}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <nav className="gmaps-drawer-nav">
+              <Link
+                href="/"
+                className="gmaps-nav-item"
+                onClick={() => setMenuDrawerOpen(false)}
+              >
+                <Home size={18} />
+                <span>{lang === "EN" ? "Home" : "Beranda"}</span>
+              </Link>
+              <Link
+                href="/map"
+                className="gmaps-nav-item is-active"
+                onClick={() => setMenuDrawerOpen(false)}
+              >
+                <Navigation size={18} />
+                <span>{lang === "EN" ? "Map & Navigation" : "Peta & Navigasi"}</span>
+              </Link>
+              <Link
+                href="/about"
+                className="gmaps-nav-item"
+                onClick={() => setMenuDrawerOpen(false)}
+              >
+                <Info size={18} />
+                <span>{lang === "EN" ? "About Airport" : "Tentang Juanda"}</span>
+              </Link>
+              <Link
+                href="/help"
+                className="gmaps-nav-item"
+                onClick={() => setMenuDrawerOpen(false)}
+              >
+                <HelpCircle size={18} />
+                <span>{lang === "EN" ? "Help & FAQ" : "Bantuan & FAQ"}</span>
+              </Link>
+            </nav>
+
+            <div className="gmaps-drawer-divider" />
+
+            <div className="gmaps-drawer-lang">
+              <div className="gmaps-lang-label">
+                <Globe size={16} />
+                <span>{lang === "EN" ? "Language" : "Bahasa"}</span>
+              </div>
+              <div className="gmaps-lang-switch">
+                <button
+                  type="button"
+                  className={lang === "ID" ? "is-active" : ""}
+                  onClick={() => setLang("ID")}
+                >
+                  Indonesia
+                </button>
+                <button
+                  type="button"
+                  className={lang === "EN" ? "is-active" : ""}
+                  onClick={() => setLang("EN")}
+                >
+                  English
+                </button>
+              </div>
+            </div>
+
+            <div className="gmaps-drawer-footer">
+              <p>Bandara Internasional Juanda</p>
+              <small>PT Angkasa Pura I · Terminal 1 Wayfinding</small>
+            </div>
+          </aside>
         </div>
-      </aside>}
+      )}
+
+      {/* Floating Controls di Kanan Bawah */}
+      <div className="gmaps-bottom-controls" aria-label={lang === "ID" ? "Kontrol peta" : "Map controls"}>
+        {/* Tombol Kompas Google Maps */}
+        <button
+          type="button"
+          className="gmaps-control-btn gmaps-compass-btn"
+          onClick={() => viewerApi.current?.resetView()}
+          title={copy.compass}
+          aria-label={copy.compass}
+        >
+          <div className="gmaps-compass-needle" style={{ transform: `rotate(${compassRotation}deg)` }}>
+            <span className="needle-n" />
+            <span className="needle-s" />
+          </div>
+        </button>
+
+        <div className="gmaps-control-stack">
+          {/* Tombol Lokasi Saya */}
+          <button
+            type="button"
+            className={`gmaps-control-btn ${automaticLocation ? "is-active" : ""}`}
+            onClick={togglePassengerLocation}
+            disabled={!bounds}
+            title={automaticLocation ? "GPS Aktif" : "Aktifkan GPS"}
+            aria-label="Lokasi saya"
+          >
+            {automaticLocation ? <LocateFixed size={18} /> : <LocateOff size={18} />}
+          </button>
+
+          {/* Zoom In & Out */}
+          <button
+            type="button"
+            className="gmaps-control-btn"
+            onClick={() => viewerApi.current?.zoomIn()}
+            disabled={!bounds}
+            title={copy.zoomIn}
+            aria-label={copy.zoomIn}
+          >
+            <Plus size={18} />
+          </button>
+          <button
+            type="button"
+            className="gmaps-control-btn"
+            onClick={() => viewerApi.current?.zoomOut()}
+            disabled={!bounds}
+            title={copy.zoomOut}
+            aria-label={copy.zoomOut}
+          >
+            <Minus size={18} />
+          </button>
+
+          {/* Toggle Area Luar */}
+          <button
+            type="button"
+            className={`gmaps-control-btn ${showExterior ? "is-active" : ""}`}
+            onClick={() => setShowExterior((v) => !v)}
+            disabled={!bounds || shownFloorView === "L2"}
+            title={lang === "ID" ? "Area Luar Gedung / Apron" : "Exterior / Apron"}
+            aria-label="Toggle area luar"
+          >
+            <Trees size={18} />
+          </button>
+        </div>
+      </div>
+
+      {exteriorAttribution && <p className="map-attribution">Area luar: {exteriorAttribution}</p>}
+
+      {/* Google Maps Place Details Card */}
+      {selected && selectedLocationConfig && (
+        <aside className="gmaps-place-card" aria-label={`Informasi ${selectedLocationConfig.displayName || selected.name}`}>
+          <div className="gmaps-place-card-top">
+            {selectedLocationConfig.photoUrl?.trim() && (
+              <div className="gmaps-place-photo">
+                <img
+                  src={getMapObjectPhotoUrl(selectedLocationConfig.photoUrl)}
+                  alt={selectedLocationConfig.displayName || selected.name}
+                  referrerPolicy="no-referrer"
+                  crossOrigin="anonymous"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
+                />
+              </div>
+            )}
+            <button
+              type="button"
+              className="gmaps-place-close"
+              onClick={() => setSelected(null)}
+              aria-label={lang === "ID" ? "Tutup" : "Close"}
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          <div className="gmaps-place-content">
+            <span className="gmaps-place-badge">
+              {selectedLocationConfig.entityType === "FACILITY" ? copy.facility : copy.tenant}
+            </span>
+            <h3 className="gmaps-place-title">
+              {selectedLocationConfig.displayName || selected.name}
+            </h3>
+            {selectedLocationConfig.displayName?.trim() && (
+              <small className="gmaps-place-code">Blok: {selected.name}</small>
+            )}
+            <p className="gmaps-place-category">
+              {selected.category}
+              {multiFloor ? ` · ${selected.location.replace(/^Terminal 1 - /, "")}` : ""}
+            </p>
+
+            {selectedLocationConfig.description && (
+              <p className="gmaps-place-desc">{selectedLocationConfig.description}</p>
+            )}
+
+            <div className="gmaps-place-status">
+              <span className="gmaps-open-pill">
+                {selectedLocationConfig.entityType === "FACILITY" || (!selectedLocationConfig.openTime && !selectedLocationConfig.closeTime)
+                  ? "Buka 24 Jam"
+                  : `${selectedLocationConfig.openTime} – ${selectedLocationConfig.closeTime}`}
+              </span>
+            </div>
+
+            <div className="gmaps-place-actions">
+              <button
+                type="button"
+                className="gmaps-btn-primary"
+                onClick={() => {
+                  const record = objects.find((item) => item.uuid === selected.uuid);
+                  if (record) {
+                    if (startPoint) {
+                      calculateRoute(record);
+                    } else {
+                      const departure = requiredDepartureForRecord(record);
+                      const entrance = departure !== null
+                        ? entranceForDeparture(record, departure)
+                        : nearestEntrance(record);
+                      if (entrance) {
+                        startPassengerRoute(entrance, entranceLabel(entrance.name), record);
+                      } else {
+                        setBuildingAsStart(record);
+                      }
+                    }
+                    setDirectionsOpen(true);
+                    setSelected(null);
+                  }
+                }}
+              >
+                <Navigation size={16} />
+                <span>{copy.directions}</span>
+              </button>
+              <button
+                type="button"
+                className="gmaps-btn-secondary"
+                onClick={() => {
+                  const record = objects.find((item) => item.uuid === selected.uuid);
+                  if (record) {
+                    setBuildingAsStart(record);
+                    setDirectionsOpen(true);
+                    setSelected(null);
+                  }
+                }}
+              >
+                <MapPin size={16} />
+                <span>{copy.chooseStart}</span>
+              </button>
+            </div>
+          </div>
+        </aside>
+      )}
 
     </main>
   );

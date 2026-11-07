@@ -1,5 +1,4 @@
 import { Map3DClient } from "@/components/map3d/Map3DClient";
-import { SiteHeader } from "@/components/site/SiteHeader";
 
 export const metadata = {
   title: "Peta 3D Terminal 1 | Juanda Airport Wayfinding",
@@ -9,8 +8,8 @@ export const metadata = {
 export default function MapPage() {
   return (
     <div className="map-page-shell">
-      <SiteHeader />
       <Map3DClient />
     </div>
   );
 }
+

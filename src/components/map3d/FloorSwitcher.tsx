@@ -2,6 +2,7 @@
 
 import { FLOOR_BUTTON_ORDER, FLOOR_LABELS, type FloorId, type FloorView } from "@/lib/map3d/floors";
 import { useMapStore } from "@/store/mapStore";
+import { Layers } from "lucide-react";
 
 type FloorSwitcherProps = {
   view: FloorView;
@@ -11,40 +12,54 @@ type FloorSwitcherProps = {
 };
 
 /**
- * Tombol lantai. Menekan lantai yang sedang aktif membatalkan pilihan,
- * lalu peta kembali menampilkan semua lantai.
+ * Pemilih lantai vertikal Google Maps style.
  */
 export function FloorSwitcher({ view, floors, onSelect }: FloorSwitcherProps) {
   const lang = useMapStore((state) => state.lang);
-  const floorName = (floor: FloorId) => lang === "EN" ? (floor === "L1" ? "1st Floor" : "2nd Floor") : FLOOR_LABELS[floor];
-  const viewName = view === "ALL"
-    ? (floors.length > 1 ? (lang === "EN" ? "All floors" : "Semua lantai") : floorName(floors[0] ?? "L1"))
-    : floorName(view);
+  const floorName = (floor: FloorId) =>
+    lang === "EN" ? (floor === "L1" ? "1st Floor" : "2nd Floor") : FLOOR_LABELS[floor];
+
   return (
-    <div className={"floor-switcher"} role="group" aria-label={lang === "EN" ? "Select floor" : "Pilih lantai"}>
-      <div className={"floor-switcher-buttons"}>
-        {FLOOR_BUTTON_ORDER.map((floor) => {
-          const available = floors.includes(floor);
-          const pressed = view === floor;
-          return (
-            <button
-              key={floor}
-              type="button"
-              className="floor-switcher-button"
-              aria-pressed={pressed}
-              disabled={!available}
-              title={available ? (pressed ? (lang === "EN" ? "Press again to show all floors" : "Tekan lagi untuk menampilkan semua lantai") : undefined) : (lang === "EN" ? "This floor model is not available" : "Model lantai ini belum tersedia")}
-              onClick={() => onSelect(pressed ? "ALL" : floor)}
-            >
-              <span className={"floor-switcher-number"}>{floor === "L1" ? "1" : "2"}</span>
-              <span className={"floor-switcher-name"}>{floorName(floor)}</span>
-            </button>
-          );
-        })}
+    <div className="gmaps-floor-switcher" role="group" aria-label={lang === "EN" ? "Select floor" : "Pilih lantai"}>
+      <div className="gmaps-floor-buttons">
+        {floors.includes("L2") && (
+          <button
+            type="button"
+            className={`gmaps-floor-btn ${view === "L2" ? "is-active" : ""}`}
+            aria-pressed={view === "L2"}
+            title={lang === "EN" ? "2nd Floor - Departures & Gates" : "Lantai 2 - Keberangkatan & Gate"}
+            onClick={() => onSelect(view === "L2" ? "ALL" : "L2")}
+          >
+            <span>2</span>
+            <small className="gmaps-floor-tooltip">{floorName("L2")}</small>
+          </button>
+        )}
+        {floors.includes("L1") && (
+          <button
+            type="button"
+            className={`gmaps-floor-btn ${view === "L1" ? "is-active" : ""}`}
+            aria-pressed={view === "L1"}
+            title={lang === "EN" ? "1st Floor - Check-in & Arrivals" : "Lantai 1 - Check-in & Kedatangan"}
+            onClick={() => onSelect(view === "L1" ? "ALL" : "L1")}
+          >
+            <span>1</span>
+            <small className="gmaps-floor-tooltip">{floorName("L1")}</small>
+          </button>
+        )}
+        {floors.length > 1 && (
+          <button
+            type="button"
+            className={`gmaps-floor-btn gmaps-floor-all ${view === "ALL" ? "is-active" : ""}`}
+            aria-pressed={view === "ALL"}
+            title={lang === "EN" ? "View all floors" : "Tampilkan semua lantai"}
+            onClick={() => onSelect("ALL")}
+          >
+            <Layers size={15} />
+            <small className="gmaps-floor-tooltip">{lang === "EN" ? "All floors" : "Semua lantai"}</small>
+          </button>
+        )}
       </div>
-      <p className={"floor-switcher-caption"} role="status" data-view={view}>
-        {view === "ALL" ? (lang === "EN" ? "View" : "Tampilan") : (lang === "EN" ? "Showing" : "Menampilkan")} <strong>{viewName}</strong>
-      </p>
     </div>
   );
 }
+
