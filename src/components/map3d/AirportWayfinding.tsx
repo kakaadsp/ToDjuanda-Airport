@@ -36,10 +36,12 @@ import {
   MapPin,
   Menu,
   Minus,
+  Moon,
   MousePointer2,
   Navigation,
   Pause,
   Plane,
+  PlaneTakeoff,
   Play,
   Plus,
   RotateCcw,
@@ -1024,11 +1026,11 @@ export function AirportWayfinding() {
 
   const CATEGORIES = useMemo(
     () => [
-      { id: "gate", label: "Gate", icon: Plane, query: "gate" },
-      { id: "food", label: lang === "EN" ? "Food" : "Kuliner", icon: Utensils, query: "makan" },
-      { id: "shop", label: lang === "EN" ? "Shopping" : "Belanja", icon: ShoppingBag, query: "toko" },
-      { id: "mosque", label: lang === "EN" ? "Mosque" : "Musala", icon: Landmark, query: "musala" },
       { id: "toilet", label: "Toilet", icon: Bath, query: "toilet" },
+      { id: "komersial", label: lang === "EN" ? "Commercial" : "Komersial", icon: ShoppingBag, query: "komersial" },
+      { id: "gate", label: "Gate", icon: Plane, query: "gate" },
+      { id: "departure", label: "Departure", icon: PlaneTakeoff, query: "departure" },
+      { id: "musholla", label: "Musholla", icon: Moon, query: "musholla" },
       { id: "atm", label: "ATM", icon: Landmark, query: "atm" },
     ],
     [lang],
@@ -1050,15 +1052,26 @@ export function AirportWayfinding() {
   );
 
   const searchResults = useMemo(() => {
-    const normalizedQuery = query.trim().toLocaleLowerCase("id-ID");
-    if (!normalizedQuery) return [];
+    const rawQuery = query.trim().toLocaleLowerCase("id-ID");
+    if (!rawQuery) return [];
+
+    let matchKeywords = [rawQuery];
+    if (rawQuery === "komersial") matchKeywords = ["komersial", "toko", "resto", "restoran", "kafe", "cafe", "store", "shop", "tenant", "building", "kios"];
+    if (rawQuery === "musholla" || rawQuery === "musala") matchKeywords = ["musholla", "musala", "mushola", "sholat", "prayer", "ibadah"];
+    if (rawQuery === "departure") matchKeywords = ["departure", "keberangkatan", "pintu", "check-in"];
+    if (rawQuery === "toilet") matchKeywords = ["toilet", "wc", "restroom", "lavatory"];
+    if (rawQuery === "atm") matchKeywords = ["atm", "bank", "mandiri", "bca", "bri", "bni"];
+    if (rawQuery === "gate") matchKeywords = ["gate", "boarding"];
+
     return selectableBuildings
       .filter((item) => {
-        const displayName = mapObjectConfigs[item.name]?.displayName ?? "";
-        const cat = item.metadata?.category ?? "";
-        return `${item.name} ${item.selectableLabel ?? getSelectableLabel(item.name) ?? ""} ${displayName} ${cat}`
-          .toLocaleLowerCase("id-ID")
-          .includes(normalizedQuery);
+        const displayName = (mapObjectConfigs[item.name]?.displayName ?? "").toLocaleLowerCase("id-ID");
+        const cat = (item.metadata?.category ?? "").toLocaleLowerCase("id-ID");
+        const name = item.name.toLocaleLowerCase("id-ID");
+        const label = (item.selectableLabel ?? getSelectableLabel(item.name) ?? "").toLocaleLowerCase("id-ID");
+        const haystack = `${name} ${label} ${displayName} ${cat}`;
+
+        return matchKeywords.some((kw) => haystack.includes(kw));
       })
       .slice(0, 10);
   }, [mapObjectConfigs, query, selectableBuildings]);
@@ -1233,7 +1246,6 @@ export function AirportWayfinding() {
     setSelectingStart(false);
     setDirectionsOpen(false);
     setViewMode("map");
-    window.requestAnimationFrame(() => viewerApi.current?.resetView());
   }, [automaticLocation, clearRoute, copy.selectStartHint]);
 
   // Kedua lantai ada dalam satu model, jadi berpindah lantai tidak memuat
@@ -1406,6 +1418,14 @@ export function AirportWayfinding() {
             >
               <Menu size={20} />
             </button>
+            <div className="gmaps-brand-pill" title="ToDjuanda Smart Airport Navigation">
+              <img
+                src="/Logo-ToDjuanda/Logo.png"
+                alt="Logo ToDjuanda"
+                className="gmaps-brand-logo-img"
+              />
+              <span className="gmaps-brand-title">ToDjuanda</span>
+            </div>
             <input
               type="text"
               className="gmaps-search-input"
@@ -1415,7 +1435,7 @@ export function AirportWayfinding() {
                 setSearchFocused(true);
               }}
               onFocus={() => setSearchFocused(true)}
-              placeholder={lang === "EN" ? "Search Terminal 1 (Gate, food, ATM...)" : "Cari di Terminal 1 (Gate, kuliner, ATM...)"}
+              placeholder={lang === "EN" ? "Search Terminal 1 (Toilet, gate, shop...)" : "Cari di Terminal 1 (Toilet, gate, komersial...)"}
               aria-label={lang === "EN" ? "Search map" : "Cari peta"}
             />
             {query && (
@@ -1442,9 +1462,9 @@ export function AirportWayfinding() {
             <div className="gmaps-search-divider" />
             <button
               type="button"
-              className="gmaps-directions-trigger"
+              className={`gmaps-directions-trigger ${directionsOpen ? "is-active" : ""}`}
               onClick={() => {
-                setDirectionsOpen(true);
+                setDirectionsOpen((prev) => !prev);
                 if (!startPoint) beginStartSelection();
               }}
               title={lang === "EN" ? "Directions" : "Petunjuk arah"}
@@ -1453,6 +1473,22 @@ export function AirportWayfinding() {
               <Navigation size={17} />
             </button>
           </div>
+
+          {/* Banner Rute Aktif Saat Panel Directions Ditutup (Bisa Dibuka Lagi Kapan Saja) */}
+          {routeSessionActive && !directionsOpen && (
+            <button
+              type="button"
+              className="gmaps-active-route-pill"
+              onClick={() => setDirectionsOpen(true)}
+              title={lang === "EN" ? "Open directions panel" : "Buka kembali petunjuk arah"}
+            >
+              <span className="gmaps-pulse-dot" />
+              <span className="gmaps-active-route-text">
+                Rute ke <strong>{destinationName}</strong> · {remainingRouteMinutes} mnt ({Math.round(remainingRouteDistance)} m)
+              </span>
+              <span className="gmaps-active-route-badge">{lang === "EN" ? "Directions →" : "Petunjuk →"}</span>
+            </button>
+          )}
 
           {/* Search Results Dropdown */}
           {searchFocused && query && (
@@ -1513,7 +1549,7 @@ export function AirportWayfinding() {
       </div>
 
       {/* Floating Directions Panel */}
-      {(directionsOpen || routeSessionActive) && (
+      {directionsOpen && (
         <aside
           className="gmaps-directions-panel"
           data-expanded={mobileSheetExpanded ? "true" : "false"}
