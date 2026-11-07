@@ -143,7 +143,33 @@ const aboutContent = {
         },
       ],
     },
-    
+    journeySection: {
+      eyebrow: "ALUR PENUMPANG",
+      title: "Mendampingi Tiap Langkah Perjalananmu di Bandara",
+      desc: "ToDjuanda memandu secara runut dari saat tiba hingga masuk ke dalam pesawat:",
+      steps: [
+        {
+          num: "01",
+          title: "Tiba di Area Keberangkatan",
+          desc: "Cari area Departure maskapai (Departure 1-4) dan temukan konter check-in untuk mencetak boarding pass.",
+        },
+        {
+          num: "02",
+          title: "Pemeriksaan & Naik ke Lantai 2",
+          desc: "Lewati security check point dan ikuti petunjuk eskalator/tangga menuju ruang tunggu lantai 2.",
+        },
+        {
+          num: "03",
+          title: "Eksplorasi Fasilitas & Kuliner",
+          desc: "Temukan restoran favorit, mushola untuk ibadah, atau ATM terdekat selagi menunggu waktu boarding.",
+        },
+        {
+          num: "04",
+          title: "Tiba Tepat Waktu di Boarding Gate",
+          desc: "Panduan rute langsung mengantarkanmu ke gate keberangkatan yang sesuai dengan estimasi waktu yang jelas.",
+        },
+      ],
+    },
     closing: {
       eyebrow: "MULAI SEKARANG",
       title: "Siap Menjelajahi Terminal 1 Bandara Juanda?",
@@ -268,7 +294,33 @@ const aboutContent = {
         },
       ],
     },
-    
+    journeySection: {
+      eyebrow: "PASSENGER JOURNEY",
+      title: "Guiding Every Stage of Your Airport Journey",
+      desc: "ToDjuanda supports your departure process seamlessly step-by-step:",
+      steps: [
+        {
+          num: "01",
+          title: "Arrive at Departure Hall",
+          desc: "Locate your airline's departure area (Departure 1-4) and check-in desk to print your boarding pass.",
+        },
+        {
+          num: "02",
+          title: "Security & Up to Level 2",
+          desc: "Clear security checks and follow verified escalators or stairs to the Level 2 waiting lounge.",
+        },
+        {
+          num: "03",
+          title: "Relax & Explore Facilities",
+          desc: "Find cafes, prayer rooms, or restrooms while waiting comfortably for boarding announcements.",
+        },
+        {
+          num: "04",
+          title: "Reach Your Boarding Gate Punctually",
+          desc: "Follow the direct path right to your boarding gate with a verified distance and walking ETA.",
+        },
+      ],
+    },
     closing: {
       eyebrow: "GET STARTED",
       title: "Ready to Explore Juanda Airport Terminal 1?",
@@ -521,6 +573,41 @@ export function AboutPage() {
                       </Link>
                     </div>
                   </article>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* =========================================
+            PASSENGER JOURNEY SECTION
+            ========================================= */}
+        <section className={styles.journeySection} aria-label="Alur Pengalaman Penumpang">
+          <div className={styles.container}>
+            <div className={`${styles.sectionHeader} ${styles.revealOnScroll}`}>
+              <div className={styles.sectionEyebrow}>
+                <Route size={14} />
+                <span>{content.journeySection.eyebrow}</span>
+              </div>
+              <h2 className={styles.sectionTitle}>{content.journeySection.title}</h2>
+              <p className={styles.sectionDesc}>{content.journeySection.desc}</p>
+            </div>
+
+            <div className={styles.journeyGrid}>
+              {content.journeySection.steps.map((st, idx) => {
+                const delayClass = [
+                  styles.revealDelay1,
+                  styles.revealDelay2,
+                  styles.revealDelay3,
+                  styles.revealDelay4,
+                ][idx % 4];
+
+                return (
+                  <div key={idx} className={`${styles.journeyStepCard} ${styles.revealOnScroll} ${delayClass}`}>
+                    <div className={styles.journeyStepNum}>{st.num}</div>
+                    <h4>{st.title}</h4>
+                    <p>{st.desc}</p>
+                  </div>
                 );
               })}
             </div>

@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { ExploreSection } from "./ExploreSection";
 import { HomeHero } from "./HomeHero";
+import { WayfindingFullTutorialSection } from "./WayfindingFullTutorialSection";
 import { WayfindingVideoTutorial } from "./WayfindingVideoTutorial";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { SiteHeader } from "@/components/site/SiteHeader";
@@ -47,6 +48,9 @@ export function WayfindingShell() {
             <ExploreSection />
           </div>
           <div className="section-overlap-stack">
+            <div className="reveal-on-scroll">
+              <WayfindingFullTutorialSection />
+            </div>
             <div className="reveal-on-scroll">
               <WayfindingVideoTutorial videoUrl="/media/todjuanda.mp4" />
             </div>

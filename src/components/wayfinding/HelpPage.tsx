@@ -24,10 +24,10 @@ const guides = {
     preview: "CONTOH TAMPILAN",
     previewNote: "Ilustrasi antarmuka, bukan posisi terminal secara langsung.",
     reminder: "Perlu diketahui",
-    reminderText: "Peta 3D ToDjuanda mencakup Terminal 1 (Lantai 1 dan Lantai 2 terpadu). Selalu ikuti petunjuk resmi bandara dan papan informasi untuk informasi penerbangan aktual.",
+    reminderText: "Peta 3D saat ini hanya mencakup Terminal 1 lantai dasar. Data dan rute perlu diverifikasi di lapangan; ikuti petunjuk resmi bandara untuk perjalanan sebenarnya.",
     passengerTitle: "Dari tiba di bandara sampai naik pesawat.",
     passengerIntro: "Ikuti urutan keberangkatan ini setelah mengetahui maskapai dan nomor penerbanganmu.",
-    passengerNote: "Peta mendukung navigasi antarlantai melalui eskalator dan tangga penghubung. Pastikan selalu mencocokkan nomor gate dan jadwal boarding Anda dengan layar informasi terminal.",
+    passengerNote: "Denah lantai 2 sudah tersedia, tetapi rute otomatis dari lantai dasar ke gate belum aktif di Maps. Cocokkan selalu nomor gate dan waktu boarding dengan layar informasi serta arahan petugas.",
     passengerSteps: [
       { floor: "Lantai dasar", title: "Cari area Departure maskapaimu", description: "Cek papan informasi keberangkatan atau tanyakan kepada maskapai, lalu menuju Departure 1, 2, 3, atau 4 yang ditentukan. Departure adalah area check-in, bukan nomor loket." },
       { floor: "Lantai dasar", title: "Check-in dan ambil boarding pass", description: "Datangi konter maskapai di area Departure yang sesuai atau gunakan kios jika tersedia. Simpan boarding pass/tiket untuk melihat informasi penerbanganmu." },
@@ -62,14 +62,14 @@ const guides = {
       {
         short: "Ubah tampilan", title: "Lihat rute dari sudut pengunjung.",
         desc: "Gunakan Visitor POV untuk melihat dari titik awal, Map View untuk kembali ke tampilan atas, atau Reset Route untuk menghapus pilihan rute.",
-        tips: ["Gunakan tombol zoom dan reset view bila peta sulit dilihat.", "Peta mendukung penjelajahan multi-lantai antara Lantai 1 dan Lantai 2."],
+        tips: ["Gunakan tombol zoom dan reset view bila peta sulit dilihat.", "Rute otomatis menuju gate di lantai 2 belum aktif di Maps."],
         action: "Lihat peta 3D", href: "/map",
       },
     ],
     faq: [
       { q: "Bagaimana kalau saya tidak tahu posisi awal?", a: "Pilih building atau node terdekat secara manual melalui Set Start. Peta ini belum mendeteksi posisi secara otomatis." },
       { q: "Mengapa rute tidak muncul?", a: "Pastikan titik awal sudah ditetapkan dan building tujuan terhubung pada jaringan navigasi. Coba tujuan lain bila jalur tidak ditemukan." },
-      { q: "Apakah peta ini sudah bisa dipakai sebagai panduan bandara nyata?", a: "Peta ToDjuanda mencakup area publik Terminal 1 (Lantai 1 dan Lantai 2) Juanda. Tetap perhatikan papan informasi dan arahan petugas terminal untuk kondisi perjalanan nyata." },
+      { q: "Apakah peta ini sudah bisa dipakai sebagai panduan bandara nyata?", a: "Belum sebagai satu-satunya panduan. Cakupannya baru Terminal 1 lantai dasar dan data harus diverifikasi di lokasi. Ikuti petunjuk resmi terminal." },
     ],
   },
   EN: {
@@ -87,10 +87,10 @@ const guides = {
     preview: "SCREEN PREVIEW",
     previewNote: "Interface illustration, not a live terminal position.",
     reminder: "Good to know",
-    reminderText: "The 3D map covers Terminal 1 (Ground Floor & 2nd Floor). Always follow official airport signs and information screens for live flight updates.",
+    reminderText: "The current 3D map covers Terminal 1 ground floor only. Location data and routes need on-site verification; follow official airport signs for real journeys.",
     passengerTitle: "From arriving at the airport to boarding your flight.",
     passengerIntro: "Follow these departure steps once you know your airline and flight number.",
-    passengerNote: "Multi-floor navigation is active via connecting escalators and stairs. Always verify your gate number and boarding schedule with airport information displays.",
+    passengerNote: "A second-floor plan is available, but automated routes from the ground floor to gates are not active in Maps yet. Always confirm your gate and boarding time on airport displays and with staff.",
     passengerSteps: [
       { floor: "Ground floor", title: "Find your airline's Departure area", description: "Check the departure display or ask your airline, then head to the assigned Departure 1, 2, 3, or 4. Departure identifies a check-in area, not a specific counter." },
       { floor: "Ground floor", title: "Check in and get your boarding pass", description: "Go to your airline's counter in the correct Departure area, or use a kiosk if available. Keep your boarding pass for your flight details." },
@@ -107,12 +107,12 @@ const guides = {
       { short: "Find a place", title: "Find where you want to go.", desc: "On Maps, search for a building code such as T1-GF-01 or select a building directly on the 3D model to see its details.", tips: ["Search uses the model's object.name codes.", "Choose a result to highlight the building."], action: "Open map", href: "/map" },
       { short: "Set your position", title: "Choose your starting point.", desc: "Select a building and press Start Here. You can also press Set Start, then select a building, node, or POI on the map.", tips: ["Check the start label before choosing a destination.", "The start is selected manually, not through GPS."], action: "Try on map", href: "/map" },
       { short: "Follow the route", title: "Read the route to your destination.", desc: "Search for and select a destination building, then press Route Here. The path, distance, and guidance appear if the endpoints are connected.", tips: ["Check both endpoints before following the route.", "If no route is available, try another connected building."], action: "Plan a route", href: "/map" },
-      { short: "Change view", title: "See the route from a visitor's view.", desc: "Use Visitor POV to look from the starting point, Map View to return to the overhead view, or Reset Route to clear the selected route.", tips: ["Use zoom and reset view if the map is hard to see.", "The map supports multi-floor viewing and routing across Ground Floor and 2nd Floor."], action: "Explore the 3D map", href: "/map" },
+      { short: "Change view", title: "See the route from a visitor's view.", desc: "Use Visitor POV to look from the starting point, Map View to return to the overhead view, or Reset Route to clear the selected route.", tips: ["Use zoom and reset view if the map is hard to see.", "Automated routes to second-floor gates are not active in Maps yet."], action: "Explore the 3D map", href: "/map" },
     ],
     faq: [
       { q: "What if I don't know my starting point?", a: "Choose the nearest building or node manually with Set Start. Automatic positioning is not available yet." },
       { q: "Why can't I see a route?", a: "Make sure a start is set and the destination building is connected to the navigation graph. Try another destination if no path is found." },
-      { q: "Can I rely on this for a real airport journey?", a: "ToDjuanda covers Terminal 1 public areas (Ground Floor & 2nd Floor). Always pay attention to official terminal displays and airport staff instructions for real-world travel." },
+      { q: "Can I rely on this for a real airport journey?", a: "Not as the only guide. Coverage is limited to Terminal 1 ground floor and the data needs on-site verification. Follow official terminal signs." },
     ],
   },
 } as const;
