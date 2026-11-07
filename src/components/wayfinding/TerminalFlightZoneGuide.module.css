@@ -1,185 +1,376 @@
 .section {
   position: relative;
   width: 100%;
-  padding: 80px 24px;
-  background: linear-gradient(180deg, #071927 0%, #0b2235 50%, #071927 100%);
+  padding: 100px 24px;
+  background: radial-gradient(120% 100% at 50% 0%, #0d283e 0%, #061726 50%, #040e18 100%);
   color: #f8fafc;
-  border-top: 1px solid rgba(56, 189, 248, 0.12);
-  border-bottom: 1px solid rgba(56, 189, 248, 0.12);
+  border-top: 1px solid rgba(56, 189, 248, 0.16);
+  border-bottom: 1px solid rgba(56, 189, 248, 0.16);
   overflow: hidden;
 }
 
+/* Ambient glow orbs */
+.ambientGlow1 {
+  position: absolute;
+  top: 10%;
+  left: 15%;
+  width: 480px;
+  height: 480px;
+  background: radial-gradient(circle, rgba(2, 132, 199, 0.12) 0%, transparent 70%);
+  filter: blur(60px);
+  pointer-events: none;
+}
+
+.ambientGlow2 {
+  position: absolute;
+  bottom: 10%;
+  right: 15%;
+  width: 450px;
+  height: 450px;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 70%);
+  filter: blur(60px);
+  pointer-events: none;
+}
+
 .inner {
-  max-width: 1240px;
+  position: relative;
+  z-index: 2;
+  max-width: 1260px;
   margin: 0 auto;
 }
 
+/* Section Header */
 .header {
   text-align: center;
-  max-width: 720px;
-  margin: 0 auto 52px auto;
+  max-width: 760px;
+  margin: 0 auto 58px auto;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
 }
 
 .eyebrow {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 14px;
+  padding: 6px 16px;
   border-radius: 999px;
   background: rgba(56, 189, 248, 0.12);
-  border: 1px solid rgba(56, 189, 248, 0.28);
+  border: 1px solid rgba(56, 189, 248, 0.3);
   color: #38bdf8;
   font-size: 11.5px;
-  font-weight: 700;
+  font-weight: 750;
   letter-spacing: 0.08em;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.15);
+}
+
+.eyebrowIcon {
+  color: #38bdf8;
+  animation: pulseRotate 4s ease-in-out infinite;
+}
+
+@keyframes pulseRotate {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.15) rotate(15deg); }
 }
 
 .title {
   margin: 0;
-  font-size: clamp(30px, 3.8vw, 44px);
-  font-weight: 850;
+  font-size: clamp(32px, 4.2vw, 48px);
+  font-weight: 900;
   line-height: 1.15;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
   color: #ffffff;
 }
 
-.title span {
-  background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+.titleGradient {
+  background: linear-gradient(135deg, #38bdf8 0%, #60a5fa 50%, #34d399 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .subtitle {
   margin: 0;
-  font-size: clamp(15px, 1.2vw, 17px);
+  font-size: clamp(15.5px, 1.25vw, 17.5px);
   line-height: 1.6;
   color: #94a3b8;
 }
 
+/* Grid layout */
 .grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
+  gap: 28px;
 }
 
+/* Base Card */
 .card {
   position: relative;
   display: flex;
   flex-direction: column;
-  padding: 28px 24px;
-  background: rgba(15, 23, 42, 0.75);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(56, 189, 248, 0.18);
-  border-radius: 20px;
-  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.35);
-  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 32px 28px;
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.88) 0%, rgba(20, 36, 56, 0.65) 100%);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .card:hover {
-  transform: translateY(-4px);
-  background: rgba(15, 23, 42, 0.95);
-  border-color: rgba(56, 189, 248, 0.45);
-  box-shadow: 0 16px 40px rgba(2, 132, 199, 0.25);
+  transform: translateY(-6px);
+  box-shadow: 0 22px 55px rgba(0, 0, 0, 0.6);
 }
 
-.cardTop {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 14px;
+/* Watermark Number in background */
+.watermarkNum {
+  position: absolute;
+  top: 12px;
+  right: 18px;
+  font-size: 80px;
+  font-weight: 950;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.03);
+  pointer-events: none;
+  user-select: none;
+  font-family: monospace, sans-serif;
+  transition: color 0.25s ease;
 }
 
-.badge {
-  font-size: 11.5px;
-  font-weight: 700;
+.card:hover .watermarkNum {
+  color: rgba(56, 189, 248, 0.08);
+}
+
+/* Themes per Card */
+.themeCyan {
+  border-top: 3px solid #38bdf8;
+}
+.themeCyan:hover {
+  border-color: rgba(56, 189, 248, 0.65);
+  box-shadow: 0 22px 55px rgba(2, 132, 199, 0.25);
+}
+.themeCyan .iconBox {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.25) 0%, rgba(2, 132, 199, 0.15) 100%);
   color: #38bdf8;
-  letter-spacing: 0.02em;
+  border: 1px solid rgba(56, 189, 248, 0.35);
 }
-
-.tag {
-  font-size: 11px;
-  font-weight: 600;
-  padding: 3px 8px;
-  border-radius: 6px;
+.themeCyan .cardAction {
   background: rgba(56, 189, 248, 0.12);
-  color: #7dd3fc;
-}
-
-.cardTitle {
-  margin: 0 0 16px 0;
-  font-size: 24px;
-  font-weight: 800;
-  color: #ffffff;
-}
-
-.airlineRow {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 12px 14px;
-  border-radius: 12px;
-  background: rgba(30, 41, 59, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  margin-bottom: 14px;
-}
-
-.airlineLabel {
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #94a3b8;
-}
-
-.airlineText {
-  font-size: 13.5px;
-  font-weight: 700;
-  color: #f1f5f9;
-  line-height: 1.4;
-}
-
-.featuresText {
-  margin: 0 0 24px 0;
-  font-size: 13px;
-  line-height: 1.55;
-  color: #94a3b8;
-  flex: 1;
-}
-
-.cardAction {
-  display: inline-flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 12px 18px;
-  border-radius: 12px;
-  background: rgba(56, 189, 248, 0.12);
-  border: 1px solid rgba(56, 189, 248, 0.28);
+  border: 1px solid rgba(56, 189, 248, 0.3);
   color: #38bdf8;
-  font-size: 13.5px;
-  font-weight: 700;
-  text-decoration: none;
-  transition: all 0.15s ease;
 }
-
-.cardAction:hover {
+.themeCyan .cardAction:hover {
   background: #0284c7;
   border-color: #0284c7;
   color: #ffffff;
 }
 
-@media (max-width: 992px) {
+.themeBlue {
+  border-top: 3px solid #60a5fa;
+}
+.themeBlue:hover {
+  border-color: rgba(96, 165, 250, 0.65);
+  box-shadow: 0 22px 55px rgba(37, 99, 235, 0.25);
+}
+.themeBlue .iconBox {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.25) 0%, rgba(37, 99, 235, 0.15) 100%);
+  color: #60a5fa;
+  border: 1px solid rgba(96, 165, 250, 0.35);
+}
+.themeBlue .cardAction {
+  background: rgba(96, 165, 250, 0.12);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  color: #60a5fa;
+}
+.themeBlue .cardAction:hover {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #ffffff;
+}
+
+.themeEmerald {
+  border-top: 3px solid #34d399;
+}
+.themeEmerald:hover {
+  border-color: rgba(52, 211, 153, 0.65);
+  box-shadow: 0 22px 55px rgba(5, 150, 105, 0.25);
+}
+.themeEmerald .iconBox {
+  background: linear-gradient(135deg, rgba(52, 211, 153, 0.25) 0%, rgba(5, 150, 105, 0.15) 100%);
+  color: #34d399;
+  border: 1px solid rgba(52, 211, 153, 0.35);
+}
+.themeEmerald .cardAction {
+  background: rgba(52, 211, 153, 0.12);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  color: #34d399;
+}
+.themeEmerald .cardAction:hover {
+  background: #059669;
+  border-color: #059669;
+  color: #ffffff;
+}
+
+/* Card Header */
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.iconBox {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  flex-shrink: 0;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+}
+
+.badgeWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.badge {
+  font-size: 11.5px;
+  font-weight: 750;
+  color: #cbd5e1;
+  letter-spacing: 0.02em;
+}
+
+.tag {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Card Title */
+.cardTitle {
+  margin: 0 0 16px 0;
+  font-size: 26px;
+  font-weight: 850;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+}
+
+/* Airlines Section */
+.airlinesBox {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  margin-bottom: 20px;
+}
+
+.boxLabel {
+  font-size: 11px;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+}
+
+.airlinePills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.airlinePill {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: rgba(30, 41, 59, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #f8fafc;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.3;
+}
+
+/* Facilities Section */
+.facilitiesBox {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 28px;
+  flex: 1;
+}
+
+.facilityList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.facilityItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #cbd5e1;
+}
+
+.checkIcon {
+  color: #38bdf8;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* Card Action Button */
+.cardAction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 20px;
+  border-radius: 14px;
+  font-size: 13.5px;
+  font-weight: 750;
+  text-decoration: none;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.actionArrow {
+  transition: transform 0.2s ease;
+}
+
+.cardAction:hover .actionArrow {
+  transform: translateX(4px);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
   .grid {
     grid-template-columns: 1fr;
-    gap: 16px;
+    gap: 20px;
   }
 
   .section {
-    padding: 60px 18px;
+    padding: 70px 20px;
+  }
+
+  .card {
+    padding: 26px 20px;
   }
 }
