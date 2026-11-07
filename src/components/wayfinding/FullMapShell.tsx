@@ -7,7 +7,9 @@ import {
   ChevronRight,
   Clock3,
   Crosshair,
+  Minus,
   Navigation,
+  Plus,
   QrCode,
   RotateCcw,
   Ruler,
@@ -101,7 +103,13 @@ const tDict = {
   },
 };
 
-export function FullMapShell() {
+export function FullMapShell({
+  hideHeader = false,
+  onSwitchTo3D,
+}: {
+  hideHeader?: boolean;
+  onSwitchTo3D?: () => void;
+} = {}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [showQrModal, setShowQrModal] = useState(false);
@@ -243,10 +251,61 @@ export function FullMapShell() {
   const routeFloorIds = [...new Set(store.route?.nodes.map((n) => n.floorId) ?? [])];
 
   return (
-    <div className={`wayfinding-page full-screen-page ${styles.root}`}>
-      <SiteHeader />
+    <div className={`wayfinding-page full-screen-page ${styles.root} ${hideHeader ? styles.embedded : ""}`}>
+      {!hideHeader && <SiteHeader />}
 
       <main className="wayfinding-shell full-screen-shell">
+        {/* ── LAYER 1: 2D Floating Floor Switcher ── */}
+        <div className="fs-floor-floating-switcher" role="group" aria-label={lang === "EN" ? "Select floor" : "Pilih lantai"}>
+          <button
+            type="button"
+            className={`fs-floor-btn ${store.floorId === "T1-L2" ? "is-active" : ""}`}
+            onClick={() => { store.selectSpace(null); store.setFloorId("T1-L2"); }}
+            aria-pressed={store.floorId === "T1-L2"}
+            title={lang === "EN" ? "Switch to 2nd Floor" : "Beralih ke Lantai 2"}
+          >
+            <span className="fs-floor-num">2</span>
+            <span className="fs-floor-text">{lang === "EN" ? "2nd Floor" : "Lantai 2"}</span>
+          </button>
+          <button
+            type="button"
+            className={`fs-floor-btn ${store.floorId === "T1-L1" ? "is-active" : ""}`}
+            onClick={() => { store.selectSpace(null); store.setFloorId("T1-L1"); }}
+            aria-pressed={store.floorId === "T1-L1"}
+            title={lang === "EN" ? "Switch to 1st Floor" : "Beralih ke Lantai 1"}
+          >
+            <span className="fs-floor-num">1</span>
+            <span className="fs-floor-text">{lang === "EN" ? "1st Floor" : "Lantai 1"}</span>
+          </button>
+        </div>
+
+        {/* ── LAYER 1: 2D Zoom Controls ── */}
+        <div className="fs-map-zoom-controls" aria-label={lang === "EN" ? "Map zoom controls" : "Kontrol zoom peta"}>
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new CustomEvent("wayfinding:zoom-in"))}
+            aria-label={lang === "EN" ? "Zoom in" : "Perbesar"}
+            title={lang === "EN" ? "Zoom in" : "Perbesar"}
+          >
+            <Plus size={18} />
+          </button>
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new CustomEvent("wayfinding:zoom-out"))}
+            aria-label={lang === "EN" ? "Zoom out" : "Perkecil"}
+            title={lang === "EN" ? "Zoom out" : "Perkecil"}
+          >
+            <Minus size={18} />
+          </button>
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new CustomEvent("wayfinding:reset-view"))}
+            aria-label={lang === "EN" ? "Reset view" : "Reset tampilan"}
+            title={lang === "EN" ? "Reset view" : "Reset tampilan"}
+          >
+            <RotateCcw size={16} />
+          </button>
+        </div>
 
         {/* ── LAYER 0: Full-screen background map canvas ── */}
         <div className="fs-map-bg">

@@ -622,3 +622,135 @@
   .root :global(.fs-sidebar-right) { display: flex !important; top: auto; bottom: 4.8rem; left: .75rem; right: .75rem; width: auto; max-height: 38dvh; }
   .root:has(:global(.fs-detail-sheet)) :global(.fs-sidebar-right) { display: none !important; }
 }
+
+
+/* Embedded in MapPage */
+.root.embedded {
+  height: 100% !important;
+  min-height: 0 !important;
+  flex: 1;
+}
+
+.root.embedded :global(.full-screen-shell) {
+  height: 100% !important;
+  min-height: 0 !important;
+  flex: 1;
+}
+
+/* 2D Floating Floor Switcher */
+.root :global(.fs-floor-floating-switcher) {
+  position: absolute;
+  top: 6.85rem;
+  right: 1.75rem;
+  z-index: 15;
+  display: grid;
+  gap: 4px;
+  padding: 5px;
+  background: rgba(20, 43, 60, 0.92);
+  border: 1px solid rgba(150, 190, 214, 0.28);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(10px);
+}
+
+.root :global(.fs-floor-btn) {
+  display: grid;
+  grid-template-columns: 28px auto;
+  align-items: center;
+  gap: 10px;
+  min-width: 116px;
+  height: 42px;
+  padding: 0 12px 0 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #e7f1f7;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.root :global(.fs-floor-btn:hover) {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.root :global(.fs-floor-btn.is-active) {
+  background: #126c9d;
+  color: #ffffff;
+}
+
+.root :global(.fs-floor-num) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: rgba(150, 190, 214, 0.18);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.root :global(.fs-floor-btn.is-active .fs-floor-num) {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.root :global(.fs-floor-text) {
+  white-space: nowrap;
+}
+
+/* 2D Floating Zoom Controls */
+.root :global(.fs-map-zoom-controls) {
+  position: absolute;
+  right: 1.75rem;
+  bottom: 5rem;
+  z-index: 15;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 5px;
+  background: rgba(20, 43, 60, 0.92);
+  border: 1px solid rgba(150, 190, 214, 0.28);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(10px);
+}
+
+.root :global(.fs-map-zoom-controls button) {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #e2eef7;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.root :global(.fs-map-zoom-controls button:hover) {
+  background: rgba(0, 198, 244, 0.2);
+  color: #38bdf8;
+}
+
+@media (max-width: 56rem) {
+  .root :global(.fs-floor-floating-switcher) {
+    top: 5.5rem;
+    right: 1rem;
+  }
+  .root :global(.fs-floor-btn) {
+    min-width: 0;
+    grid-template-columns: 28px;
+    padding: 0 6px;
+  }
+  .root :global(.fs-floor-text) {
+    display: none;
+  }
+  .root :global(.fs-map-zoom-controls) {
+    right: 1rem;
+    bottom: 4.5rem;
+  }
+}
