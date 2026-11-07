@@ -49,6 +49,9 @@ export function HomeHero() {
     },
   ];
 
+  // Repeat board items to guarantee seamless infinite scrolling on all screen resolutions
+  const repeatedBoard = [...board, ...board];
+
   return (
     <>
       <section className={styles.hero} aria-labelledby="home-title">
@@ -77,21 +80,37 @@ export function HomeHero() {
         </div>
       </section>
 
-      {/* Airport Stats Section - Posisi di bawah lipatan awal halaman */}
+      {/* Airport Stats Section - Slim continuous horizontal marquee ticker */}
       <section
         className={styles.statsSection}
         aria-label={isID ? "Informasi Operasional Bandara" : "Airport Operational Information"}
       >
-        <div className={styles.statsInner}>
-          <dl className={styles.statsGrid}>
-            {board.map((cell) => (
-              <div key={cell.label} className={styles.statCard}>
-                <dt className={styles.statLabel}>{cell.label}</dt>
-                <dd className={styles.statValue}>{cell.value}</dd>
-                <p className={styles.statDesc}>{cell.desc}</p>
+        <div className={styles.tickerTrack}>
+          {/* Primary loop group */}
+          <div className={styles.tickerGroup}>
+            {repeatedBoard.map((cell, idx) => (
+              <div key={`${cell.label}-${idx}`} className={styles.statCard}>
+                <span className={styles.statDot} aria-hidden="true" />
+                <span className={styles.statLabel}>{cell.label}:</span>
+                <strong className={styles.statValue}>{cell.value}</strong>
+                <span className={styles.statDesc}>{cell.desc}</span>
+                <span className={styles.statDivider} aria-hidden="true" />
               </div>
             ))}
-          </dl>
+          </div>
+
+          {/* Duplicate loop group for seamless continuous loop */}
+          <div className={styles.tickerGroup} aria-hidden="true">
+            {repeatedBoard.map((cell, idx) => (
+              <div key={`dup-${cell.label}-${idx}`} className={styles.statCard}>
+                <span className={styles.statDot} aria-hidden="true" />
+                <span className={styles.statLabel}>{cell.label}:</span>
+                <strong className={styles.statValue}>{cell.value}</strong>
+                <span className={styles.statDesc}>{cell.desc}</span>
+                <span className={styles.statDivider} aria-hidden="true" />
+              </div>
+            ))}
+          </div>
         </div>
       </section>
     </>
