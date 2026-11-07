@@ -553,12 +553,22 @@ export function AirportWayfinding() {
     (nextBounds: SceneBounds, nextObjects: SceneObjectRecord[]) => {
       setBounds(nextBounds);
       setObjects(nextObjects);
-      try {
-        setNavigation(createFloorNavigation(nextObjects));
-        setGridError(null);
-      } catch (error) {
-        setNavigation(null);
-        setGridError(error instanceof Error ? error.message : "Area jalan dari model GLB tidak dapat diproses.");
+
+      // Defer komputasi grid jalan ke idle/next tick agar frame pertama kanvas 3D langsung render 60 FPS tanpa jeda freeze
+      const computeNav = () => {
+        try {
+          setNavigation(createFloorNavigation(nextObjects));
+          setGridError(null);
+        } catch (error) {
+          setNavigation(null);
+          setGridError(error instanceof Error ? error.message : "Area jalan dari model GLB tidak dapat diproses.");
+        }
+      };
+
+      if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+        (window as Window & { requestIdleCallback: (cb: () => void, opts?: { timeout: number }) => void }).requestIdleCallback(computeNav, { timeout: 120 });
+      } else {
+        setTimeout(computeNav, 20);
       }
     },
     [],
@@ -1231,7 +1241,7 @@ export function AirportWayfinding() {
       />
       <div className="canvas-stage">
         <Canvas
-          dpr={[1, 1.75]}
+          dpr={[1, 1.25]}
           frameloop="demand"
           camera={{ fov: 70, near: 0.01, far: 100000, position: [0, 10, 10] }}
           gl={{
