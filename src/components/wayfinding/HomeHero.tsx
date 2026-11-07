@@ -65,9 +65,9 @@ export function HomeHero() {
             </p>
             <div className={styles.actions}>
               <Link href="/map" className={styles.primaryCta}>
-                <Compass size={18} aria-hidden="true" />
+                <Compass size={20} aria-hidden="true" />
                 <span>{isID ? "Buka Peta Navigasi" : "Open Navigation Map"}</span>
-                <ArrowRight size={18} aria-hidden="true" />
+                <ArrowRight size={20} aria-hidden="true" />
               </Link>
               <Link href="/about" className={styles.secondaryCta}>
                 <span>{isID ? "Tentang Bandara" : "About Airport"}</span>
