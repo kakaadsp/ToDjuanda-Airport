@@ -70,10 +70,6 @@ function readTriangles(record: SceneObject): ObjectSurfaces {
   const surfaces: SurfaceTriangle[] = [];
   const triangles: ObjectSurfaces["triangles"] = [];
   const box = new THREE.Box3();
-  const vA = new THREE.Vector3();
-  const vB = new THREE.Vector3();
-  const vC = new THREE.Vector3();
-
   record.object.traverse((child) => {
     if (!(child instanceof THREE.Mesh) || child.visible === false) return;
     const position = child.geometry.getAttribute("position");
@@ -81,22 +77,16 @@ function readTriangles(record: SceneObject): ObjectSurfaces {
     const index = child.geometry.getIndex();
     const count = index?.count ?? position.count;
     for (let offset = 0; offset + 2 < count; offset += 3) {
-      const idx0 = index ? index.getX(offset) : offset;
-      const idx1 = index ? index.getX(offset + 1) : offset + 1;
-      const idx2 = index ? index.getX(offset + 2) : offset + 2;
-
-      vA.fromBufferAttribute(position, idx0).applyMatrix4(child.matrixWorld);
-      vB.fromBufferAttribute(position, idx1).applyMatrix4(child.matrixWorld);
-      vC.fromBufferAttribute(position, idx2).applyMatrix4(child.matrixWorld);
-
-      const minY = Math.min(vA.y, vB.y, vC.y);
-      const maxY = Math.max(vA.y, vB.y, vC.y);
-      box.expandByPoint(vA).expandByPoint(vB).expandByPoint(vC);
-
-      const a = vA.clone();
-      const b = vB.clone();
-      const c = vC.clone();
-      triangles.push({ vertices: [a, b, c], minY, maxY });
+      const vertices = [0, 1, 2].map((corner) =>
+        new THREE.Vector3()
+          .fromBufferAttribute(position, index?.getX(offset + corner) ?? offset + corner)
+          .applyMatrix4(child.matrixWorld),
+      ) as [THREE.Vector3, THREE.Vector3, THREE.Vector3];
+      const [a, b, c] = vertices;
+      const minY = Math.min(a.y, b.y, c.y);
+      const maxY = Math.max(a.y, b.y, c.y);
+      box.expandByPoint(a).expandByPoint(b).expandByPoint(c);
+      triangles.push({ vertices, minY, maxY });
       if (maxY - minY > FLAT_TRIANGLE_TOLERANCE) continue;
       const area = triangleAreaXZ([a.x, a.y, a.z], [b.x, b.y, b.z], [c.x, c.y, c.z]);
       if (area < 1e-5) continue;

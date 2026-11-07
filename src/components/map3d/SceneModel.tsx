@@ -13,7 +13,7 @@ import {
   type ObjectMetadata,
   type SelectedObject,
 } from "@/lib/map3d/object-metadata";
-import { GROUND_FLOOR_MODEL_URL, TERMINAL_MODEL_URL } from "@/lib/map3d/assets";
+import { GROUND_FLOOR_MODEL_URL } from "@/lib/map3d/assets";
 import { FLOOR_ORDER, floorOfObject, levelGroupName, type FloorId, type FloorView } from "@/lib/map3d/floors";
 import { defaultMapObjectConfig, readMapObjectConfigs, type MapObjectConfigByName, type MapObjectDoor } from "@/lib/map3d/admin-object-config";
 
@@ -294,7 +294,7 @@ function isFloorSurfaceName(objectName: string) {
 }
 
 export function SceneModel({ selectedUuid, onSelect, onSelectFloor, onSelectPoint, onSelectEntryPoint, onReady, objectConfigs = {}, modelUrl = GROUND_FLOOR_MODEL_URL, floorView = "ALL", showObjectLabels = false }: SceneModelProps) {
-  const gltf = useGLTF(modelUrl, "/draco/");
+  const gltf = useGLTF(modelUrl);
   const sourceScene = gltf.scene;
   const sourceParser = gltf.parser as typeof gltf.parser & {
     associations: Map<THREE.Object3D, GltfAssociation>;
@@ -674,4 +674,4 @@ function EntryDoorMarkers({ object, objectName, doors, onSelect }: { object: THR
   </group>;
 }
 
-useGLTF.preload(TERMINAL_MODEL_URL, "/draco/");
+useGLTF.preload(GROUND_FLOOR_MODEL_URL);

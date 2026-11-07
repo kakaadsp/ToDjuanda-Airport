@@ -344,7 +344,7 @@ export function AdminMapPanel({ initialObjectName = null, focusNonce = 0 }: { in
         ))}
       </div>
       <div className="admin-map-canvas admin-3d-editor-canvas">
-        <Canvas dpr={[1, 1.25]} camera={{ fov: 55, near: 0.01, far: 100000, position: [20, 20, 20] }}>
+        <Canvas dpr={[1, 1.5]} camera={{ fov: 55, near: 0.01, far: 100000, position: [20, 20, 20] }}>
           <color attach="background" args={["#102d3d"]} />
           <ambientLight intensity={0.9} />
           <hemisphereLight intensity={1.1} color="#ffffff" groundColor="#65747d" />

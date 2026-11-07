@@ -55,14 +55,7 @@ export type FloorRoute = {
 /** Jarak gambar rute di atas permukaan lantai, dalam meter. */
 export const ROUTE_CLEARANCE = 0.06;
 
-let navCache: FloorNavigation | null = null;
-let navCacheKey = "";
-
 export function createFloorNavigation(objects: { name: string; object: THREE.Object3D }[]): FloorNavigation {
-  const cacheKey = objects.length + ":" + (objects[0]?.name ?? "");
-  if (navCache && navCacheKey === cacheKey) {
-    return navCache;
-  }
   // Tingkat diurutkan dari bawah ke atas dan dipetakan ke L1, L2. Model lama
   // yang hanya berisi lantai dasar menghasilkan satu tingkat saja.
   const levels = analyzeAllLevels(objects).slice(0, FLOOR_ORDER.length);
@@ -74,10 +67,7 @@ export function createFloorNavigation(objects: { name: string; object: THREE.Obj
   const connectors = levels.length > 1
     ? detectFloorConnectors(objects, levels[0].level.y, levels[1].level.y)
     : [];
-  const result = { floors, grids, connectors };
-  navCache = result;
-  navCacheKey = cacheKey;
-  return result;
+  return { floors, grids, connectors };
 }
 
 /** Lantai terdekat untuk sebuah ketinggian, misalnya titik klik pada peta. */
