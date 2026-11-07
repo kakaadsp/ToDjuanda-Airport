@@ -82,7 +82,7 @@ export function MapStage({
     );
   }, [terminal, floorId, overview]);
 
-  // Listen for pan-to and zoom events (e.g. from 2D controls)
+  // Listen for pan-to events (e.g. from "Where Am I?" button)
   useEffect(() => {
     const handlePanTo = (event: Event) => {
       const { x, y, scale: targetScale } = (event as CustomEvent<{ x: number; y: number; scale: number }>).detail;
@@ -94,28 +94,9 @@ export function MapStage({
       };
       applyTransform();
     };
-    const handleZoomIn = () => zoom(0.3);
-    const handleZoomOut = () => zoom(-0.3);
-    const handleReset = () => {
-      const initialView = overview
-        ? { x: 310, y: 217, scale: 0.38 }
-        : { x: 0, y: 0, scale: 1.2 };
-      transformRef.current = initialView;
-      applyTransform();
-    };
-
     window.addEventListener("wayfinding:pan-to", handlePanTo);
-    window.addEventListener("wayfinding:zoom-in", handleZoomIn);
-    window.addEventListener("wayfinding:zoom-out", handleZoomOut);
-    window.addEventListener("wayfinding:reset-view", handleReset);
-
-    return () => {
-      window.removeEventListener("wayfinding:pan-to", handlePanTo);
-      window.removeEventListener("wayfinding:zoom-in", handleZoomIn);
-      window.removeEventListener("wayfinding:zoom-out", handleZoomOut);
-      window.removeEventListener("wayfinding:reset-view", handleReset);
-    };
-  }, [overview]);
+    return () => window.removeEventListener("wayfinding:pan-to", handlePanTo);
+  }, []);
 
   // Pan to selected space
   useEffect(() => {

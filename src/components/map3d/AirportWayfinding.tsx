@@ -337,7 +337,7 @@ const CameraController = forwardRef<
   },
 );
 
-function LoadingOverlay({ modelReady, lang, onSwitchTo2D }: { modelReady: boolean; lang: "ID" | "EN"; onSwitchTo2D?: () => void }) {
+function LoadingOverlay({ modelReady, lang }: { modelReady: boolean; lang: "ID" | "EN" }) {
   const { progress } = useProgress();
   if (!isMapModelLoading(modelReady)) return null;
   return (
@@ -352,15 +352,6 @@ function LoadingOverlay({ modelReady, lang, onSwitchTo2D }: { modelReady: boolea
       <div className="loader-track">
         <div style={{ width: progress + "%" }} />
       </div>
-      {onSwitchTo2D && (
-        <button
-          type="button"
-          className="loader-switch-2d-btn"
-          onClick={onSwitchTo2D}
-        >
-          {lang === "EN" ? "Loading slow? Switch to 2D Light Map" : "Terasa berat? Beralih ke Peta 2D Ringan"}
-        </button>
-      )}
     </div>
   );
 }
@@ -458,7 +449,7 @@ function nearestRouteDistance(metrics: { points: THREE.Vector3[]; cumulativeDist
   return bestDistance;
 }
 
-export function AirportWayfinding({ onSwitchTo2D }: { onSwitchTo2D?: () => void } = {}) {
+export function AirportWayfinding() {
   const viewerApi = useRef<ViewerApi>(null);
   const [bounds, setBounds] = useState<SceneBounds | null>(null);
   const [objects, setObjects] = useState<SceneObjectRecord[]>([]);
@@ -1318,7 +1309,7 @@ export function AirportWayfinding({ onSwitchTo2D }: { onSwitchTo2D?: () => void 
         </Canvas>
       </div>
 
-      <LoadingOverlay modelReady={bounds !== null} lang={lang} onSwitchTo2D={onSwitchTo2D} />
+      <LoadingOverlay modelReady={bounds !== null} lang={lang} />
       <FloorSwitcher view={shownFloorView} floors={modelFloors.length ? modelFloors : ["L1"]} onSelect={changeFloor} />
 
       <aside
