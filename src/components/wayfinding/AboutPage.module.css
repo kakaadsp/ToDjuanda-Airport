@@ -92,7 +92,7 @@
   gap: 40px;
   width: min(1280px, calc(100% - 64px));
   margin: auto;
-  padding: 48px 0 52px;
+  padding: 108px 0 52px;
 }
 
 .heroCopy {
@@ -271,6 +271,76 @@
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.04em;
+}
+
+/* Interactive Map Container inside Showcase */
+.showcaseMapWrap {
+  position: relative;
+  width: 100%;
+  height: 310px;
+  min-height: 260px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(134, 210, 232, 0.25);
+  background: #041c2e;
+}
+
+.showcaseMapPlaceholder {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #7be4fb;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.showcaseMapCaption {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  z-index: 1000;
+  padding: 6px 11px;
+  border-radius: 7px;
+  background: rgba(8, 43, 68, 0.94);
+  color: #d9f8ff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border: 1px solid rgba(134, 210, 232, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+
+.showcasePills {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.showcasePill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(11, 46, 70, 0.6);
+  border: 1px solid rgba(145, 203, 224, 0.14);
+  color: #cfe8f3;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.showcasePillIcon {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: rgba(0, 163, 218, 0.25);
+  color: #7be4fb;
+  flex-shrink: 0;
 }
 
 .showcaseBadge {
@@ -907,7 +977,7 @@
   .heroInner {
     grid-template-columns: 1fr;
     gap: 32px;
-    padding: 40px 0 46px;
+    padding: 96px 0 46px;
   }
 
   .visionGrid {
@@ -927,7 +997,7 @@
 @media (max-width: 760px) {
   .heroInner {
     width: calc(100% - 32px);
-    padding: 36px 0 42px;
+    padding: 92px 0 42px;
   }
 
   .container {

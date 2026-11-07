@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -26,6 +27,11 @@ import { SiteFooter } from "@/components/site/SiteFooter";
 import { useMapStore } from "@/store/mapStore";
 import styles from "./AboutPage.module.css";
 
+const OverviewMap = dynamic(
+  () => import("@/components/map2d/JuandaOverviewMap").then((module) => module.JuandaOverviewMap),
+  { ssr: false },
+);
+
 const aboutContent = {
   ID: {
     heroEyebrow: "TENTANG TODJUANDA · INJOURNEY AIRPORTS",
@@ -46,16 +52,15 @@ const aboutContent = {
       gatesSub: "Pintu Keberangkatan",
     },
     showcase: {
-      brand: "Terminal 1 Digital Twin",
-      status: "Peta 3D Interaktif",
-      caption: "Visualisasi 3D multi-lantai akurat Terminal 1 Juanda",
-      highlights: [
-        { label: "Lantai 1", desc: "Area Check-in Departure 1–4 & Kedatangan", icon: Building2 },
-        { label: "Lantai 2", desc: "Ruang Tunggu Boarding Gate 1–12 & Resto", icon: Plane },
-        { label: "Konektor", desc: "Jalur Eskalator & Tangga Antarlantai", icon: Layers },
-        { label: "Direktori", desc: "83+ Fasilitas, Toilet, Musholla & ATM", icon: Search },
+      brand: "Peta Bandara Juanda",
+      status: "Peta Satelit 2D",
+      caption: "Klik Terminal 1 untuk masuk ke peta 3D interaktif",
+      pills: [
+        { label: "Pintu Masuk & Check-in", icon: "building" },
+        { label: "Gate Keberangkatan 1-12", icon: "plane" },
+        { label: "Konektor Eskalator/Tangga", icon: "layers" },
+        { label: "Direktori F&B & Fasilitas", icon: "search" },
       ],
-      cta: "Jelajahi Peta 3D Sekarang",
     },
     visionSection: {
       eyebrow: "LATAR BELAKANG & VISI",
@@ -202,16 +207,15 @@ const aboutContent = {
       gatesSub: "Boarding Gates",
     },
     showcase: {
-      brand: "Terminal 1 Digital Twin",
-      status: "Interactive 3D Map",
-      caption: "Accurate multi-floor 3D visualization of Juanda Terminal 1",
-      highlights: [
-        { label: "Level 1", desc: "Departure 1–4 Check-in & Arrivals Area", icon: Building2 },
-        { label: "Level 2", desc: "Boarding Gates 1–12 Lounge & Dining", icon: Plane },
-        { label: "Connectors", desc: "Directional Escalators & Multi-floor Stairs", icon: Layers },
-        { label: "Directory", desc: "83+ Facilities, Restrooms, Prayer Rooms & ATMs", icon: Search },
+      brand: "Juanda Airport Map",
+      status: "2D Satellite Map",
+      caption: "Click Terminal 1 to enter interactive 3D map",
+      pills: [
+        { label: "Entrance & Check-in", icon: "building" },
+        { label: "Boarding Gates 1-12", icon: "plane" },
+        { label: "Escalator & Stair Connectors", icon: "layers" },
+        { label: "F&B & Amenities Directory", icon: "search" },
       ],
-      cta: "Explore 3D Map Now",
     },
     visionSection: {
       eyebrow: "BACKGROUND & VISION",
@@ -435,41 +439,37 @@ export function AboutPage() {
               </div>
             </div>
 
-            {/* Showcase Visual Card (Digital Twin 3D Highlights) */}
+            {/* Showcase Visual Card (2D Overview Map ala Google Maps) */}
             <div className={`${styles.heroShowcase} ${styles.revealOnScroll} ${styles.revealDelay1}`}>
               <div className={styles.showcaseCard}>
                 <div className={styles.showcaseHeader}>
                   <div className={styles.showcaseBrand}>
-                    <Building2 size={18} color="#40d6ec" />
+                    <PlaneTakeoff size={16} />
                     <span>{content.showcase.brand}</span>
                   </div>
                   <span className={styles.showcaseBadge}>{content.showcase.status}</span>
                 </div>
 
-                <div className={styles.showcaseBody}>
-                  <p className={styles.showcaseCaption}>{content.showcase.caption}</p>
+                {/* Juanda Overview Map using Google Maps Tile API */}
+                <div className={styles.showcaseMapWrap}>
+                  <OverviewMap />
+                  <span className={styles.showcaseMapCaption}>
+                    {content.showcase.caption}
+                  </span>
+                </div>
 
-                  <div className={styles.showcaseGrid}>
-                    {content.showcase.highlights.map((item, idx) => {
-                      const Icon = item.icon;
-                      return (
-                        <div key={idx} className={styles.showcaseItem}>
-                          <div className={styles.showcaseItemIcon}>
-                            <Icon size={16} />
-                          </div>
-                          <div className={styles.showcaseItemText}>
-                            <strong>{item.label}</strong>
-                            <span>{item.desc}</span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  <Link href="/map" className={styles.showcaseAction}>
-                    <span>{content.showcase.cta}</span>
-                    <ArrowRight size={16} />
-                  </Link>
+                <div className={styles.showcasePills}>
+                  {content.showcase.pills.map((pill, idx) => (
+                    <div key={idx} className={styles.showcasePill}>
+                      <span className={styles.showcasePillIcon}>
+                        {pill.icon === "building" && <Building2 size={14} />}
+                        {pill.icon === "plane" && <PlaneTakeoff size={14} />}
+                        {pill.icon === "layers" && <Layers size={14} />}
+                        {pill.icon === "search" && <Search size={14} />}
+                      </span>
+                      <span>{pill.label}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>

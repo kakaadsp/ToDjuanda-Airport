@@ -15,6 +15,7 @@ export function SiteHeader() {
   const pathname = usePathname();
   const isMapPage = pathname === "/map";
   const isHomePage = pathname === "/";
+  const isTransparentHeaderPage = pathname === "/" || pathname === "/about" || pathname === "/help";
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
@@ -41,7 +42,7 @@ export function SiteHeader() {
   }, [isMobileMenuOpen]);
 
   useEffect(() => {
-    if (!isHomePage) return;
+    if (!isTransparentHeaderPage) return;
     const handleScroll = () => {
       const currentY = window.scrollY;
       const progress = Math.min(1, Math.max(0, currentY / 140));
@@ -50,14 +51,14 @@ export function SiteHeader() {
     handleScroll();
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [isHomePage]);
+  }, [isTransparentHeaderPage]);
 
   return (
     <>
       <header
-        className={`${styles.header} ${isHomePage ? styles.homeHeader : styles.mapHeader}`}
+        className={`${styles.header} ${isTransparentHeaderPage ? styles.homeHeader : styles.mapHeader}`}
         style={
-          isHomePage
+          isTransparentHeaderPage
             ? {
                 backgroundColor: `rgba(7, 86, 168, ${scrollProgress * 0.96})`,
                 backdropFilter: scrollProgress > 0.05 ? `blur(${scrollProgress * 12}px)` : "none",
