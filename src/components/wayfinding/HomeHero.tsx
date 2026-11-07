@@ -1,96 +1,99 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { ArrowRight, Search, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { ArrowRight, Compass } from "lucide-react";
 import { useMapStore } from "@/store/mapStore";
 import styles from "./HomeHero.module.css";
 
-const QUICK_SEARCHES = [
-  { query: "Check-in", id: "Check-in", en: "Check-in" },
-  { query: "Toilet", id: "Toilet", en: "Restroom" },
-  { query: "Mushola", id: "Mushola", en: "Prayer room" },
-];
-
 export function HomeHero() {
-  const router = useRouter();
   const lang = useMapStore((state) => state.lang);
   const isID = lang === "ID";
-  const [query, setQuery] = useState("");
+  const [facilityCount, setFacilityCount] = useState<number>(83);
 
-  const openMap = (term = query) => {
-    const value = term.trim();
-    router.push(value ? `/map?q=${encodeURIComponent(value)}` : "/map");
-  };
+  useEffect(() => {
+    let active = true;
+    fetch("/api/tenants", { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (active && Array.isArray(data?.tenants) && data.tenants.length > 0) {
+          setFacilityCount(data.tenants.length);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const board = [
-    { label: isID ? "Terminal" : "Terminal", value: "T1" },
-    { label: isID ? "Lantai" : "Floors", value: "1 & 2" },
-    { label: isID ? "Area keberangkatan" : "Departure areas", value: "1 - 4" },
-    { label: isID ? "Counter check-in" : "Check-in counters", value: "1 - 83" },
+    {
+      label: isID ? "Terminal" : "Terminal",
+      value: "Terminal 1",
+      desc: isID ? "Penerbangan Domestik" : "Domestic Flights",
+    },
+    {
+      label: isID ? "Lantai Operasional" : "Operating Floors",
+      value: "Lantai 1 & 2",
+      desc: isID ? "Kedatangan & Keberangkatan" : "Arrivals & Departures",
+    },
+    {
+      label: isID ? "Pintu Keberangkatan" : "Boarding Gates",
+      value: "Gate 1 – 12",
+      desc: isID ? "Lantai 2 Terminal 1" : "2nd Floor Terminal 1",
+    },
+    {
+      label: isID ? "Fasilitas & Tenant" : "Facilities & Tenants",
+      value: `${facilityCount}+ Lokasi`,
+      desc: isID ? "Terdaftar di Direktori" : "Registered in Directory",
+    },
   ];
 
   return (
-    <section className={styles.hero} aria-labelledby="home-title">
-      <div className={styles.inner}>
-        <div className={styles.copy}>
-          <p className={styles.eyebrow}>Juanda International Airport</p>
-          <h1 id="home-title" className={styles.title}>
-            {isID ? "Temukan jalur Anda di Terminal 1" : "Find your way through Terminal 1"}
-          </h1>
-          <p className={styles.subtitle}>
-            {isID
-              ? "Peta 3D bagian dalam terminal. Pilih titik awal dan tujuan, lalu ikuti jalur berjalan kaki yang ditampilkan."
-              : "A 3D map of the terminal interior. Pick a start and a destination, then follow the walking route shown."}
-          </p>
-          <form
-            className={styles.search}
-            role="search"
-            onSubmit={(event) => {
-              event.preventDefault();
-              openMap();
-            }}
-          >
-            <label className={styles.field}>
-              <Search size={20} aria-hidden="true" />
-              <span className="sr-only">{isID ? "Cari tujuan" : "Search destination"}</span>
-              <input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder={isID ? "Cari gate, counter, atau fasilitas" : "Search gate, counter, or facility"}
-                autoComplete="off"
-              />
-              {query && (
-                <button type="button" className={styles.clear} onClick={() => setQuery("")} aria-label={isID ? "Hapus pencarian" : "Clear search"}>
-                  <X size={16} aria-hidden="true" />
-                </button>
-              )}
-            </label>
-            <button type="submit" className={styles.submit}>
-              {isID ? "Buka peta" : "Open map"}
-              <ArrowRight size={18} aria-hidden="true" />
-            </button>
-          </form>
-          <div className={styles.quick}>
-            <span className={styles.quickLabel}>{isID ? "Sering dicari" : "Popular"}</span>
-            {QUICK_SEARCHES.map((item) => (
-              <button key={item.query} type="button" className={styles.chip} onClick={() => openMap(item.query)}>
-                {isID ? item.id : item.en}
-              </button>
-            ))}
+    <>
+      <section className={styles.hero} aria-labelledby="home-title">
+        <div className={styles.inner}>
+          <div className={styles.copy}>
+            <p className={styles.eyebrow}>JUANDA INTERNATIONAL AIRPORT · SURABAYA</p>
+            <h1 id="home-title" className={styles.title}>
+              {isID ? "Temukan Jalur Anda di Terminal 1" : "Find Your Way Through Terminal 1"}
+            </h1>
+            <p className={styles.subtitle}>
+              {isID
+                ? "Navigasi interaktif multi-lantai dengan panduan arah rute presisi menuju boarding gate, counter check-in, dan fasilitas bandara."
+                : "Interactive multi-floor navigation with precise walking route guidance to boarding gates, check-in counters, and airport facilities."}
+            </p>
+            <div className={styles.actions}>
+              <Link href="/map" className={styles.primaryCta}>
+                <Compass size={18} aria-hidden="true" />
+                <span>{isID ? "Buka Peta Navigasi" : "Open Navigation Map"}</span>
+                <ArrowRight size={18} aria-hidden="true" />
+              </Link>
+              <Link href="/about" className={styles.secondaryCta}>
+                <span>{isID ? "Tentang Bandara" : "About Airport"}</span>
+              </Link>
+            </div>
           </div>
         </div>
-      </div>
-      <div className={styles.board}>
-        <dl className={styles.boardInner} style={{ margin: "0 auto" }}>
-          {board.map((cell) => (
-            <div key={cell.label} className={styles.cell}>
-              <dt className={styles.cellLabel}>{cell.label}</dt>
-              <dd className={styles.cellValue} style={{ margin: 0 }}>{cell.value}</dd>
-            </div>
-          ))}
-        </dl>
-      </div>
-    </section>
+      </section>
+
+      {/* Airport Stats Section - Posisi di bawah lipatan awal halaman */}
+      <section
+        className={styles.statsSection}
+        aria-label={isID ? "Informasi Operasional Bandara" : "Airport Operational Information"}
+      >
+        <div className={styles.statsInner}>
+          <dl className={styles.statsGrid}>
+            {board.map((cell) => (
+              <div key={cell.label} className={styles.statCard}>
+                <dt className={styles.statLabel}>{cell.label}</dt>
+                <dd className={styles.statValue}>{cell.value}</dd>
+                <p className={styles.statDesc}>{cell.desc}</p>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </section>
+    </>
   );
 }
