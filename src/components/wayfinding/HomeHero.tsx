@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Compass } from "lucide-react";
+import { ArrowRight, Compass, Plane, Luggage, Bath, Moon, Landmark, ShoppingBag } from "lucide-react";
 import { useMapStore } from "@/store/mapStore";
 import styles from "./HomeHero.module.css";
 
@@ -75,6 +75,39 @@ export function HomeHero() {
               <Link href="/about" className={styles.secondaryCta}>
                 <span>{isID ? "Tentang Bandara" : "About Airport"}</span>
               </Link>
+            </div>
+
+            {/* Quick Access Facilities Pills */}
+            <div className={styles.shortcutsWrap}>
+              <span className={styles.shortcutsLabel}>
+                {isID ? "Akses Cepat Fasilitas:" : "Quick Access:"}
+              </span>
+              <div className={styles.shortcutsList}>
+                <Link href="/map?q=gate" className={styles.shortcutPill}>
+                  <Plane size={15} aria-hidden="true" />
+                  <span>Gate 1 – 12</span>
+                </Link>
+                <Link href="/map?q=check-in" className={styles.shortcutPill}>
+                  <Luggage size={15} aria-hidden="true" />
+                  <span>Check-in</span>
+                </Link>
+                <Link href="/map?q=toilet" className={styles.shortcutPill}>
+                  <Bath size={15} aria-hidden="true" />
+                  <span>Toilet</span>
+                </Link>
+                <Link href="/map?q=musholla" className={styles.shortcutPill}>
+                  <Moon size={15} aria-hidden="true" />
+                  <span>Musholla</span>
+                </Link>
+                <Link href="/map?q=atm" className={styles.shortcutPill}>
+                  <Landmark size={15} aria-hidden="true" />
+                  <span>ATM</span>
+                </Link>
+                <Link href="/map?q=komersial" className={styles.shortcutPill}>
+                  <ShoppingBag size={15} aria-hidden="true" />
+                  <span>Kuliner & Ritel</span>
+                </Link>
+              </div>
             </div>
           </div>
         </div>

@@ -33,16 +33,16 @@ export function ExploreSection() {
 
   const steps = [
     {
-      title: id ? "Cari building" : "Find a building",
-      text: id ? "Ketik kode building, misalnya T1-GF-01." : "Type a building code, for example T1-GF-01.",
+      title: id ? "Cari Tujuan Anda" : "Search Destination",
+      text: id ? "Ketik nama gate, konter check-in, musholla, toilet, atau toko." : "Search boarding gates, check-in desks, prayer rooms, or shops.",
     },
     {
-      title: id ? "Tentukan titik awal" : "Set a start point",
-      text: id ? "Pilih lokasi keberangkatanmu langsung di model 3D." : "Choose where you are directly on the 3D model.",
+      title: id ? "Tentukan Titik Berangkat" : "Set Your Starting Point",
+      text: id ? "Pilih lokasi posisi Anda saat ini di Lantai 1 atau Lantai 2." : "Choose where you are right now on Level 1 or Level 2.",
     },
     {
-      title: id ? "Lihat rute" : "View the route",
-      text: id ? "Pilih tujuan, jalurnya langsung tergambar di peta." : "Pick a destination and the path is drawn on the map.",
+      title: id ? "Ikuti Rute Pejalan Kaki" : "Follow Walking Route",
+      text: id ? "Lihat petunjuk arah belokan, eskalator, serta estimasi jarak dan menit." : "View turn-by-turn steps, escalators, and accurate walking ETA.",
     },
   ];
 

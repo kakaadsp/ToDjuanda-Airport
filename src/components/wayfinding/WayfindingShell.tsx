@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { ExploreSection } from "./ExploreSection";
+import { TerminalFlightZoneGuide } from "./TerminalFlightZoneGuide";
 import { HomeHero } from "./HomeHero";
 import { WayfindingFullTutorialSection } from "./WayfindingFullTutorialSection";
 import { WayfindingVideoTutorial } from "./WayfindingVideoTutorial";
@@ -46,6 +47,9 @@ export function WayfindingShell() {
         <section className="explore-section">
           <div className="reveal-on-scroll">
             <ExploreSection />
+          </div>
+          <div className="reveal-on-scroll">
+            <TerminalFlightZoneGuide />
           </div>
           <div className="section-overlap-stack">
             <div className="reveal-on-scroll">

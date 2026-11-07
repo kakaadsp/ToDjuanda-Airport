@@ -13,46 +13,46 @@ export function WayfindingFullTutorialSection() {
   const steps = [
     {
       num: "01",
-      tag: lang === "ID" ? "Pencarian lokasi" : "Find a location",
-      title: lang === "ID" ? "Cari building berdasarkan kodenya" : "Find a building by its code",
+      tag: lang === "ID" ? "Pencarian Seketika" : "Instant Search",
+      title: lang === "ID" ? "Temukan Gate, Maskapai & Fasilitas" : "Find Gates, Airlines & Facilities",
       icon: Search,
       desc: lang === "ID"
-        ? "Gunakan kolom pencarian di peta untuk menemukan kode building, misalnya T1-GF-01."
-        : "Use the map search field to find a building code, such as T1-GF-01.",
+        ? "Ketik langsung nama tujuan Anda: Boarding Gate 1–12, konter maskapai, toilet, musholla, hingga restoran favorit."
+        : "Type your destination directly: Gates 1–12, check-in desks, prayer rooms, restrooms, or cafes.",
       cta: lang === "ID" ? "Buka peta" : "Open map",
       onCta: () => router.push("/map"),
     },
     {
       num: "02",
-      tag: lang === "ID" ? "Posisi awal" : "Set your location",
-      title: lang === "ID" ? "Tentukan posisi awal di peta" : "Set your starting point on the map",
+      tag: lang === "ID" ? "Navigasi Multi-Lantai" : "Multi-Floor Routes",
+      title: lang === "ID" ? "Panduan Terhubung Lantai 1 & 2" : "Seamless Levels 1 & 2 Guidance",
       icon: MousePointer2,
       desc: lang === "ID"
-        ? "Pilih titik awal pada model 3D sebelum menentukan tujuan. Pemindaian QR belum tersedia pada peta ini."
-        : "Choose a starting point on the 3D model before selecting a destination. QR scanning is not available on this map yet.",
+        ? "Peta cerdas menghubungkan lantai dasar (Check-in/Kedatangan) dan lantai 2 (Ruang Boarding) via eskalator dan tangga."
+        : "Intelligent routing connects the ground floor (Check-in/Arrivals) and level 2 (Boarding Lounge) via escalators.",
       cta: lang === "ID" ? "Pilih di peta" : "Choose on map",
       onCta: () => router.push("/map"),
     },
     {
       num: "03",
-      tag: lang === "ID" ? "Perhitungan rute" : "Plan your route",
-      title: lang === "ID" ? "Pilih tujuan dan ikuti rute" : "Choose a destination and follow the route",
+      tag: lang === "ID" ? "Estimasi Waktu Riil" : "Real Walking Time",
+      title: lang === "ID" ? "Jarak & Waktu Tempuh Akurat" : "Accurate Distance & Walking ETA",
       icon: Navigation,
       desc: lang === "ID"
-        ? "Setelah titik awal dan tujuan dipilih, rute akan tampil di model 3D beserta kontrol navigasinya."
-        : "Once you choose the start and destination, the route appears on the 3D model with navigation controls.",
-      cta: lang === "ID" ? "Lihat panduan peta" : "View map guide",
+        ? "Ketahui jarak meter riil dan perkiraan menit berjalan santai ke boarding gate agar Anda tidak ketinggalan pesawat."
+        : "Get exact walking meters and minutes to your boarding gate so you board your flight comfortably on time.",
+      cta: lang === "ID" ? "Lihat panduan rute" : "View route guide",
       onCta: () => router.push("/help"),
     },
     {
       num: "04",
-      tag: lang === "ID" ? "Jelajahi model" : "Explore the model",
-      title: lang === "ID" ? "Atur tampilan peta 3D" : "Adjust the 3D map view",
+      tag: lang === "ID" ? "100% Akses Web" : "100% Web Based",
+      title: lang === "ID" ? "Langsung Diakses Tanpa Aplikasi" : "Instant Access, No App Needed",
       icon: View,
       desc: lang === "ID"
-        ? "Geser, putar, dan zoom peta untuk melihat jalur lebih jelas. Saat ini peta mencakup Terminal 1 lantai dasar."
-        : "Pan, rotate, and zoom the map to inspect your route. The current map covers Terminal 1 ground floor.",
-      cta: lang === "ID" ? "Buka peta" : "Open map",
+        ? "Buka langsung lewat browser smartphone atau tablet. Ringan, cepat, dan responsif dengan mode peta 3D interaktif."
+        : "Open directly in your mobile browser. Fast, lightweight, and responsive with interactive 3D navigation.",
+      cta: lang === "ID" ? "Buka peta 3D" : "Open 3D map",
       onCta: () => router.push("/map"),
     },
   ];
@@ -69,15 +69,15 @@ export function WayfindingFullTutorialSection() {
           <div className={styles.headerGrid}>
             <h2 id="guide-title">
               {lang === "ID" ? (
-                <>Gunakan peta dengan <span>jelas dan cepat.</span></>
+                <>Navigasi bandara yang <span>mudah, cepat, dan presisi.</span></>
               ) : (
-                <>Use the map <span>quickly and easily.</span></>
+                <>Airport navigation made <span>simple, fast, and precise.</span></>
               )}
             </h2>
             <p>
               {lang === "ID"
-                ? "Empat langkah untuk mencari building, menetapkan posisi awal, mengikuti rute, dan menjelajahi model 3D."
-                : "Four steps to find a building, set your start, follow a route, and explore the 3D model."}
+                ? "Dirancang khusus untuk memandu penumpang Terminal 1 Bandara Internasional Juanda melangkah tenang dari drop zone hingga boarding pesawat."
+                : "Engineered specifically to guide Juanda Airport Terminal 1 passengers seamlessly from drop zone to departure gate."}
             </p>
           </div>
         </header>
