@@ -1,8 +1,8 @@
 .hero {
   position: relative;
-  min-height: clamp(620px, calc(100svh - 72px), 800px);
+  min-height: clamp(680px, 100svh, 860px);
   padding: 0 clamp(20px, 5vw, 72px);
-  border-radius: 34px 34px 0 0;
+  border-radius: 0;
   background: url("/bg-home.jpg") center 35% / cover no-repeat;
   display: flex;
   align-items: center;
@@ -23,7 +23,7 @@
   position: relative;
   width: min(1280px, 100%);
   margin: 0 auto;
-  padding: 72px 0 120px;
+  padding: clamp(96px, 13vh, 136px) 0 120px;
 }
 
 .copy {
@@ -224,13 +224,13 @@
   .hero {
     min-height: auto;
     align-items: flex-start;
-    border-radius: 24px 24px 0 0;
+    border-radius: 0;
   }
   .hero::before {
     background: rgba(5, 40, 84, 0.78);
   }
   .inner {
-    padding: 48px 0 250px;
+    padding: 76px 0 250px;
   }
   .search {
     flex-direction: column;

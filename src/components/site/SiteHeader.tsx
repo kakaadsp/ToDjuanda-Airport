@@ -17,6 +17,7 @@ export function SiteHeader() {
   const isHomePage = pathname === "/";
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
 
   useEffect(() => {
     setMounted(true);
@@ -26,9 +27,40 @@ export function SiteHeader() {
     setIsMobileMenuOpen(false);
   }, [pathname]);
 
+  useEffect(() => {
+    if (!isHomePage) return;
+    const handleScroll = () => {
+      const currentY = window.scrollY;
+      const progress = Math.min(1, Math.max(0, currentY / 140));
+      setScrollProgress(progress);
+    };
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [isHomePage]);
+
   return (
     <>
-      <header className={`${styles.header} ${styles.mapHeader} ${isHomePage ? styles.homeHeader : ""}`}>
+      <header
+        className={`${styles.header} ${isHomePage ? styles.homeHeader : styles.mapHeader}`}
+        style={
+          isHomePage
+            ? {
+                backgroundColor: `rgba(7, 86, 168, ${scrollProgress * 0.96})`,
+                backdropFilter: scrollProgress > 0.05 ? `blur(${scrollProgress * 12}px)` : "none",
+                WebkitBackdropFilter: scrollProgress > 0.05 ? `blur(${scrollProgress * 12}px)` : "none",
+                boxShadow:
+                  scrollProgress > 0.08
+                    ? `0 4px 24px rgba(3, 25, 54, ${scrollProgress * 0.35})`
+                    : "none",
+                borderBottomColor:
+                  scrollProgress > 0.08
+                    ? `rgba(145, 166, 183, ${scrollProgress * 0.22})`
+                    : "rgba(255, 255, 255, 0.06)",
+              }
+            : undefined
+        }
+      >
       <div className={styles.headerInner}>
         {/* Juanda International Airport by InJourney Airports */}
         <div className={styles.logoGroup}>
