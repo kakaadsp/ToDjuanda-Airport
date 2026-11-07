@@ -1555,24 +1555,26 @@ export function AirportWayfinding() {
           )}
         </div>
 
-        {/* Category Filter Chips ala Google Maps */}
-        <div className="gmaps-category-chips" role="tablist">
-          {CATEGORIES.map((cat) => {
-            const Icon = cat.icon;
-            const active = activeCategory === cat.id;
-            return (
-              <button
-                key={cat.id}
-                type="button"
-                className={`gmaps-chip ${active ? "is-active" : ""}`}
-                onClick={() => handleCategoryClick(cat.id, cat.query)}
-              >
-                <Icon size={14} className="gmaps-chip-icon" />
-                <span>{cat.label}</span>
-              </button>
-            );
-          })}
-        </div>
+        {/* Category Filter Chips ala Google Maps (disembunyikan saat navigasi rute aktif agar pandangan peta lega) */}
+        {!routeSessionActive && (
+          <div className="gmaps-category-chips" role="tablist">
+            {CATEGORIES.map((cat) => {
+              const Icon = cat.icon;
+              const active = activeCategory === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  className={`gmaps-chip ${active ? "is-active" : ""}`}
+                  onClick={() => handleCategoryClick(cat.id, cat.query)}
+                >
+                  <Icon size={14} className="gmaps-chip-icon" />
+                  <span>{cat.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Floating Directions Panel */}
