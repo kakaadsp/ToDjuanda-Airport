@@ -1612,11 +1612,12 @@
 
 .map3d-root .passenger-map-guide {
   position: absolute;
-  z-index: 30;
-  top: 20px;
-  right: 20px;
+  z-index: 40;
+  top: 16px;
+  right: 16px;
   display: flex;
-  width: min(390px, calc(100vw - 40px));
+  width: auto;
+  max-width: 220px;
   flex-direction: column;
   align-items: flex-end;
   gap: 10px;
@@ -1628,19 +1629,27 @@
   align-items: center;
   gap: 8px;
   padding: 8px 16px;
-  border: 2px solid #0b5596;
+  border: 1px solid rgba(56, 189, 248, 0.35);
   border-radius: 999px;
-  background: #fff;
-  color: #084d88;
-  box-shadow: 0 4px 14px rgba(19, 48, 72, .14);
+  background: rgba(15, 23, 42, 0.94);
+  backdrop-filter: blur(16px);
+  color: #38bdf8;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5);
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
   pointer-events: auto;
   white-space: nowrap;
+  transition: all 0.16s ease;
 }
-.map3d-root .passenger-map-link:hover { background: #eaf5fb; }
-.map3d-root .passenger-map-link:focus-visible { outline: 3px solid #e76f43; outline-offset: 3px; }
+.map3d-root .passenger-map-link:hover {
+  background: rgba(30, 41, 59, 0.98);
+  border-color: #38bdf8;
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+}
+.map3d-root .passenger-map-link:focus-visible { outline: 2px solid #38bdf8; outline-offset: 2px; }
 .map3d-root .passenger-pill-icon { flex-shrink: 0; }
 .map3d-root .passenger-pill-text { font-size: 13px; font-weight: 700; line-height: 1.2; white-space: nowrap; }
 .map3d-root .passenger-pill-toggle { font-size: 14px; font-weight: 700; line-height: 1; }
@@ -2834,11 +2843,12 @@
   position: absolute;
   top: 16px;
   left: 16px;
+  right: 236px;
   z-index: 40;
   display: flex;
   align-items: center;
   gap: 12px;
-  max-width: calc(100vw - 32px);
+  max-width: calc(100vw - 252px);
   pointer-events: none;
 }
 
@@ -3147,9 +3157,14 @@
   align-items: center;
   gap: 8px;
   overflow-x: auto;
+  overflow-y: hidden;
   white-space: nowrap;
-  padding: 2px 4px;
+  padding: 4px 6px;
   scrollbar-width: none;
+  -ms-overflow-style: none;
+  flex: 1;
+  min-width: 0;
+  -webkit-overflow-scrolling: touch;
 }
 
 .map3d-root .gmaps-category-chips::-webkit-scrollbar {
@@ -3763,8 +3778,8 @@
 .map3d-root .gmaps-floor-switcher {
   position: absolute;
   right: 16px;
-  top: 76px; /* Dibawah tombol Panduan Penumpang yang ada di top: 20px */
-  z-index: 30;
+  top: 68px; /* Cleanly below Panduan Penumpang at top: 16px */
+  z-index: 35;
 }
 
 .map3d-root .gmaps-floor-buttons {
@@ -4125,9 +4140,16 @@
     cursor: grab;
   }
 
+  .map3d-root .passenger-map-guide {
+    top: 112px;
+    right: 10px;
+    left: auto;
+    z-index: 35;
+  }
+
   .map3d-root .gmaps-floor-switcher {
     right: 10px;
-    top: 120px;
+    top: 164px;
   }
 
   .map3d-root .gmaps-bottom-controls {
