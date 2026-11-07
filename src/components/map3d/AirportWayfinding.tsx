@@ -1418,14 +1418,6 @@ export function AirportWayfinding() {
             >
               <Menu size={20} />
             </button>
-            <div className="gmaps-brand-pill" title="ToDjuanda Smart Airport Navigation">
-              <img
-                src="/Logo-ToDjuanda/Logo.png"
-                alt="Logo ToDjuanda"
-                className="gmaps-brand-logo-img"
-              />
-              <span className="gmaps-brand-title">ToDjuanda</span>
-            </div>
             <input
               type="text"
               className="gmaps-search-input"
@@ -1768,7 +1760,11 @@ export function AirportWayfinding() {
           <aside className="gmaps-drawer">
             <div className="gmaps-drawer-header">
               <div className="gmaps-drawer-brand">
-                <span className="gmaps-drawer-logo">🛫</span>
+                <img
+                  src="/Logo-ToDjuanda/Logo.png"
+                  alt="Logo ToDjuanda"
+                  className="gmaps-drawer-logo-img"
+                />
                 <div>
                   <h3>Juanda Airport</h3>
                   <span>Terminal 1 Navigation</span>

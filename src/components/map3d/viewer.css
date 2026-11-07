@@ -3640,8 +3640,12 @@
   gap: 12px;
 }
 
-.map3d-root .gmaps-drawer-logo {
-  font-size: 26px;
+.map3d-root .gmaps-drawer-logo-img {
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.45));
+  flex-shrink: 0;
 }
 
 .map3d-root .gmaps-drawer-brand h3 {
