@@ -237,7 +237,33 @@
     align-items: flex-start;
   }
   .inner {
-    padding: 100px 0 100px;
+    padding: 84px 0 60px;
+  }
+}
+
+@media (max-width: 640px) {
+  .title {
+    font-size: clamp(34px, 8.5vw, 44px);
+    line-height: 1.1;
+  }
+  .subtitle {
+    font-size: 15px;
+    margin-top: 16px;
+  }
+  .inner {
+    padding: 76px 0 48px;
+  }
+  .eyebrow {
+    margin-bottom: 16px;
+    font-size: 12px;
+  }
+  .actions {
+    margin-top: 28px;
+    gap: 12px;
+  }
+  .primaryCta {
+    padding: 15px 24px;
+    font-size: 15px;
   }
 }
 

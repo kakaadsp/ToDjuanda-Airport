@@ -28,6 +28,19 @@ export function SiteHeader() {
   }, [pathname]);
 
   useEffect(() => {
+    if (!isMobileMenuOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setIsMobileMenuOpen(false);
+    };
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isMobileMenuOpen]);
+
+  useEffect(() => {
     if (!isHomePage) return;
     const handleScroll = () => {
       const currentY = window.scrollY;
@@ -136,8 +149,9 @@ export function SiteHeader() {
       </div>
     </header>
 
-    {/* Mobile Navigation Bar di Bagian Page (di bawah header) */}
-    <nav className={styles.mobilePageNav} aria-label="Mobile Navigation">
+    {/* Mobile Navigation Bar di Bagian Page (di bawah header, disembunyikan di home) */}
+    {!isHomePage && (
+      <nav className={styles.mobilePageNav} aria-label="Mobile Navigation">
       <Link href="/" className={styles.subNavLink} data-active={pathname === "/"}>
         Home
       </Link>
@@ -151,6 +165,7 @@ export function SiteHeader() {
         Help
       </Link>
     </nav>
+    )}
 
       {/* Mobile Drawer Menu rendered via portal into body to escape header clipping */}
       {mounted && isMobileMenuOpen && typeof document !== "undefined" && createPortal(

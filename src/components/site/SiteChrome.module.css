@@ -631,7 +631,7 @@
   }
 
   .mobileMenuToggle {
-    display: none !important;
+    display: inline-flex !important;
   }
 
   .mobilePageNav {
@@ -855,16 +855,16 @@
     left: 0 !important;
     right: 0 !important;
     z-index: 100 !important;
-    min-height: 52px !important;
-    height: 52px !important;
+    min-height: 56px !important;
+    height: 56px !important;
     margin-bottom: 0 !important;
-    background-size: 260px 52px !important;
+    background-size: 260px 56px !important;
     overflow: visible !important;
   }
 
   .homeHeader .headerInner {
-    min-height: 52px !important;
-    height: 52px !important;
+    min-height: 56px !important;
+    height: 56px !important;
     padding: 0 14px 0 16px !important;
   }
 
