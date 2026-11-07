@@ -3151,6 +3151,110 @@
   font-size: 13.5px;
 }
 
+
+/* Search Backdrop (Closes dropdown on outside click) */
+.map3d-root .gmaps-search-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 38;
+  background: rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(2px);
+}
+
+/* Quick Categories inside Search Dropdown (Ideal for mobile & desktop) */
+.map3d-root .gmaps-search-quick-wrap {
+  padding: 8px 12px 10px;
+}
+
+.map3d-root .gmaps-quick-heading {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+  margin-bottom: 8px;
+  padding: 0 2px;
+}
+
+.map3d-root .gmaps-quick-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.map3d-root .gmaps-quick-cat-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 4px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  background: rgba(30, 41, 59, 0.6);
+  color: #e2e8f0;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.map3d-root .gmaps-quick-cat-btn:hover {
+  background: rgba(56, 189, 248, 0.18);
+  border-color: rgba(56, 189, 248, 0.4);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.map3d-root .gmaps-quick-cat-icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+}
+
+/* Drawer Quick Categories Grid */
+.map3d-root .gmaps-drawer-section-title {
+  padding: 0 16px 8px;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+}
+
+.map3d-root .gmaps-drawer-cats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  padding: 0 16px 12px;
+}
+
+.map3d-root .gmaps-drawer-cat-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  background: rgba(30, 41, 59, 0.6);
+  color: #cbd5e1;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+}
+
+.map3d-root .gmaps-drawer-cat-btn:hover {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: #38bdf8;
+  color: #ffffff;
+}
+
 /* Category Filter Chips (Dark Mode) */
 .map3d-root .gmaps-category-chips {
   display: flex;
@@ -4109,16 +4213,49 @@
     max-width: none;
     flex-direction: column;
     align-items: stretch;
-    gap: 8px;
+    gap: 6px;
   }
 
   .map3d-root .gmaps-searchbox-wrapper {
     width: 100%;
   }
 
+  .map3d-root .gmaps-searchbox {
+    height: 48px;
+  }
+
+  /* Sembunyikan chip kategori horizontal mengambang di mobile agar view peta lega & luas */
   .map3d-root .gmaps-category-chips {
-    margin-top: 0;
-    padding: 0 2px;
+    display: none !important;
+  }
+
+  .map3d-root .gmaps-active-route-pill {
+    max-width: calc(100% - 56px);
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
+  /* Panduan Penumpang & Floor Switcher sejajar rapi di bawah search bar pada mobile */
+  .map3d-root .passenger-map-guide {
+    top: 66px;
+    left: 10px;
+    right: auto;
+    z-index: 35;
+    width: auto;
+    max-width: calc(100vw - 76px);
+  }
+
+  .map3d-root .passenger-map-link {
+    height: 36px;
+    min-height: 36px;
+    padding: 0 12px;
+    font-size: 12px;
+  }
+
+  .map3d-root .gmaps-floor-switcher {
+    right: 10px;
+    top: 66px;
+    z-index: 35;
   }
 
   .map3d-root .gmaps-directions-panel {
@@ -4140,18 +4277,6 @@
     border-radius: 2px;
     margin: 8px auto 0 auto;
     cursor: grab;
-  }
-
-  .map3d-root .passenger-map-guide {
-    top: 112px;
-    right: 10px;
-    left: auto;
-    z-index: 35;
-  }
-
-  .map3d-root .gmaps-floor-switcher {
-    right: 10px;
-    top: 164px;
   }
 
   .map3d-root .gmaps-bottom-controls {

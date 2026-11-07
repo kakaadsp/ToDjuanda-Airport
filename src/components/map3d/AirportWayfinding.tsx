@@ -1405,6 +1405,15 @@ export function AirportWayfinding() {
       <LoadingOverlay modelReady={bounds !== null} lang={lang} />
       <FloorSwitcher view={shownFloorView} floors={modelFloors.length ? modelFloors : ["L1"]} onSelect={changeFloor} />
 
+      {/* Backdrop to close search dropdown when tapping outside */}
+      {searchFocused && (
+        <div
+          className="gmaps-search-backdrop"
+          onClick={() => setSearchFocused(false)}
+          aria-hidden="true"
+        />
+      )}
+
       {/* Google Maps Floating Search Bar & Category Chips */}
       <div className="gmaps-top-container">
         <div className="gmaps-searchbox-wrapper">
@@ -1427,7 +1436,7 @@ export function AirportWayfinding() {
                 setSearchFocused(true);
               }}
               onFocus={() => setSearchFocused(true)}
-              placeholder={lang === "EN" ? "Search Terminal 1 (Toilet, gate, shop...)" : "Cari di Terminal 1 (Toilet, gate, komersial...)"}
+              placeholder={lang === "EN" ? "Search Terminal 1..." : "Cari di Terminal 1..."}
               aria-label={lang === "EN" ? "Search map" : "Cari peta"}
             />
             {query && (
@@ -1482,10 +1491,36 @@ export function AirportWayfinding() {
             </button>
           )}
 
-          {/* Search Results Dropdown */}
-          {searchFocused && query && (
+          {/* Search Results & Quick Categories Dropdown */}
+          {searchFocused && (
             <div className="gmaps-search-dropdown">
-              {searchResults.length > 0 ? (
+              {!query ? (
+                <div className="gmaps-search-quick-wrap">
+                  <div className="gmaps-quick-heading">
+                    <span>{lang === "EN" ? "Quick categories" : "Kategori Cepat"}</span>
+                  </div>
+                  <div className="gmaps-quick-grid">
+                    {CATEGORIES.map((cat) => {
+                      const Icon = cat.icon;
+                      const active = activeCategory === cat.id;
+                      return (
+                        <button
+                          key={cat.id}
+                          type="button"
+                          className={`gmaps-quick-cat-btn ${active ? "is-active" : ""}`}
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => handleCategoryClick(cat.id, cat.query)}
+                        >
+                          <div className="gmaps-quick-cat-icon">
+                            <Icon size={18} />
+                          </div>
+                          <span>{cat.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : searchResults.length > 0 ? (
                 searchResults.map((record) => {
                   const displayName = mapObjectConfigs[record.name]?.displayName?.trim();
                   const floorNote = multiFloor ? ` · ${FLOOR_LABELS[record.floor]}` : "";
@@ -1814,6 +1849,31 @@ export function AirportWayfinding() {
                 <span>{lang === "EN" ? "Help & FAQ" : "Bantuan & FAQ"}</span>
               </Link>
             </nav>
+
+            <div className="gmaps-drawer-divider" />
+
+            <div className="gmaps-drawer-section-title">
+              {lang === "EN" ? "Quick Facilities" : "Kategori Cepat Fasilitas"}
+            </div>
+            <div className="gmaps-drawer-cats-grid">
+              {CATEGORIES.map((cat) => {
+                const Icon = cat.icon;
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    className="gmaps-drawer-cat-btn"
+                    onClick={() => {
+                      setMenuDrawerOpen(false);
+                      handleCategoryClick(cat.id, cat.query);
+                    }}
+                  >
+                    <Icon size={16} />
+                    <span>{cat.label}</span>
+                  </button>
+                );
+              })}
+            </div>
 
             <div className="gmaps-drawer-divider" />
 
