@@ -1613,7 +1613,7 @@
 .map3d-root .passenger-map-guide {
   position: absolute;
   z-index: 40;
-  top: 16px;
+  top: 21px;
   right: 16px;
   display: flex;
   width: auto;
@@ -2846,7 +2846,7 @@
   right: 236px;
   z-index: 40;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
   max-width: calc(100vw - 252px);
   pointer-events: none;
@@ -3159,7 +3159,8 @@
   overflow-x: auto;
   overflow-y: hidden;
   white-space: nowrap;
-  padding: 4px 6px;
+  padding: 0 4px;
+  margin-top: 6px;
   scrollbar-width: none;
   -ms-overflow-style: none;
   flex: 1;
@@ -3778,7 +3779,7 @@
 .map3d-root .gmaps-floor-switcher {
   position: absolute;
   right: 16px;
-  top: 68px; /* Cleanly below Panduan Penumpang at top: 16px */
+  top: 73px;
   z-index: 35;
 }
 
@@ -4116,6 +4117,7 @@
   }
 
   .map3d-root .gmaps-category-chips {
+    margin-top: 0;
     padding: 0 2px;
   }
 
