@@ -32,8 +32,8 @@
   left: 0 !important;
   right: 0 !important;
   z-index: 100 !important;
-  min-height: 72px !important;
-  height: 72px !important;
+  min-height: 70px !important;
+  height: 70px !important;
   margin-bottom: 0 !important;
   background-image: none !important;
   border-bottom: none !important;
@@ -47,10 +47,10 @@
   position: absolute;
   top: 0;
   left: 0;
-  width: 500px;
-  height: 106px;
-  background: url("/header-juanda-ribbon.svg") left top / 500px 106px no-repeat;
-  filter: drop-shadow(0 6px 16px rgba(0, 15, 30, 0.18));
+  width: 460px;
+  height: 70px;
+  background: url("/header-juanda-ribbon.svg") left top / 460px 70px no-repeat;
+  filter: drop-shadow(0 4px 12px rgba(0, 15, 30, 0.14));
   pointer-events: none;
   z-index: 0;
   opacity: var(--ribbon-opacity, 1);
@@ -58,8 +58,8 @@
 }
 
 .homeHeader .headerInner {
-  min-height: 72px !important;
-  height: 72px !important;
+  min-height: 70px !important;
+  height: 70px !important;
   padding: 0 24px 0 90px;
 }
 
@@ -137,17 +137,17 @@
 }
 
 .headerAirportLogo {
-  width: clamp(150px, 13vw, 170px);
+  width: clamp(140px, 12vw, 160px);
   height: auto;
   object-fit: contain;
-  transform: translateY(4px);
+  transform: translateY(2px);
   filter: var(--logo-filter, brightness(0) saturate(100%) invert(16%) sepia(16%) saturate(857%) hue-rotate(154deg) brightness(91%) contrast(89%));
   transition: filter 0.2s ease-out;
 }
 
 .toDjuandaLogo {
   width: auto;
-  height: 35px;
+  height: 32px;
   object-fit: contain;
   filter: var(--logo-filter, brightness(0) saturate(100%) invert(16%) sepia(16%) saturate(857%) hue-rotate(154deg) brightness(91%) contrast(89%));
   transition: filter 0.2s ease-out;
