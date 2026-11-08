@@ -67,10 +67,7 @@ export function SiteHeader() {
                   scrollProgress > 0.08
                     ? `0 4px 24px rgba(3, 25, 54, ${scrollProgress * 0.35})`
                     : "none",
-                borderBottomColor:
-                  scrollProgress > 0.08
-                    ? `rgba(145, 166, 183, ${scrollProgress * 0.22})`
-                    : "rgba(255, 255, 255, 0.06)",
+                borderBottom: "none",
                 backgroundImage: isHomePage ? undefined : "none",
               }
             : undefined
