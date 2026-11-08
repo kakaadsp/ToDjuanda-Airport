@@ -373,12 +373,12 @@ export function AboutPage() {
 
               <div className={styles.heroActions}>
                 <Link href="/map" className={styles.primaryButton}>
-                  <Compass size={20} />
+                  <Compass size={18} />
                   <span>{content.openMap}</span>
-                  <ArrowRight size={18} />
+                  <ArrowRight size={16} />
                 </Link>
                 <Link href="/help" className={styles.ghostButton}>
-                  <Sparkles size={18} />
+                  <Sparkles size={16} />
                   <span>{content.openGuide}</span>
                 </Link>
               </div>
@@ -389,7 +389,7 @@ export function AboutPage() {
               <div className={styles.showcaseCard}>
                 <div className={styles.showcaseHeader}>
                   <div className={styles.showcaseBrand}>
-                    <Radio size={18} className={styles.pulseRadio} />
+                    <Radio size={16} className={styles.pulseRadio} />
                     <span>{content.showcase.brand}</span>
                   </div>
                   <span className={styles.showcaseBadge}>{content.showcase.status}</span>
@@ -407,10 +407,10 @@ export function AboutPage() {
                   {content.showcase.pills.map((pill, idx) => (
                     <div key={idx} className={styles.showcasePill}>
                       <span className={styles.showcasePillIcon}>
-                        {pill.icon === "building" && <Building2 size={15} />}
-                        {pill.icon === "plane" && <PlaneTakeoff size={15} />}
-                        {pill.icon === "layers" && <Layers size={15} />}
-                        {pill.icon === "search" && <Search size={15} />}
+                        {pill.icon === "building" && <Building2 size={13} />}
+                        {pill.icon === "plane" && <PlaneTakeoff size={13} />}
+                        {pill.icon === "layers" && <Layers size={13} />}
+                        {pill.icon === "search" && <Search size={13} />}
                       </span>
                       <span>{pill.label}</span>
                     </div>
