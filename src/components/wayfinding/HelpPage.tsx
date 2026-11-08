@@ -716,13 +716,6 @@ export function HelpPage() {
               </div>
             </div>
           </div>
-          <aside className={styles.notice}>
-            <span className={styles.noticeIcon}>i</span>
-            <div>
-              <strong>{t.reminder}</strong>
-              <p>{t.reminderText}</p>
-            </div>
-          </aside>
         </section>
 
         <section className={`${styles.passengerSection} reveal-on-scroll`} aria-labelledby="passenger-title">
