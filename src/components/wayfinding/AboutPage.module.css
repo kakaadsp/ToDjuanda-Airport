@@ -52,6 +52,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* Ambient Floating Glow Orbs */
@@ -941,12 +943,7 @@
 /* =========================================
    RESPONSIVE DESIGN
    ========================================= */
-@media (max-width: 1050px) {
-  .hero {
-    min-height: auto;
-    display: block;
-  }
-
+@media (max-width: 900px) {
   .heroInner {
     grid-template-columns: 1fr;
     gap: 32px;
