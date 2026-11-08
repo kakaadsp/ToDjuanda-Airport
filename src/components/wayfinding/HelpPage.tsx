@@ -2,7 +2,23 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, Check, ChevronDown, Flag, MapPin, Navigation2, Search } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  ChevronDown,
+  ChevronRight,
+  Compass,
+  CornerUpRight,
+  Eye,
+  Flag,
+  Layers,
+  MapPin,
+  Navigation,
+  Navigation2,
+  QrCode,
+  Search,
+} from "lucide-react";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { useMapStore } from "@/store/mapStore";
@@ -42,28 +58,48 @@ const guides = {
     closingText: "Buka peta, pilih titik awal dan tujuan, lalu lihat bagaimana rute ditampilkan.",
     steps: [
       {
-        short: "Cari lokasi", title: "Temukan tempat yang dituju.",
-        desc: "Di halaman Maps, cari kode building seperti T1-GF-01 atau pilih building langsung pada model 3D untuk melihat detailnya.",
-        tips: ["Pencarian memakai kode object.name pada model.", "Pilih hasil pencarian untuk menyorot building di peta."],
-        action: "Buka peta", href: "/map",
+        short: "Cari lokasi",
+        title: "Cari gate, tenant, atau fasilitas terminal.",
+        desc: "Gunakan kolom pencarian di halaman Maps untuk menemukan boarding gate, konter check-in maskapai, musala, toilet, ATM, maupun resto di Terminal 1 Juanda. Anda juga dapat langsung mengeklik area atau gedung pada peta 3D.",
+        tips: [
+          "Ketik nama spesifik seperti Gate 1, Batik Air, atau Kedai Roti O.",
+          "Gunakan filter kategori cepat untuk menemukan fasilitas umum terdekat.",
+        ],
+        action: "Buka pencarian peta",
+        href: "/map",
       },
       {
-        short: "Tentukan posisi", title: "Tentukan titik awalmu.",
-        desc: "Pilih sebuah building, lalu tekan Start Here. Kamu juga bisa menekan Set Start dan memilih building, node, atau POI pada peta.",
-        tips: ["Periksa label titik awal sebelum memilih tujuan.", "Titik awal dipilih manual, bukan dari GPS."],
-        action: "Coba di peta", href: "/map",
+        short: "Tentukan posisi",
+        title: "Tetapkan titik awal keberangkatan Anda.",
+        desc: "Tentukan posisi awal tempat Anda berdiri saat ini. Anda dapat memindai QR code pada standee fisik bandara terdekat untuk posisi instan 0 detik, atau memilih 'Start Here' pada pintu masuk dan gedung di denah terminal.",
+        tips: [
+          "Pindai QR standee di lapangan untuk akurasi posisi instan tanpa GPS indoor.",
+          "Atau klik tombol 'Set Start' lalu pilih lokasi awal Anda pada denah terminal.",
+        ],
+        action: "Tetapkan posisi di peta",
+        href: "/map",
       },
       {
-        short: "Ikuti rute", title: "Baca rute menuju tujuan.",
-        desc: "Cari dan pilih building tujuan, lalu tekan Route Here. Jalur, jarak, dan petunjuk navigasi akan tampil jika kedua titik terhubung.",
-        tips: ["Periksa titik awal dan tujuan sebelum mengikuti rute.", "Jika rute tidak tersedia, coba building lain yang terhubung."],
-        action: "Rencanakan rute", href: "/map",
+        short: "Ikuti rute",
+        title: "Panduan rute cerdas belokan demi belokan.",
+        desc: "Peta menghitung jalur pejalan kaki terpendek dan teraman. Garis rute 3D berpendar akan menuntun langkah Anda dari konter check-in langsung ke boarding gate lengkap dengan jarak meter riil dan estimasi menit jalan santai.",
+        tips: [
+          "Pantau estimasi waktu jalan kaki (ETA) agar tidak terburu-buru menuju gate.",
+          "Jalur rute terverifikasi resmi hanya melalui koridor pejalan kaki, tangga, dan eskalator.",
+        ],
+        action: "Rencanakan rute di peta",
+        href: "/map",
       },
       {
-        short: "Ubah tampilan", title: "Lihat rute dari sudut pengunjung.",
-        desc: "Gunakan Visitor POV untuk melihat dari titik awal, Map View untuk kembali ke tampilan atas, atau Reset Route untuk menghapus pilihan rute.",
-        tips: ["Gunakan tombol zoom dan reset view bila peta sulit dilihat.", "Rute otomatis menuju gate di lantai 2 belum aktif di Maps."],
-        action: "Lihat peta 3D", href: "/map",
+        short: "Kontrol peta",
+        title: "Sudut pandang pengunjung & multi-lantai.",
+        desc: "Gunakan mode 'Visitor POV' untuk melihat terminal dari sudut pandang nyata mata pejalan kaki, atau 'Map View' untuk tampak atas. Anda juga dapat berganti secara leluasa antara Lantai 1 (GF) dan Lantai 2 (Gate).",
+        tips: [
+          "Mode 'Visitor POV' memudahkan orientasi spasial bentuk gedung dan arah belokan.",
+          "Gunakan switcher lantai untuk mengecek fasilitas di Lantai 1 (GF) dan Lantai 2 (L2).",
+        ],
+        action: "Jelajahi peta 3D",
+        href: "/map",
       },
     ],
     faq: [
@@ -104,10 +140,50 @@ const guides = {
     closingEyebrow: "READY TO GO",
     closingText: "Open the map, choose a starting point and destination, then see how a route appears.",
     steps: [
-      { short: "Find a place", title: "Find where you want to go.", desc: "On Maps, search for a building code such as T1-GF-01 or select a building directly on the 3D model to see its details.", tips: ["Search uses the model's object.name codes.", "Choose a result to highlight the building."], action: "Open map", href: "/map" },
-      { short: "Set your position", title: "Choose your starting point.", desc: "Select a building and press Start Here. You can also press Set Start, then select a building, node, or POI on the map.", tips: ["Check the start label before choosing a destination.", "The start is selected manually, not through GPS."], action: "Try on map", href: "/map" },
-      { short: "Follow the route", title: "Read the route to your destination.", desc: "Search for and select a destination building, then press Route Here. The path, distance, and guidance appear if the endpoints are connected.", tips: ["Check both endpoints before following the route.", "If no route is available, try another connected building."], action: "Plan a route", href: "/map" },
-      { short: "Change view", title: "See the route from a visitor's view.", desc: "Use Visitor POV to look from the starting point, Map View to return to the overhead view, or Reset Route to clear the selected route.", tips: ["Use zoom and reset view if the map is hard to see.", "Automated routes to second-floor gates are not active in Maps yet."], action: "Explore the 3D map", href: "/map" },
+      {
+        short: "Find a place",
+        title: "Search for gates, check-in, or amenities.",
+        desc: "Use the search bar on the Maps page to locate boarding gates, airline counters, prayer rooms, restrooms, ATMs, and dining options across Terminal 1. You can also click any space directly on the 3D map.",
+        tips: [
+          "Type specific terms such as Gate 1, Batik Air, or Roti O.",
+          "Use quick category chips to find nearby public amenities right away.",
+        ],
+        action: "Open map search",
+        href: "/map",
+      },
+      {
+        short: "Set position",
+        title: "Set your departure starting point.",
+        desc: "Choose where you are currently standing. You can scan the QR code on the nearest physical terminal standee for instant positioning, or select 'Start Here' on any entrance or building on the map.",
+        tips: [
+          "Scan airport QR standees for immediate corridor accuracy without indoor GPS drift.",
+          "Or click 'Set Start' and select your departure point directly on the layout.",
+        ],
+        action: "Set position on map",
+        href: "/map",
+      },
+      {
+        short: "Follow route",
+        title: "Turn-by-turn intelligent indoor wayfinding.",
+        desc: "The map calculates the shortest and safest pedestrian route. An illuminated 3D path guides you from check-in counters directly to your boarding gate with real meter distances and walking time ETA.",
+        tips: [
+          "Keep an eye on the estimated walking time (ETA) to board comfortably.",
+          "Routes strictly follow official walkways, escalators, and airport corridors.",
+        ],
+        action: "Plan route on map",
+        href: "/map",
+      },
+      {
+        short: "Map controls",
+        title: "Visitor POV & multi-floor navigation.",
+        desc: "Switch to 'Visitor POV' to experience the terminal at eye-level walking perspective, or use 'Map View' for an overhead overview. Easily toggle between Floor 1 (GF) and Floor 2 (Gates).",
+        tips: [
+          "Use 'Visitor POV' for real-world spatial orientation of corridors and turns.",
+          "Use the floor switcher to view Floor 1 (Check-in) and Floor 2 (Gates).",
+        ],
+        action: "Explore 3D map",
+        href: "/map",
+      },
     ],
     faq: [
       { q: "What if I don't know my starting point?", a: "Choose the nearest building or node manually with Set Start. Automatic positioning is not available yet." },
@@ -117,34 +193,204 @@ const guides = {
   },
 } as const;
 
-const icons = [Search, Flag, Navigation2, MapPin] as const;
+const icons = [Search, QrCode, Navigation, Layers] as const;
 
 function StepPreview({ active, lang }: { active: number; lang: "ID" | "EN" }) {
   const id = lang === "ID";
   return (
     <div className={styles.previewScene} key={active} aria-hidden="true">
-      <div className={styles.previewTop}><span className={styles.previewBrand}>JUANDA <b>MAP</b></span><span className={styles.previewDots}><i /><i /><i /></span></div>
-      {active === 0 && <div className={styles.searchScene}>
-        <div className={styles.mockSearch}><Search size={17} /><span>T1-GF-01</span></div>
-        <div className={styles.mockCategory}><span>TERMINAL 1</span><span>GROUND FLOOR</span></div>
-        <div className={styles.mockResult}><span className={styles.resultIcon}><MapPin size={17} /></span><span><strong>T1-GF-01</strong><small>{id ? "Building pada model 3D" : "Building in the 3D model"}</small></span><ArrowRight size={16} /></div>
-        <div className={styles.mockResult}><span className={styles.resultIcon}><MapPin size={17} /></span><span><strong>T1-GF-02</strong><small>{id ? "Building pada model 3D" : "Building in the 3D model"}</small></span><ArrowRight size={16} /></div>
-      </div>}
-      {active === 1 && <div className={styles.qrScene}>
-        <div className={styles.qrGlyph}><Flag size={66} strokeWidth={1.35} /></div>
-        <div className={styles.qrCopy}><span className={styles.mockPill}>START HERE</span><strong>{id ? "Titik awal ditetapkan" : "Starting point set"}</strong><span>T1-GF-01 · Terminal 1</span></div>
-        <span className={styles.qrCheck}><Check size={20} /></span>
-      </div>}
-      {active === 2 && <div className={styles.routeScene}>
-        <div className={styles.routeStats}><span>{id ? "RUTE DITEMUKAN" : "ROUTE FOUND"}</span><strong>ROUTE HERE</strong></div>
-        <svg className={styles.routeMap} viewBox="0 0 450 210" fill="none" role="presentation"><path className={styles.mapCorridor} d="M20 42H155V85H248V45H425M40 175H145V122H345V175H425M79 20V189M385 20V189" /><path className={styles.routeLine} d="M70 160H145V122H248V85H382V48" /><circle cx="70" cy="160" r="12" fill="#00A3DC" stroke="white" strokeWidth="5" /><circle cx="382" cy="48" r="12" fill="#12A875" stroke="white" strokeWidth="5" /></svg>
-        <div className={styles.routeLabels}><span>{id ? "Titik awal" : "Start"}</span><span>{id ? "Tujuan" : "Destination"}</span></div>
-      </div>}
-      {active === 3 && <div className={styles.floorScene}>
-        <div className={styles.floorPicker}><span>{id ? "KONTROL TAMPILAN" : "VIEW CONTROLS"}</span><strong className={styles.floorActive}>Visitor POV</strong><strong>Map View</strong></div>
-        <div className={styles.floorMap}><div className={styles.floorGrid}><span className={styles.floorBlockA} /><span className={styles.floorBlockB} /><span className={styles.floorBlockC} /><span className={styles.floorBlockD} /><span className={styles.floorPoint}><Navigation2 size={17} /></span></div><span className={styles.floorCaption}>TERMINAL 1 · GF</span></div>
-      </div>}
-      <div className={styles.previewBottom}><span><span className={styles.liveDot} /> {id ? "PRATINJAU INTERAKTIF" : "INTERACTIVE PREVIEW"}</span><span>0{active + 1} / 04</span></div>
+      <div className={styles.previewTop}>
+        <span className={styles.previewBrand}>
+          JUANDA SUB T1 · <b>DIGITAL TWIN HUD</b>
+        </span>
+        <div className={styles.previewDots}>
+          <i />
+          <i />
+          <i />
+        </div>
+      </div>
+
+      {/* STEP 1: PENCARIAN DIREKTORI LOKASI */}
+      {active === 0 && (
+        <div className={styles.searchScene}>
+          <div className={styles.mockSearch}>
+            <Search size={18} className={styles.mockSearchIcon} />
+            <span className={styles.mockSearchQuery}>Gate 1</span>
+            <span className={styles.mockSearchBadge}>ESC</span>
+          </div>
+          <div className={styles.mockCategory}>
+            <span>{id ? "Semua" : "All"}</span>
+            <span className={styles.categoryActive}>{id ? "Gate 1–12" : "Gates 1–12"}</span>
+            <span>Check-in</span>
+            <span>Tenant F&B</span>
+            <span>Musala</span>
+          </div>
+          <div className={styles.mockResultsList}>
+            <div className={`${styles.mockResult} ${styles.resultHighlight}`}>
+              <span className={styles.resultIcon}>
+                <MapPin size={17} />
+              </span>
+              <div className={styles.resultInfo}>
+                <strong>Gate 1 - Keberangkatan Domestik</strong>
+                <small>{id ? "Terminal 1 · Lantai 2 (L2) · Sayap Timur" : "Terminal 1 · Floor 2 (L2) · East Concourse"}</small>
+              </div>
+              <span className={styles.resultTag}>BOARDING GATE</span>
+              <ChevronRight size={16} className={styles.resultArrow} />
+            </div>
+            <div className={styles.mockResult}>
+              <span className={styles.resultIconMuted}>
+                <Navigation2 size={16} />
+              </span>
+              <div className={styles.resultInfo}>
+                <strong>Check-in Batik Air & Super Air Jet</strong>
+                <small>{id ? "Terminal 1 · Lantai Dasar (GF) · Baris A" : "Terminal 1 · Ground Floor (GF) · Row A"}</small>
+              </div>
+              <span className={styles.resultTagMuted}>CHECK-IN</span>
+              <ChevronRight size={16} className={styles.resultArrow} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* STEP 2: TENTUKAN POSISI AWAL / QR STANDEE */}
+      {active === 1 && (
+        <div className={styles.qrScene}>
+          <div className={styles.hudBadgeBox}>
+            <div className={styles.hudBadgeLeft}>
+              <span className={styles.hudEyebrow}>
+                {id ? "TITIK AWAL (START HERE) · TERVERIFIKASI" : "CURRENT START POSITION · VERIFIED"}
+              </span>
+              <strong>Standee QR Check-in Area 1A</strong>
+              <small>{id ? "Terminal 1 Juanda · Lantai Dasar (GF) · Pintu 1A" : "Terminal 1 Juanda · Ground Floor (GF) · Gate 1A"}</small>
+            </div>
+            <span className={styles.hudStatusPill}>
+              <Check size={14} /> {id ? "Posisi Siap" : "Ready"}
+            </span>
+          </div>
+          <div className={styles.qrCardSimulation}>
+            <div className={styles.qrGlyphBox}>
+              <QrCode size={36} strokeWidth={1.75} />
+              <div className={styles.scanLaser} />
+            </div>
+            <div className={styles.qrCopyText}>
+              <strong>{id ? "Pindai QR Standee Terdekat" : "Scan Nearest Airport Standee"}</strong>
+              <p>
+                {id
+                  ? "Akurasi koridor 100% tanpa GPS indoor. Posisi Anda otomatis tersinkronisasi langsung dengan model 3D."
+                  : "100% corridor precision without indoor GPS drift. Your position syncs automatically to the 3D model."}
+              </p>
+              <div className={styles.qrMetaTags}>
+                <span>{id ? "0 Detik Akses" : "Zero-install"}</span>
+                <span>{id ? "Multi-Lantai L1 & L2" : "Multi-floor L1 & L2"}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* STEP 3: NAVIGASI BELOKAN DEMI BELOKAN (RUTE AKTIF) */}
+      {active === 2 && (
+        <div className={styles.routeScene}>
+          <div className={styles.routeHeaderHud}>
+            <div className={styles.routeEndpoints}>
+              <span className={styles.endpointStart}>Check-in 1A</span>
+              <ArrowRight size={14} className={styles.endpointArrow} />
+              <span className={styles.endpointFinish}>Gate 1</span>
+            </div>
+            <div className={styles.routeEtaPill}>
+              <strong>185 m</strong>
+              <span>•</span>
+              <strong>{id ? "±3 Menit Jalan" : "±3 Min Walk"}</strong>
+            </div>
+          </div>
+          <div className={styles.turnGuidanceBanner}>
+            <span className={styles.turnIconCircle}>
+              <CornerUpRight size={17} />
+            </span>
+            <span>
+              {id
+                ? "Lurus 50m melewati koridor utama, lalu belok kanan menuju Gate 1"
+                : "Walk straight 50m along main corridor, then turn right toward Gate 1"}
+            </span>
+          </div>
+          <div className={styles.radarCanvasWrap}>
+            <svg className={styles.routeMap} viewBox="0 0 520 170" fill="none" role="presentation">
+              <path className={styles.mapCorridor} d="M30 40H170V88H280V40H490M50 135H170V88H390V135H490M90 18V155M430 18V155" />
+              <path className={styles.routeLine} d="M75 135H170V88H280V45H430V30" />
+              <circle cx="75" cy="135" r="9" fill="#10B981" stroke="#FFFFFF" strokeWidth="3.5" />
+              <circle cx="430" cy="30" r="9" fill="#00C6F4" stroke="#FFFFFF" strokeWidth="3.5" />
+              <circle cx="170" cy="88" r="3.5" fill="#FFFFFF" />
+              <circle cx="280" cy="45" r="3.5" fill="#FFFFFF" />
+            </svg>
+            <div className={styles.radarLegend}>
+              <span className={styles.legendStart}>
+                <i /> {id ? "Start: Check-in 1A" : "Start: Check-in 1A"}
+              </span>
+              <span className={styles.legendFinish}>
+                <i /> {id ? "Tujuan: Boarding Gate 1" : "Dest: Boarding Gate 1"}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* STEP 4: KONTROL TAMPILAN & MULTI-LANTAI */}
+      {active === 3 && (
+        <div className={styles.floorScene}>
+          <div className={styles.controlsBarHud}>
+            <div className={styles.controlGroup}>
+              <span className={styles.controlGroupLabel}>{id ? "LANTAI" : "FLOOR"}</span>
+              <div className={styles.pillGroup}>
+                <button type="button" className={`${styles.deckPill} ${styles.deckPillActive}`}>
+                  Lantai 1 (GF)
+                </button>
+                <button type="button" className={styles.deckPill}>
+                  Lantai 2 (L2)
+                </button>
+              </div>
+            </div>
+            <div className={styles.controlGroup}>
+              <span className={styles.controlGroupLabel}>{id ? "KAMERA POV" : "CAMERA POV"}</span>
+              <div className={styles.pillGroup}>
+                <button type="button" className={`${styles.deckPill} ${styles.deckPillActive}`}>
+                  <Eye size={13} /> Visitor POV
+                </button>
+                <button type="button" className={styles.deckPill}>
+                  <Compass size={13} /> Map View 3D
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className={styles.perspectiveStage}>
+            <div className={styles.stageGrid}>
+              <div className={styles.floorBlockConcourse}>
+                <span>ZONE A · CHECK-IN & ARRIVAL (GF)</span>
+              </div>
+              <div className={styles.floorBlockGate}>
+                <span>ZONE B · BOARDING GATES 1–12 (L2)</span>
+              </div>
+              <div className={styles.stairsConnector}>
+                <span className={styles.connectorIcon}>⇅</span>
+                <small>{id ? "Eskalator / Tangga L1 ↔ L2" : "Escalator / Stairs L1 ↔ L2"}</small>
+              </div>
+              <div className={styles.visitorAvatarPin}>
+                <Navigation size={18} />
+                <span className={styles.visitorVisionCone} />
+                <small>{id ? "Posisi Anda" : "Your POV"}</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className={styles.previewBottom}>
+        <span>
+          <span className={styles.liveDot} />{" "}
+          {id ? "DIGITAL TWIN ENGINE · WAYFINDING AKTIF" : "DIGITAL TWIN ENGINE · ACTIVE WAYFINDING"}
+        </span>
+        <span>0{active + 1} / 04</span>
+      </div>
     </div>
   );
 }
