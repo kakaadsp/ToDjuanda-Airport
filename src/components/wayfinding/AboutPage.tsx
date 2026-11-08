@@ -438,32 +438,46 @@ export function AboutPage() {
             <div className={styles.visionGrid}>
               {/* Left Column: Visual Airport Tech HUD Card */}
               <div className={`${styles.hudCard} ${styles.revealOnScroll} ${styles.revealDelay1}`}>
-                <div className={styles.hudTop}>
-                  <span className={styles.hudKicker}>{content.visionSection.hudKicker}</span>
-                  <div className={styles.hudLiveBadge}>
-                    <span className={styles.beaconDot} />
-                    <span>VERIFIED SUB</span>
-                  </div>
+                <div className={styles.hudCardGlow} aria-hidden="true" />
+                <div className={styles.hudWatermark} aria-hidden="true">
+                  <svg viewBox="0 0 400 300" fill="none">
+                    <circle cx="200" cy="150" r="140" stroke="rgba(56, 189, 248, 0.12)" strokeDasharray="4 4" />
+                    <circle cx="200" cy="150" r="95" stroke="rgba(56, 189, 248, 0.16)" />
+                    <circle cx="200" cy="150" r="45" stroke="rgba(56, 189, 248, 0.22)" />
+                    <line x1="20" y1="150" x2="380" y2="150" stroke="rgba(56, 189, 248, 0.1)" />
+                    <line x1="200" y1="10" x2="200" y2="290" stroke="rgba(56, 189, 248, 0.1)" />
+                    <path d="M200 150 L330 60" stroke="#38bdf8" strokeWidth="1.5" strokeOpacity="0.4" />
+                  </svg>
                 </div>
 
-                <h3 className={styles.hudTitle}>{content.visionSection.hudTitle}</h3>
-
-                <div className={styles.hudPillTags}>
-                  {content.visionSection.hudPills.map((tag, tIdx) => (
-                    <span key={tIdx} className={styles.hudTag}>
-                      <CheckCircle2 size={13} />
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-
-                <div className={styles.hudStatsGrid}>
-                  {content.visionSection.hudStats.map((st, sIdx) => (
-                    <div key={sIdx} className={styles.hudStatBox}>
-                      <strong>{st.value}</strong>
-                      <span>{st.label}</span>
+                <div className={styles.hudCardInner}>
+                  <div className={styles.hudTop}>
+                    <span className={styles.hudKicker}>{content.visionSection.hudKicker}</span>
+                    <div className={styles.hudLiveBadge}>
+                      <span className={styles.beaconDot} />
+                      <span>VERIFIED SUB</span>
                     </div>
-                  ))}
+                  </div>
+
+                  <h3 className={styles.hudTitle}>{content.visionSection.hudTitle}</h3>
+
+                  <div className={styles.hudPillTags}>
+                    {content.visionSection.hudPills.map((tag, tIdx) => (
+                      <span key={tIdx} className={styles.hudTag}>
+                        <CheckCircle2 size={13} />
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+
+                  <div className={styles.hudStatsGrid}>
+                    {content.visionSection.hudStats.map((st, sIdx) => (
+                      <div key={sIdx} className={styles.hudStatBox}>
+                        <strong>{st.value}</strong>
+                        <span>{st.label}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
 
@@ -472,9 +486,10 @@ export function AboutPage() {
                 {content.visionSection.benefits.map((b, idx) => {
                   const Icon = b.icon;
                   return (
-                    <div key={idx} className={styles.benefitCard}>
+                    <div key={idx} className={styles.benefitCard} data-index={idx}>
+                      <div className={styles.benefitAccent} aria-hidden="true" />
                       <div className={styles.benefitIconWrap}>
-                        <Icon size={20} />
+                        <Icon size={22} />
                       </div>
                       <div className={styles.benefitBody}>
                         <div className={styles.benefitHeader}>
@@ -509,11 +524,12 @@ export function AboutPage() {
               {content.featuresSection.items.map((item, idx) => {
                 const Icon = item.icon;
                 return (
-                  <article key={idx} className={`${styles.bentoCard} ${styles.revealOnScroll}`}>
+                  <article key={idx} className={`${styles.bentoCard} ${styles.revealOnScroll}`} data-pillar={idx}>
                     <div className={styles.bentoCardGlow} aria-hidden="true" />
+                    <span className={styles.bentoWatermarkNum} aria-hidden="true">0{idx + 1}</span>
                     <div className={styles.bentoTop}>
                       <div className={styles.bentoIconWrap}>
-                        <Icon size={22} />
+                        <Icon size={24} />
                       </div>
                       <span className={styles.bentoTag}>{item.tag}</span>
                     </div>
@@ -532,7 +548,7 @@ export function AboutPage() {
                     <div className={styles.bentoFooter}>
                       <Link href={item.href} className={styles.bentoLink}>
                         <span>{item.link}</span>
-                        <ArrowRight size={14} />
+                        <ArrowRight size={15} />
                       </Link>
                     </div>
                   </article>
@@ -560,11 +576,12 @@ export function AboutPage() {
               {content.airportFacts.cards.map((card, idx) => {
                 const Icon = card.icon;
                 return (
-                  <div key={idx} className={`${styles.airportCard} ${styles.revealOnScroll}`}>
+                  <div key={idx} className={`${styles.airportCard} ${styles.revealOnScroll}`} data-fact={idx}>
+                    <div className={styles.airportCardBar} aria-hidden="true" />
                     <div className={styles.airportCardHeader}>
                       <span className={styles.airportCardNum}>{card.num}</span>
                       <div className={styles.airportCardIconWrap}>
-                        <Icon size={20} />
+                        <Icon size={22} />
                       </div>
                     </div>
                     <h3 className={styles.airportCardTitle}>{card.title}</h3>
