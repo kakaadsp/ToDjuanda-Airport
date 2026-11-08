@@ -54,6 +54,7 @@
   justify-content: center;
   width: 100%;
   box-sizing: border-box;
+  padding-bottom: clamp(60px, 8vh, 100px);
 }
 
 /* Ambient Floating Glow Orbs */
@@ -443,7 +444,7 @@
    SECTION 1: VALUES & VISUAL HUD CAPABILITY
    ========================================= */
 .visionSection {
-  padding: 64px 0 68px;
+  padding: 84px 0 76px;
   background: #ffffff;
   border-bottom: 1px solid #dcebf0;
 }
