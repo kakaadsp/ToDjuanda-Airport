@@ -46,6 +46,10 @@
   color: #ffffff;
   background: radial-gradient(120% 90% at 50% 0%, #0c3e66 0%, #07263d 55%, #051a2a 100%);
   border-bottom: 1px solid rgba(113, 206, 237, 0.15);
+  min-height: 100vh;
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
 }
 
 /* Ambient Floating Glow Orbs */
@@ -98,7 +102,8 @@
   gap: 40px;
   width: min(1280px, calc(100% - 64px));
   margin: auto;
-  padding: 110px 0 54px;
+  padding: clamp(100px, 14vh, 130px) 0 clamp(48px, 8vh, 80px);
+  box-sizing: border-box;
 }
 
 .heroCopy {
@@ -935,6 +940,11 @@
    RESPONSIVE DESIGN
    ========================================= */
 @media (max-width: 1050px) {
+  .hero {
+    min-height: auto;
+    display: block;
+  }
+
   .heroInner {
     grid-template-columns: 1fr;
     gap: 32px;
