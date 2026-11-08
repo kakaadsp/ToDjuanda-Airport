@@ -736,7 +736,6 @@ export function HelpPage() {
                 </li>
               ))}
             </ol>
-            <p className={styles.passengerNote}>{t.passengerNote}</p>
           </div>
         </section>
 
