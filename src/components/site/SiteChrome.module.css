@@ -45,6 +45,10 @@
   flex-shrink: 0;
 }
 
+.cleanHeaderInner {
+  padding-left: 32px !important;
+}
+
 .homeHeader .headerInner {
   min-height: 72px !important;
   height: 72px !important;

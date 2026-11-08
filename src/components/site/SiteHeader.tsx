@@ -71,11 +71,12 @@ export function SiteHeader() {
                   scrollProgress > 0.08
                     ? `rgba(145, 166, 183, ${scrollProgress * 0.22})`
                     : "rgba(255, 255, 255, 0.06)",
+                backgroundImage: isHomePage ? undefined : "none",
               }
             : undefined
         }
       >
-      <div className={styles.headerInner}>
+      <div className={`${styles.headerInner} ${!isHomePage ? styles.cleanHeaderInner : ""}`}>
         {/* Juanda International Airport by InJourney Airports */}
         <div className={styles.logoGroup}>
           <Link className={styles.logoLink} href="/" aria-label="Juanda International Airport">
