@@ -189,6 +189,7 @@ export function HelpPage() {
       <main className="page-fade-in" ref={pageRef}>
         <section className={styles.hero} aria-labelledby="help-title">
           <div className={styles.heroGlow} aria-hidden="true" />
+          <div className={styles.heroOrbLeft} aria-hidden="true" />
           <div className={styles.heroInner}>
             <div className={styles.heroCopy}>
               <div className={styles.heroEyebrow}>
