@@ -10,17 +10,21 @@ import {
   CheckCircle2,
   Clock,
   Compass,
+  Footprints,
   HeartHandshake,
   Layers,
   Luggage,
   MapPin,
+  Navigation2,
   Plane,
   PlaneTakeoff,
+  Radio,
   Route,
   Search,
   ShieldCheck,
   Smartphone,
   Sparkles,
+  Zap,
 } from "lucide-react";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
@@ -34,360 +38,324 @@ const OverviewMap = dynamic(
 
 const aboutContent = {
   ID: {
-    heroEyebrow: "TENTANG TODJUANDA · INJOURNEY AIRPORTS",
-    heroTitlePrefix: "Inovasi Navigasi Digital Twin di ",
+    heroEyebrow: "INJOURNEY AIRPORTS · JUANDA SUB T1",
+    heroTitlePrefix: "Navigasi Digital Twin ",
     heroTitleAccent: "Bandara Internasional Juanda",
     heroDesc:
-      "ToDjuanda adalah platform navigasi dalam ruangan (indoor wayfinding) 3D interaktif pertama yang dirancang khusus untuk memandu jutaan penumpang Terminal 1 Bandara Internasional Juanda Surabaya (SUB). Menghubungkan titik awal Anda ke gate keberangkatan, konter maskapai, dan fasilitas penting secara presisi, cepat, dan bebas stres.",
+      "Platform wayfinding 3D indoor resmi Terminal 1 Juanda. Panduan rute cerdas belokan demi belokan dari konter check-in langsung ke boarding gate.",
     openMap: "Buka Peta 3D",
-    openGuide: "Panduan Penggunaan",
-    stats: {
-      floors: "2 Lantai Terpadu",
-      floorsSub: "Lantai 1 & Lantai 2",
-      web: "100% Web-Based",
-      webSub: "Akses Tanpa Aplikasi",
-      speed: "72 m/menit",
-      speedSub: "Estimasi Waktu Tempuh",
-      gates: "Gate 1 – 12",
-      gatesSub: "Pintu Keberangkatan",
-    },
+    openGuide: "Panduan Cepat",
+    stats: [
+      { val: "2 Lantai", label: "T1 Terpadu", icon: Layers },
+      { val: "100% Web", label: "Tanpa Instalasi", icon: Zap },
+      { val: "72 m/mnt", label: "Kecepatan Jalan", icon: Footprints },
+      { val: "Gate 1–12", label: "Pintu Boarding", icon: Plane },
+    ],
     showcase: {
-      brand: "Peta Bandara Juanda",
-      status: "Peta Satelit 2D",
-      caption: "Klik Terminal 1 untuk masuk ke peta 3D interaktif",
+      brand: "Peta Satelit T1 Juanda",
+      status: "LIVE 2D RADAR",
+      caption: "Klik area Terminal 1 untuk masuk peta 3D interaktif",
       pills: [
         { label: "Pintu Masuk & Check-in", icon: "building" },
         { label: "Gate Keberangkatan 1-12", icon: "plane" },
         { label: "Konektor Eskalator/Tangga", icon: "layers" },
-        { label: "Direktori F&B & Fasilitas", icon: "search" },
+        { label: "83+ Tenant & Fasilitas", icon: "search" },
       ],
     },
     visionSection: {
-      eyebrow: "LATAR BELAKANG & VISI",
-      title: "Menghadirkan Perjalanan Bandara yang Tenang dan Bebas Stres",
-      lead:
-        "Bandara Internasional Juanda (SUB) di bawah naungan PT Angkasa Pura Indonesia (InJourney Airports) melayani puluhan ribu penumpang setiap hari di Terminal 1. Di dalam gedung seluas puluhan ribu meter persegi, kepastian arah dan efisiensi waktu adalah kunci ketenangan setiap pelancong menjelang penerbangan.",
-      cardKicker: "MISI & KOMITMEN KAMI",
-      cardTitle: "Navigasi Cepat, Akurat, dan Ramah Pengguna",
-      cardDesc:
-        "Sering kali penumpang menghadapi ketegangan mengejar boarding gate, bingung mencari eskalator menuju ruang tunggu lantai 2, atau kesulitan menemukan fasilitas penting seperti musholla dan toilet. ToDjuanda menghadirkan denah 3D nyata dan rute belokan otomatis agar setiap penumpang melangkah dengan percaya diri dari drop zone hingga boarding pesawat.",
-      cardStats: [
-        { value: "0 Detik", label: "Tanpa unduh aplikasi tambahan" },
-        { value: "100%", label: "Cakupan area publik Terminal 1" },
-        { value: "Multi-Lantai", label: "Rute terhubung Lantai 1 & 2" },
+      eyebrow: "NILAI UNGGULAN",
+      title: "Solusi Navigasi Bebas Bingung di Terminal 1",
+      lead: "Menghilangkan kecemasan tertinggal pesawat dengan kepastian arah dan visual gedung yang nyata.",
+      hudKicker: "MISI & AKURASI",
+      hudTitle: "Digital Twin Presisi Tinggi",
+      hudPills: ["Akurasi Koridor 100%", "Multi-Lantai L1 & L2", "Akses Cepat 0 Detik"],
+      hudStats: [
+        { value: "0 Detik", label: "Tanpa Unduh App" },
+        { value: "83+ Titik", label: "Fasilitas Terdata" },
+        { value: "100%", label: "Rute Terverifikasi" },
       ],
       benefits: [
         {
-          badge: "Visual 3D Nyata",
-          title: "Orientasi Spasial yang Mudah",
-          desc: "Visualisasi 3D realistis membantu penumpang memahami bentuk fisik gedung terminal, posisi lantai, dan koridor secara nyata.",
+          badge: "VISUAL NYATA",
+          title: "Orientasi Spasial 3D",
+          desc: "Bentuk gedung dan koridor divisualisasikan sesuai fisik aslinya.",
+          icon: Compass,
         },
         {
-          badge: "Rute Terverifikasi",
-          title: "Jalur Pejalan Kaki Resmi",
-          desc: "Perhitungan rute hanya melewati koridor pejalan kaki, tangga, dan eskalator terarah tanpa rute mustahil menembus dinding.",
+          badge: "JALUR RESMI",
+          title: "Rute Fisik Terverifikasi",
+          desc: "Hanya melewati jalur pejalan kaki, tangga, dan eskalator resmi.",
+          icon: Route,
         },
         {
-          badge: "Tepat Waktu",
-          title: "Kepastian Menjelang Penerbangan",
-          desc: "Ketahui jarak meter riil dan perkiraan menit berjalan santai menuju boarding gate agar Anda tidak tertinggal pesawat.",
+          badge: "BEBAS PANIK",
+          title: "Estimasi Jarak & Menit (ETA)",
+          desc: "Ketahui jarak meter riil dan menit jalan santai menuju gate Anda.",
+          icon: Clock,
         },
       ],
     },
     featuresSection: {
-      eyebrow: "FITUR UNGGULAN",
-      title: "Dirancang Cerdas untuk Segala Kebutuhan Penumpang",
-      desc: "Setiap fitur ToDjuanda dibangun dengan fokus pada kemudahan interaksi, kecepatan akses, dan akurasi informasi fasilitas terminal.",
+      eyebrow: "4 PILAR FITUR CERDAS",
+      title: "Teknologi Modern untuk Setiap Penumpang",
+      desc: "Dirancang seringan mungkin agar dapat diakses seketika dari browser HP tanpa hambatan.",
       items: [
         {
           tag: "DIGITAL TWIN 3D",
-          title: "Denah 3D Multi-Lantai Terpadu",
-          desc: "Menampilkan denah Terminal 1 Juanda (Lantai 1 dan Lantai 2) dalam satu model 3D terintegrasi dengan transisi antar lantai yang mulus dan bebas lag.",
-          points: [
-            "Peralihan lantai instan (Lantai 1, Lantai 2, Semua Lantai)",
-            "Kontrol orbit kamera, putar 360°, dan zoom responsif",
-            "Visualisasi koridor terminal, apron, dan garbarata pesawat",
-          ],
+          title: "Denah 3D Multi-Lantai",
+          desc: "Visualisasi interaktif Lantai 1 & Lantai 2 dengan kamera putar 360° yang sangat responsif.",
+          chips: ["Lantai 1 & 2", "Orbit 360°", "Garbarata 3D"],
           link: "Eksplorasi Peta",
           href: "/map",
+          icon: Layers,
         },
         {
           tag: "SMART ROUTING",
-          title: "Perhitungan Rute Belokan Demi Belokan",
-          desc: "Mesin pencarian rute cerdas yang menghitung lintasan pejalan kaki tercepat dan paling efisien berbasis lorong resmi terminal.",
-          points: [
-            "Deteksi rute tercepat antarlantai via eskalator dan tangga",
-            "Mendukung jalur eskalator terarah (khusus naik atau turun)",
-            "Estimasi jarak tempuh meter riil dan waktu berjalan (ETA)",
-          ],
-          link: "Coba Navigasi",
+          title: "Navigasi Turn-by-Turn",
+          desc: "Kalkulasi rute terpendek dengan deteksi arah eskalator (naik/turun) dan tangga antarlantai.",
+          chips: ["Jalur Terpendek", "Eskalator Terarah", "ETA Berjalan"],
+          link: "Coba Rute",
           href: "/map",
+          icon: Navigation2,
         },
         {
           tag: "OMNI-SEARCH",
-          title: "Pencarian Tenant & Fasilitas Seketika",
-          desc: "Temukan lokasi boarding gate 1–12, konter check-in maskapai, restoran, kafe, musholla, toilet, dan ATM secara cepat dengan autocomplete.",
-          points: [
-            "Pencarian cepat berdasarkan nama lokasi atau kategori",
-            "Kategori filter: Toilet, Musholla, Gate, Departure, ATM, Kuliner",
-            "Pilihan rute langsung ke titik tujuan dalam satu sentuhan",
-          ],
-          link: "Cari Fasilitas",
+          title: "Direktori & Fasilitas Cepat",
+          desc: "Temukan Gate 1-12, konter maskapai, musholla, toilet, ATM, dan resto dalam 1 sentuhan.",
+          chips: ["Gate 1–12", "Toilet & Musholla", "Resto & ATM"],
+          link: "Cari Tempat",
           href: "/map",
+          icon: Search,
         },
         {
-          tag: "UNIVERSAL ACCESS",
-          title: "Responsif di Smartphone & Kiosk",
-          desc: "Antarmuka modern yang dapat diakses langsung melalui browser ponsel penumpang, tablet petugas, maupun layar sentuh kiosk terminal.",
-          points: [
-            "Ringan dan cepat diakses melalui pemindaian QR code",
-            "Antarmuka sentuh yang intuitif dan ramah pengguna",
-            "Dukungan multibahasa lengkap (Bahasa Indonesia & English)",
-          ],
-          link: "Lihat Panduan",
+          tag: "UNIVERSAL WEB",
+          title: "Akses Instan Tanpa Install",
+          desc: "Cukup pindai QR code di standing banner atau kiosk bandara untuk langsung mulai navigasi.",
+          chips: ["Scan QR", "Ringan & Cepat", "HP & Kiosk"],
+          link: "Buka Panduan",
           href: "/help",
+          icon: Smartphone,
         },
       ],
     },
     airportFacts: {
-      eyebrow: "PROFIL OPERASIONAL TERMINAL 1",
-      title: "Mengenal Gerbang Udara Utama Jawa Timur",
-      desc: "Terminal 1 Bandara Internasional Juanda Surabaya (SUB) merupakan pusat mobilitas penerbangan domestik terpadu di bawah naungan PT Angkasa Pura Indonesia (InJourney Airports).",
+      eyebrow: "OPERASIONAL TERMINAL 1",
+      title: "Gerbang Udara Utama Jawa Timur",
+      desc: "Pusat mobilitas penerbangan domestik tersibuk yang dikelola oleh InJourney Airports.",
       cards: [
         {
           num: "01",
           icon: PlaneTakeoff,
-          title: "Konektivitas Domestik Terluas",
-          desc: "Melayani puluhan ribu penumpang domestik setiap hari, menghubungkan Surabaya dengan lebih dari 30 kota di seluruh Nusantara dari Sabang hingga Merauke.",
+          title: "30+ Kota Domestik",
+          desc: "Konektivitas luas menghubungkan Surabaya ke seluruh penjuru Nusantara setiap hari.",
         },
         {
           num: "02",
           icon: Building2,
-          title: "Infrastruktur 2 Lantai Terpadu",
-          desc: "Lantai 1 difungsikan untuk area keberangkatan Departure 1–4, konter check-in 1–83, dan kedatangan. Lantai 2 difungsikan untuk ruang tunggu Boarding Gate 1–12.",
+          title: "Infrastruktur 2 Lantai",
+          desc: "Lantai 1 Check-in Departure 1–4 & Kedatangan · Lantai 2 Ruang Tunggu Gate 1–12.",
         },
         {
           num: "03",
           icon: ShieldCheck,
-          title: "Standar Layanan InJourney",
-          desc: "Mengedepankan prinsip 3S+1C (Safety, Security, Services & Compliance) demi kenyamanan, kebersihan, dan keselamatan penerbangan berstandar internasional.",
+          title: "Standar Layanan 3S+1C",
+          desc: "Safety, Security, Services & Compliance berstandar internasional demi kenyamanan penumpang.",
         },
         {
           num: "04",
           icon: HeartHandshake,
-          title: "83+ Mitra Fasilitas & Tenant",
-          desc: "Menghadirkan ragam pilihan kuliner legendaris khas Jawa Timur, gerai internasional, ritel cinderamata, perbankan, ruang laktasi, dan fasilitas disabilitas ramah keluarga.",
+          title: "83+ Mitra Fasilitas",
+          desc: "Kuliner khas Jawa Timur, toko ritel, perbankan, ruang laktasi, dan toilet disabilitas.",
         },
       ],
     },
     closing: {
-      eyebrow: "MULAI SEKARANG",
-      title: "Siap Menjelajahi Terminal 1 Bandara Juanda?",
-      desc: "Buka peta navigasi 3D interaktif sekarang atau pelajari panduan penggunaan alur perjalanan untuk pengalaman terbang yang tenang dan menyenangkan.",
-      buttonMap: "Buka Peta 3D Sekarang",
-      buttonGuide: "Buka Panduan Penumpang",
+      eyebrow: "SIAP MENJELAJAHI JUANDA?",
+      title: "Mulai Navigasi Perjalanan Anda Sekarang",
+      desc: "Buka peta 3D interaktif atau pelajari panduan ringkas penggunaan hanya dalam hitungan detik.",
+      buttonMap: "Mulai Peta 3D",
+      buttonGuide: "Buku Panduan",
     },
   },
   EN: {
-    heroEyebrow: "ABOUT TODJUANDA · INJOURNEY AIRPORTS",
-    heroTitlePrefix: "Digital Twin Navigation Innovation at ",
+    heroEyebrow: "INJOURNEY AIRPORTS · JUANDA SUB T1",
+    heroTitlePrefix: "Digital Twin Wayfinding ",
     heroTitleAccent: "Juanda International Airport",
     heroDesc:
-      "ToDjuanda is the first interactive 3D indoor wayfinding platform engineered specifically for Terminal 1 passengers at Juanda International Airport Surabaya (SUB). Seamlessly connecting your position to departure gates, airline desks, and vital facilities with high precision and zero stress.",
+      "Official 3D indoor navigation for Juanda Terminal 1. Turn-by-turn guidance connecting check-in desks directly to boarding gates.",
     openMap: "Open 3D Map",
-    openGuide: "User Guide",
-    stats: {
-      floors: "2 Integrated Floors",
-      floorsSub: "Ground Floor & Level 2",
-      web: "100% Web-Based",
-      webSub: "No App Install Required",
-      speed: "72 m/min",
-      speedSub: "Walking Pace ETA",
-      gates: "Gates 1 – 12",
-      gatesSub: "Boarding Gates",
-    },
+    openGuide: "Quick Guide",
+    stats: [
+      { val: "2 Levels", label: "Integrated T1", icon: Layers },
+      { val: "100% Web", label: "No App Install", icon: Zap },
+      { val: "72 m/min", label: "Walking Pace", icon: Footprints },
+      { val: "Gates 1–12", label: "Boarding Gates", icon: Plane },
+    ],
     showcase: {
-      brand: "Juanda Airport Map",
-      status: "2D Satellite Map",
-      caption: "Click Terminal 1 to enter interactive 3D map",
+      brand: "T1 Juanda Satellite Radar",
+      status: "LIVE 2D RADAR",
+      caption: "Click Terminal 1 area to enter interactive 3D map",
       pills: [
         { label: "Entrance & Check-in", icon: "building" },
         { label: "Boarding Gates 1-12", icon: "plane" },
-        { label: "Escalator & Stair Connectors", icon: "layers" },
-        { label: "F&B & Amenities Directory", icon: "search" },
+        { label: "Escalator & Stair Links", icon: "layers" },
+        { label: "83+ Directory Facilities", icon: "search" },
       ],
     },
     visionSection: {
-      eyebrow: "BACKGROUND & VISION",
-      title: "Delivering a Calm and Stress-Free Airport Journey",
-      lead:
-        "Juanda International Airport (SUB), operated by PT Angkasa Pura Indonesia (InJourney Airports), welcomes tens of thousands of travelers daily at Terminal 1. Within a terminal spanning tens of thousands of square meters, clear orientation and time efficiency are paramount to traveler peace of mind.",
-      cardKicker: "OUR MISSION & COMMITMENT",
-      cardTitle: "Fast, Accurate, and Passenger-Centric Wayfinding",
-      cardDesc:
-        "Travelers often face airport anxiety when looking for boarding gates, navigating escalators to level 2, or searching for essential amenities like prayer rooms and restrooms. ToDjuanda delivers real 3D spatial models and automated turn-by-turn guidance so every traveler can walk with confidence from drop-off to boarding.",
-      cardStats: [
-        { value: "0 sec", label: "No app download required" },
-        { value: "100%", label: "Coverage of T1 public spaces" },
-        { value: "Multi-Floor", label: "Connected Levels 1 & 2 routing" },
+      eyebrow: "CORE VALUES",
+      title: "Stress-Free Navigation in Terminal 1",
+      lead: "Eliminating airport anxiety with verified pedestrian paths and real 3D spatial models.",
+      hudKicker: "MISSION & PRECISION",
+      hudTitle: "High-Precision Digital Twin",
+      hudPills: ["100% Corridor Accuracy", "Multi-Floor Levels 1 & 2", "Instant 0-Sec Access"],
+      hudStats: [
+        { value: "0 sec", label: "No App Install" },
+        { value: "83+ Nodes", label: "Mapped Facilities" },
+        { value: "100%", label: "Verified Routing" },
       ],
       benefits: [
         {
-          badge: "Real 3D Spatial",
-          title: "Intuitive Orientation",
-          desc: "Realistic 3D models help travelers understand terminal structure, level layouts, and corridors exactly as they exist in reality.",
+          badge: "REAL 3D",
+          title: "Intuitive 3D Orientation",
+          desc: "Understand level layouts and corridors exactly as built in reality.",
+          icon: Compass,
         },
         {
-          badge: "Verified Routes",
-          title: "Official Walkable Paths",
-          desc: "Routing strictly follows verified pedestrian corridors, stairs, and escalators without unrealistic paths passing through walls.",
+          badge: "OFFICIAL PATH",
+          title: "Verified Pedestrian Paths",
+          desc: "Strictly routes through official walkways, stairs, and escalators.",
+          icon: Route,
         },
         {
-          badge: "Punctual Travel",
-          title: "Confidence Before Flight",
-          desc: "View exact distance in meters and walking minutes to your assigned departure gate so you never risk missing your flight.",
+          badge: "CALM PACE",
+          title: "Punctual Distance & ETA",
+          desc: "View actual meter distance and relaxed walking minutes to your gate.",
+          icon: Clock,
         },
       ],
     },
     featuresSection: {
-      eyebrow: "CORE FEATURES",
-      title: "Intelligently Designed for Every Traveler's Needs",
-      desc: "Every capability in ToDjuanda is built with a focus on seamless interaction, instant accessibility, and verified terminal data accuracy.",
+      eyebrow: "4 SMART PILLARS",
+      title: "Modern Tech for Every Passenger",
+      desc: "Built to be lightweight and accessible instantly from mobile browsers.",
       items: [
         {
           tag: "DIGITAL TWIN 3D",
-          title: "Integrated Multi-Floor 3D Plan",
-          desc: "Comprehensive representation of Juanda Terminal 1 (Ground Floor & Level 2) within an integrated 3D model featuring smooth floor transitions.",
-          points: [
-            "Instant floor switcher (Level 1, Level 2, All Floors)",
-            "360° camera orbit, smooth panning, and pinch zoom controls",
-            "Visualization of corridors, gate lounges, and aeroramps",
-          ],
+          title: "Multi-Floor 3D Layout",
+          desc: "Interactive visualization of Levels 1 & 2 with smooth 360° orbit camera controls.",
+          chips: ["Levels 1 & 2", "360° Orbit", "3D Jetbridges"],
           link: "Explore Map",
           href: "/map",
+          icon: Layers,
         },
         {
           tag: "SMART ROUTING",
-          title: "Turn-by-Turn Pathfinding Engine",
-          desc: "Smart pedestrian engine calculating the fastest and most optimal path connecting your current position directly to your aircraft gate.",
-          points: [
-            "Fastest route detection across levels via escalators and stairs",
-            "Directional escalator awareness (upward vs downward paths)",
-            "Realistic walking meter distance and estimated minutes (ETA)",
-          ],
+          title: "Turn-by-Turn Guidance",
+          desc: "Shortest route calculation with directional escalator (up/down) and stair support.",
+          chips: ["Shortest Path", "Directional Escalators", "Walking ETA"],
           link: "Try Navigation",
           href: "/map",
+          icon: Navigation2,
         },
         {
           tag: "OMNI-SEARCH",
-          title: "Instant Facility & Tenant Search",
-          desc: "Locate Boarding Gates 1–12, airline check-in desks, restaurants, cafes, prayer rooms, restrooms, and ATMs instantly with autocomplete.",
-          points: [
-            "Quick lookup by location name, airline, or facility category",
-            "Convenient category filters: Restrooms, Prayer Rooms, Gates, ATMs",
-            "Single-tap route plotting to any selected destination",
-          ],
-          link: "Search Facilities",
+          title: "Instant Facility Search",
+          desc: "Locate Gates 1–12, airline counters, prayer rooms, restrooms, ATMs, and dining.",
+          chips: ["Gates 1–12", "Restrooms & Prayer", "Dining & ATM"],
+          link: "Find Places",
           href: "/map",
+          icon: Search,
         },
         {
-          tag: "UNIVERSAL ACCESS",
-          title: "Responsive on Smartphones & Kiosks",
-          desc: "Flexible, modern web interface accessible on passenger smartphones, staff tablets, or airport interactive touchscreen kiosks.",
-          points: [
-            "Instant loading via QR code scan without app store downloads",
-            "Intuitive, passenger-tested touch interaction design",
-            "Bilingual interface support (Bahasa Indonesia & English)",
-          ],
-          link: "View Guide",
+          tag: "UNIVERSAL WEB",
+          title: "Zero-Install Web Access",
+          desc: "Scan QR codes on terminal kiosks or banners to start navigating immediately.",
+          chips: ["Scan QR", "Fast & Responsive", "Mobile & Kiosk"],
+          link: "Read Guide",
           href: "/help",
+          icon: Smartphone,
         },
       ],
     },
     airportFacts: {
-      eyebrow: "TERMINAL 1 OPERATIONAL PROFILE",
-      title: "Discovering East Java's Primary Aviation Hub",
-      desc: "Juanda International Airport Terminal 1 (SUB) is the central domestic aviation gateway operated by PT Angkasa Pura Indonesia (InJourney Airports).",
+      eyebrow: "OPERATIONAL PROFILE",
+      title: "East Java's Premier Aviation Hub",
+      desc: "The busiest domestic hub managed by PT Angkasa Pura Indonesia (InJourney Airports).",
       cards: [
         {
           num: "01",
           icon: PlaneTakeoff,
-          title: "Extensive Domestic Connectivity",
-          desc: "Serving tens of thousands of travelers daily, linking Surabaya directly to over 30 destinations across the Indonesian archipelago.",
+          title: "30+ Domestic Cities",
+          desc: "Extensive routes connecting Surabaya to cities across the Indonesian archipelago.",
         },
         {
           num: "02",
           icon: Building2,
-          title: "Integrated 2-Floor Infrastructure",
-          desc: "Level 1 serves Departures 1–4, check-in desks 1–83, and Arrivals. Level 2 hosts Boarding Gates 1–12 and passenger departure lounges.",
+          title: "2 Integrated Levels",
+          desc: "Level 1 Check-in Departure 1–4 & Arrivals · Level 2 Boarding Gates 1–12 Lounges.",
         },
         {
           num: "03",
           icon: ShieldCheck,
-          title: "InJourney Airport Standards",
-          desc: "Upholding 3S+1C standards (Safety, Security, Services & Compliance) to deliver international-caliber cleanliness, comfort, and security.",
+          title: "InJourney 3S+1C Standard",
+          desc: "Safety, Security, Services & Compliance for world-class passenger satisfaction.",
         },
         {
           num: "04",
           icon: HeartHandshake,
-          title: "83+ Amenities & Tenant Partners",
-          desc: "Featuring renowned East Javanese local culinary heritage, global dining, retail boutiques, banking hubs, nursing rooms, and accessible family facilities.",
+          title: "83+ Facility Partners",
+          desc: "East Java culinary icons, retail shops, banking, nursing, and accessibility rooms.",
         },
       ],
     },
     closing: {
-      eyebrow: "GET STARTED",
-      title: "Ready to Explore Juanda Airport Terminal 1?",
-      desc: "Open the interactive 3D navigation map now or consult our passenger travel guide for a calm and enjoyable flying experience.",
-      buttonMap: "Open 3D Map Now",
-      buttonGuide: "Open Passenger Guide",
+      eyebrow: "READY TO EXPLORE JUANDA?",
+      title: "Begin Your Terminal Navigation Now",
+      desc: "Open the interactive 3D map or read the quick visual guide in seconds.",
+      buttonMap: "Launch 3D Map",
+      buttonGuide: "User Guide",
     },
   },
-} as const;
+};
 
 export function AboutPage() {
-  const pageRef = useRef<HTMLElement>(null);
-  const lang = useMapStore((state) => state.lang);
-  const content = aboutContent[lang];
+  const store = useMapStore();
+  const lang = store.lang;
+  const content = aboutContent[lang] ?? aboutContent.ID;
+  const observerRef = useRef<IntersectionObserver | null>(null);
 
   useEffect(() => {
-    const container = pageRef.current;
-    if (!container) return;
-
-    const revealElements = container.querySelectorAll<HTMLElement>(`.${styles.revealOnScroll}`);
-
-    const observer = new IntersectionObserver(
+    observerRef.current = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             entry.target.classList.add(styles.isRevealed);
-            observer.unobserve(entry.target);
           }
         });
       },
-      {
-        root: null,
-        threshold: 0.08,
-        rootMargin: "0px 0px -40px 0px",
-      },
+      { threshold: 0.1, rootMargin: "0px 0px -40px 0px" },
     );
 
-    revealElements.forEach((el) => observer.observe(el));
+    const elements = document.querySelectorAll(`.${styles.revealOnScroll}`);
+    elements.forEach((el) => observerRef.current?.observe(el));
 
-    return () => observer.disconnect();
-  }, [lang]);
+    return () => observerRef.current?.disconnect();
+  }, []);
 
   return (
-    <div className={styles.page}>
+    <div className={styles.aboutPage}>
       <SiteHeader />
 
-      <main className={styles.main} ref={pageRef}>
+      <main className={styles.mainContent}>
         {/* =========================================
-            HERO SECTION
+            HERO SECTION WITH VISUAL GRADIENTS & 2D RADAR MAP
             ========================================= */}
         <section className={styles.hero} aria-labelledby="about-hero-title">
-          <div className={styles.heroGlow} aria-hidden="true" />
-          <div className={styles.heroGlowLeft} aria-hidden="true" />
+          {/* Animated Ambient Gradient Orbs */}
+          <div className={styles.heroOrb1} aria-hidden="true" />
+          <div className={styles.heroOrb2} aria-hidden="true" />
+          <div className={styles.heroGridLines} aria-hidden="true" />
 
           <div className={styles.heroInner}>
             <div className={`${styles.heroCopy} ${styles.revealOnScroll}`}>
@@ -415,42 +383,37 @@ export function AboutPage() {
                 </Link>
               </div>
 
-              {/* Metrics Strip */}
-              <div className={styles.heroMetrics}>
-                <div className={styles.metricItem}>
-                  <span className={styles.metricValue}>{content.stats.floors}</span>
-                  <span className={styles.metricLabel}>{content.stats.floorsSub}</span>
-                </div>
-                <div className={styles.metricDivider} aria-hidden="true" />
-                <div className={styles.metricItem}>
-                  <span className={styles.metricValue}>{content.stats.web}</span>
-                  <span className={styles.metricLabel}>{content.stats.webSub}</span>
-                </div>
-                <div className={styles.metricDivider} aria-hidden="true" />
-                <div className={styles.metricItem}>
-                  <span className={styles.metricValue}>{content.stats.speed}</span>
-                  <span className={styles.metricLabel}>{content.stats.speedSub}</span>
-                </div>
-                <div className={styles.metricDivider} aria-hidden="true" />
-                <div className={styles.metricItem}>
-                  <span className={styles.metricValue}>{content.stats.gates}</span>
-                  <span className={styles.metricLabel}>{content.stats.gatesSub}</span>
-                </div>
+              {/* 4 Interactive Visual Stat Badges */}
+              <div className={styles.heroStatsGrid}>
+                {content.stats.map((st, sIdx) => {
+                  const Icon = st.icon;
+                  return (
+                    <div key={sIdx} className={styles.statPillCard}>
+                      <div className={styles.statPillIconWrap}>
+                        <Icon size={16} />
+                      </div>
+                      <div className={styles.statPillInfo}>
+                        <strong>{st.val}</strong>
+                        <span>{st.label}</span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
-            {/* Showcase Visual Card (2D Overview Map ala Google Maps) */}
+            {/* Showcase Visual Card (2D Overview Radar Map) */}
             <div className={`${styles.heroShowcase} ${styles.revealOnScroll} ${styles.revealDelay1}`}>
               <div className={styles.showcaseCard}>
                 <div className={styles.showcaseHeader}>
                   <div className={styles.showcaseBrand}>
-                    <PlaneTakeoff size={16} />
+                    <Radio size={16} className={styles.pulseRadio} />
                     <span>{content.showcase.brand}</span>
                   </div>
                   <span className={styles.showcaseBadge}>{content.showcase.status}</span>
                 </div>
 
-                {/* Juanda Overview Map using Google Maps Tile API */}
+                {/* 2D Overview Map Frame */}
                 <div className={styles.showcaseMapWrap}>
                   <OverviewMap />
                   <span className={styles.showcaseMapCaption}>
@@ -462,10 +425,10 @@ export function AboutPage() {
                   {content.showcase.pills.map((pill, idx) => (
                     <div key={idx} className={styles.showcasePill}>
                       <span className={styles.showcasePillIcon}>
-                        {pill.icon === "building" && <Building2 size={14} />}
-                        {pill.icon === "plane" && <PlaneTakeoff size={14} />}
-                        {pill.icon === "layers" && <Layers size={14} />}
-                        {pill.icon === "search" && <Search size={14} />}
+                        {pill.icon === "building" && <Building2 size={13} />}
+                        {pill.icon === "plane" && <PlaneTakeoff size={13} />}
+                        {pill.icon === "layers" && <Layers size={13} />}
+                        {pill.icon === "search" && <Search size={13} />}
                       </span>
                       <span>{pill.label}</span>
                     </div>
@@ -477,53 +440,64 @@ export function AboutPage() {
         </section>
 
         {/* =========================================
-            VISION & BACKGROUND SECTION
+            VALUES & VISUAL HUD CAPABILITY SECTION
             ========================================= */}
-        <section className={styles.visionSection} aria-label="Latar Belakang & Visi">
+        <section className={styles.visionSection} aria-label="Nilai Keunggulan">
           <div className={styles.container}>
-            <div className={`${styles.visionHeader} ${styles.revealOnScroll}`}>
-              <div className={styles.visionEyebrow}>
+            <div className={`${styles.sectionHeader} ${styles.revealOnScroll}`}>
+              <div className={styles.sectionEyebrow}>
                 <Sparkles size={14} />
                 <span>{content.visionSection.eyebrow}</span>
               </div>
-              <h2 className={styles.visionTitle}>{content.visionSection.title}</h2>
-              <p className={styles.visionLead}>{content.visionSection.lead}</p>
+              <h2 className={styles.sectionTitle}>{content.visionSection.title}</h2>
+              <p className={styles.sectionDesc}>{content.visionSection.lead}</p>
             </div>
 
             <div className={styles.visionGrid}>
-              {/* Left Column: Mission & Impact Card */}
-              <div className={`${styles.visionMissionCard} ${styles.revealOnScroll} ${styles.revealDelay1}`}>
-                <div>
-                  <div className={styles.visionMissionKicker}>{content.visionSection.cardKicker}</div>
-                  <h3 className={styles.visionMissionTitle}>{content.visionSection.cardTitle}</h3>
-                  <p className={styles.visionMissionDesc}>{content.visionSection.cardDesc}</p>
+              {/* Left Column: Visual Airport Tech HUD Card */}
+              <div className={`${styles.hudCard} ${styles.revealOnScroll} ${styles.revealDelay1}`}>
+                <div className={styles.hudTop}>
+                  <span className={styles.hudKicker}>{content.visionSection.hudKicker}</span>
+                  <div className={styles.hudLiveBadge}>
+                    <span className={styles.beaconDot} />
+                    <span>VERIFIED SUB</span>
+                  </div>
                 </div>
 
-                <div className={styles.visionStatsRow}>
-                  {content.visionSection.cardStats.map((stat, sIdx) => (
-                    <div key={sIdx} className={styles.visionStatBox}>
-                      <strong>{stat.value}</strong>
-                      <span>{stat.label}</span>
+                <h3 className={styles.hudTitle}>{content.visionSection.hudTitle}</h3>
+
+                <div className={styles.hudPillTags}>
+                  {content.visionSection.hudPills.map((tag, tIdx) => (
+                    <span key={tIdx} className={styles.hudTag}>
+                      <CheckCircle2 size={13} />
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+
+                <div className={styles.hudStatsGrid}>
+                  {content.visionSection.hudStats.map((st, sIdx) => (
+                    <div key={sIdx} className={styles.hudStatBox}>
+                      <strong>{st.value}</strong>
+                      <span>{st.label}</span>
                     </div>
                   ))}
                 </div>
               </div>
 
-              {/* Right Column: 3 Value Pillars */}
-              <div className={`${styles.visionPillarsCol} ${styles.revealOnScroll} ${styles.revealDelay2}`}>
+              {/* Right Column: 3 Compact Capability Cards */}
+              <div className={`${styles.visionCardsCol} ${styles.revealOnScroll} ${styles.revealDelay2}`}>
                 {content.visionSection.benefits.map((b, idx) => {
-                  const icons = [
-                    <Compass key={0} size={22} />,
-                    <Route key={1} size={22} />,
-                    <PlaneTakeoff key={2} size={22} />,
-                  ];
+                  const Icon = b.icon;
                   return (
-                    <div key={idx} className={styles.visionPillarCard}>
-                      <span className={styles.pillarIconWrap}>{icons[idx % icons.length]}</span>
-                      <div className={styles.pillarBody}>
-                        <div className={styles.pillarHeader}>
-                          <strong>{b.title}</strong>
-                          <span className={styles.pillarBadge}>{b.badge}</span>
+                    <div key={idx} className={styles.benefitCard}>
+                      <div className={styles.benefitIconWrap}>
+                        <Icon size={20} />
+                      </div>
+                      <div className={styles.benefitBody}>
+                        <div className={styles.benefitHeader}>
+                          <h4>{b.title}</h4>
+                          <span className={styles.benefitBadge}>{b.badge}</span>
                         </div>
                         <p>{b.desc}</p>
                       </div>
@@ -536,7 +510,7 @@ export function AboutPage() {
         </section>
 
         {/* =========================================
-            CORE FEATURES SECTION
+            4 SMART PILLARS (BENTO GLASS CARDS)
             ========================================= */}
         <section className={styles.featuresSection} aria-label="Fitur Unggulan">
           <div className={styles.container}>
@@ -549,39 +523,32 @@ export function AboutPage() {
               <p className={styles.sectionDesc}>{content.featuresSection.desc}</p>
             </div>
 
-            <div className={styles.featuresGrid}>
+            <div className={styles.featuresBentoGrid}>
               {content.featuresSection.items.map((item, idx) => {
-                const icons = [
-                  <Layers key={0} size={24} />,
-                  <Route key={1} size={24} />,
-                  <Search key={2} size={24} />,
-                  <Smartphone key={3} size={24} />,
-                ];
-                const delayClass = [
-                  styles.revealDelay1,
-                  styles.revealDelay2,
-                  styles.revealDelay3,
-                  styles.revealDelay4,
-                ][idx % 4];
-
+                const Icon = item.icon;
                 return (
-                  <article key={idx} className={`${styles.featureCard} ${styles.revealOnScroll} ${delayClass}`}>
-                    <div className={styles.featureIconWrap}>{icons[idx % icons.length]}</div>
-                    <span className={styles.featureTag}>{item.tag}</span>
-                    <h3 className={styles.featureTitle}>{item.title}</h3>
-                    <p className={styles.featureDesc}>{item.desc}</p>
+                  <article key={idx} className={`${styles.bentoCard} ${styles.revealOnScroll}`}>
+                    <div className={styles.bentoCardGlow} aria-hidden="true" />
+                    <div className={styles.bentoTop}>
+                      <div className={styles.bentoIconWrap}>
+                        <Icon size={22} />
+                      </div>
+                      <span className={styles.bentoTag}>{item.tag}</span>
+                    </div>
 
-                    <ul className={styles.featureBulletList}>
-                      {item.points.map((pt, pIdx) => (
-                        <li key={pIdx} className={styles.featureBulletItem}>
-                          <CheckCircle2 size={14} />
-                          <span>{pt}</span>
-                        </li>
+                    <h3 className={styles.bentoTitle}>{item.title}</h3>
+                    <p className={styles.bentoDesc}>{item.desc}</p>
+
+                    <div className={styles.bentoChips}>
+                      {item.chips.map((chip, cIdx) => (
+                        <span key={cIdx} className={styles.bentoChip}>
+                          {chip}
+                        </span>
                       ))}
-                    </ul>
+                    </div>
 
-                    <div className={styles.featureCardFooter}>
-                      <Link href={item.href} className={styles.featureLink}>
+                    <div className={styles.bentoFooter}>
+                      <Link href={item.href} className={styles.bentoLink}>
                         <span>{item.link}</span>
                         <ArrowRight size={14} />
                       </Link>
@@ -594,7 +561,7 @@ export function AboutPage() {
         </section>
 
         {/* =========================================
-            AIRPORT OPERATIONAL PROFILE SECTION
+            AIRPORT OPERATIONAL FACTS (HUD FACT CARDS)
             ========================================= */}
         <section className={styles.airportSection} aria-label="Profil Operasional Terminal 1">
           <div className={styles.container}>
@@ -612,7 +579,7 @@ export function AboutPage() {
                 const Icon = card.icon;
                 return (
                   <div key={idx} className={`${styles.airportCard} ${styles.revealOnScroll}`}>
-                    <div className={styles.airportCardTop}>
+                    <div className={styles.airportCardHeader}>
                       <span className={styles.airportCardNum}>{card.num}</span>
                       <div className={styles.airportCardIconWrap}>
                         <Icon size={20} />
@@ -631,6 +598,7 @@ export function AboutPage() {
             CLOSING CTA SECTION
             ========================================= */}
         <section className={styles.closing} aria-label="Mulai Menjelajahi">
+          <div className={styles.closingGlow} aria-hidden="true" />
           <div className={`${styles.closingCopy} ${styles.revealOnScroll}`}>
             <span className={styles.closingEyebrow}>{content.closing.eyebrow}</span>
             <h2>{content.closing.title}</h2>
