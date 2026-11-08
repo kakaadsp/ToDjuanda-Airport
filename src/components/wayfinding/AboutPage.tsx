@@ -373,12 +373,12 @@ export function AboutPage() {
 
               <div className={styles.heroActions}>
                 <Link href="/map" className={styles.primaryButton}>
-                  <Compass size={20} />
+                  <Compass size={22} />
                   <span>{content.openMap}</span>
-                  <ArrowRight size={18} />
+                  <ArrowRight size={19} />
                 </Link>
                 <Link href="/help" className={styles.ghostButton}>
-                  <Sparkles size={18} />
+                  <Sparkles size={19} />
                   <span>{content.openGuide}</span>
                 </Link>
               </div>

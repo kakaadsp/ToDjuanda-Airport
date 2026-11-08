@@ -101,10 +101,10 @@
 .heroInner {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(440px, 0.9fr);
+  grid-template-columns: minmax(0, 1.15fr) minmax(440px, 0.85fr);
   align-items: center;
-  gap: 48px;
-  width: min(1340px, calc(100% - 64px));
+  gap: 52px;
+  width: min(1360px, calc(100% - 64px));
   margin: auto;
   padding: clamp(76px, 10vh, 88px) 0 clamp(24px, 4vh, 36px);
   box-sizing: border-box;
@@ -118,23 +118,23 @@
 .heroEyebrow {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 16px;
-  padding: 7px 16px;
+  gap: 9px;
+  margin-bottom: 18px;
+  padding: 8px 18px;
   border-radius: 999px;
   background: rgba(14, 165, 233, 0.16);
   border: 1px solid rgba(56, 189, 248, 0.38);
   color: #7be4fb;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 800;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
   box-shadow: 0 4px 16px rgba(0, 163, 218, 0.22);
 }
 
 .heroEyebrowDot {
-  width: 8.5px;
-  height: 8.5px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
   background: #38bdf8;
   box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.3), 0 0 14px #38bdf8;
@@ -142,12 +142,12 @@
 }
 
 .hero h1 {
-  max-width: 660px;
-  margin: 0 0 16px;
-  font-size: clamp(38px, 4.2vw, 52px);
+  max-width: 700px;
+  margin: 0 0 18px;
+  font-size: clamp(42px, 4.6vw, 58px);
   font-weight: 700;
-  letter-spacing: -0.05em;
-  line-height: 1.14;
+  letter-spacing: -0.045em;
+  line-height: 1.12;
   text-wrap: balance;
   color: #ffffff;
 }
@@ -161,18 +161,18 @@
 }
 
 .heroCopy > p {
-  max-width: 580px;
-  margin: 0 0 28px;
-  color: #bed4df;
-  font-size: clamp(15px, 1.2vw, 17px);
-  line-height: 1.7;
+  max-width: 620px;
+  margin: 0 0 32px;
+  color: #c4dbe8;
+  font-size: clamp(16px, 1.3vw, 18.5px);
+  line-height: 1.72;
 }
 
 .heroActions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
   margin: 0;
 }
 
@@ -181,11 +181,11 @@
   display: inline-flex;
   justify-content: center;
   align-items: center;
-  gap: 10px;
-  min-height: 52px;
-  padding: 0 28px;
-  border-radius: 13px;
-  font-size: 14.5px;
+  gap: 12px;
+  min-height: 56px;
+  padding: 0 32px;
+  border-radius: 14px;
+  font-size: 15.5px;
   font-weight: 700;
   text-decoration: none;
   cursor: pointer;
