@@ -5,18 +5,29 @@ import Link from "next/link";
 import {
   ArrowLeft,
   ArrowRight,
+  ArrowUpDown,
   Check,
   ChevronDown,
   ChevronRight,
   Compass,
   CornerUpRight,
+  Crosshair,
   Eye,
   Layers,
   LocateFixed,
   MapPin,
+  Menu,
+  Minus,
+  MousePointer2,
   Navigation,
   Navigation2,
+  Play,
+  Plus,
+  Radio,
+  RotateCcw,
   Search,
+  Trees,
+  X,
 } from "lucide-react";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
@@ -200,7 +211,7 @@ function StepPreview({ active, lang }: { active: number; lang: "ID" | "EN" }) {
     <div className={styles.previewScene} key={active} aria-hidden="true">
       <div className={styles.previewTop}>
         <span className={styles.previewBrand}>
-          JUANDA SUB T1 · <b>DIGITAL TWIN HUD</b>
+          BANDARA JUANDA T1 · <b>MAPS LIVE INTERFACE</b>
         </span>
         <div className={styles.previewDots}>
           <i />
@@ -209,198 +220,295 @@ function StepPreview({ active, lang }: { active: number; lang: "ID" | "EN" }) {
         </div>
       </div>
 
-      {/* STEP 1: PENCARIAN DIREKTORI LOKASI */}
-      {active === 0 && (
-        <div className={styles.searchScene}>
-          <div className={styles.mockSearch}>
-            <Search size={18} className={styles.mockSearchIcon} />
-            <span className={styles.mockSearchQuery}>Gate 1</span>
-            <span className={styles.mockSearchBadge}>ESC</span>
-          </div>
-          <div className={styles.mockCategory}>
-            <span>{id ? "Semua" : "All"}</span>
-            <span className={styles.categoryActive}>{id ? "Gate 1–12" : "Gates 1–12"}</span>
-            <span>Check-in</span>
-            <span>Tenant F&B</span>
-            <span>Musala</span>
-          </div>
-          <div className={styles.mockResultsList}>
-            <div className={`${styles.mockResult} ${styles.resultHighlight}`}>
-              <span className={styles.resultIcon}>
-                <MapPin size={17} />
-              </span>
-              <div className={styles.resultInfo}>
-                <strong>Gate 1 - Keberangkatan Domestik</strong>
-                <small>{id ? "Terminal 1 · Lantai 2 (L2) · Sayap Timur" : "Terminal 1 · Floor 2 (L2) · East Concourse"}</small>
+      <div className={styles.mapCanvasViewport}>
+        {/* STEP 1: FLOATING SEARCHBOX & CATEGORY CHIPS DARI HALAMAN MAPS */}
+        {active === 0 && (
+          <div className={styles.mapsSearchLayout}>
+            {/* Real Search Box ala Google Maps di /map */}
+            <div className={styles.gmapsSearchboxWrapper}>
+              <div className={styles.gmapsSearchbox}>
+                <button type="button" className={styles.gmapsMenuBtn} tabIndex={-1}>
+                  <Menu size={16} />
+                </button>
+                <div className={styles.gmapsBrandPill}>
+                  <img src="/icon.png" alt="ToDjuanda" className={styles.gmapsBrandLogo} />
+                  <span className={styles.gmapsBrandTitle}>ToDjuanda</span>
+                </div>
+                <div className={styles.gmapsSearchInputMock}>
+                  <span>Gate 1</span>
+                </div>
+                <button type="button" className={styles.gmapsIconBtn} tabIndex={-1}>
+                  <X size={15} />
+                </button>
+                <div className={styles.gmapsSearchDivider} />
+                <button type="button" className={styles.gmapsDirectionsTrigger} tabIndex={-1}>
+                  <Navigation size={16} />
+                </button>
               </div>
-              <span className={styles.resultTag}>BOARDING GATE</span>
-              <ChevronRight size={16} className={styles.resultArrow} />
-            </div>
-            <div className={styles.mockResult}>
-              <span className={styles.resultIconMuted}>
-                <Navigation2 size={16} />
-              </span>
-              <div className={styles.resultInfo}>
-                <strong>Check-in Batik Air & Super Air Jet</strong>
-                <small>{id ? "Terminal 1 · Lantai Dasar (GF) · Baris A" : "Terminal 1 · Ground Floor (GF) · Row A"}</small>
-              </div>
-              <span className={styles.resultTagMuted}>CHECK-IN</span>
-              <ChevronRight size={16} className={styles.resultArrow} />
-            </div>
-          </div>
-        </div>
-      )}
 
-      {/* STEP 2: TENTUKAN POSISI AWAL (KLIK PETA / NYALAKAN GPS) */}
-      {active === 1 && (
-        <div className={styles.positionScene}>
-          <div className={styles.hudBadgeBox}>
-            <div className={styles.hudBadgeLeft}>
-              <span className={styles.hudEyebrow}>
-                {id ? "TITIK AWAL (START HERE) · TERVERIFIKASI" : "CURRENT START POSITION · VERIFIED"}
-              </span>
-              <strong>{id ? "Pintu Masuk 1A Keberangkatan" : "Departure Entrance 1A"}</strong>
-              <small>{id ? "Terminal 1 Juanda · Lantai Dasar (GF) · Titik Terpilih" : "Terminal 1 Juanda · Ground Floor (GF) · Selected Point"}</small>
-            </div>
-            <span className={styles.hudStatusPill}>
-              <Check size={14} /> {id ? "Posisi Siap" : "Ready"}
-            </span>
-          </div>
-
-          <div className={styles.positionOptionsGrid}>
-            <div className={`${styles.positionOptionCard} ${styles.positionCardActive}`}>
-              <div className={styles.optionHeader}>
-                <span className={styles.optionIconPin}>
-                  <MapPin size={18} />
+              {/* Floating Category Chips */}
+              <div className={styles.gmapsCategoryChips}>
+                <span className={`${styles.gmapsChip} ${styles.chipActive}`}>
+                  <MapPin size={13} className={styles.chipIcon} />
+                  <span>Gate 1–12</span>
                 </span>
-                <strong>{id ? "1. Klik Langsung di Peta" : "1. Click Directly on Map"}</strong>
-                <span className={styles.optionBadgeStart}>START HERE</span>
+                <span className={styles.gmapsChip}>
+                  <span>Check-in</span>
+                </span>
+                <span className={styles.gmapsChip}>
+                  <span>Makanan & Minuman</span>
+                </span>
+                <span className={styles.gmapsChip}>
+                  <span>Musala</span>
+                </span>
               </div>
-              <p>
-                {id
-                  ? "Pilih gedung, area check-in, atau pintu masuk mana pun di denah, lalu tekan tombol 'Start Here'."
-                  : "Click any building, check-in area, or entrance on the 3D map, then press 'Start Here'."}
-              </p>
+
+              {/* Dropdown Results ala /map */}
+              <div className={styles.gmapsSearchDropdown}>
+                <div className={`${styles.gmapsSearchItem} ${styles.itemHighlight}`}>
+                  <div className={styles.gmapsItemIcon}>
+                    <MapPin size={17} />
+                  </div>
+                  <div className={styles.gmapsItemInfo}>
+                    <strong>Gate 1 - Keberangkatan Domestik</strong>
+                    <small>{id ? "Terminal 1 · Lantai 2 (L2) · Ruang Tunggu Sayap Timur" : "Terminal 1 · Floor 2 (L2) · East Concourse"}</small>
+                  </div>
+                  <span className={styles.gmapsBadgeGate}>GATE</span>
+                </div>
+                <div className={styles.gmapsSearchItem}>
+                  <div className={styles.gmapsItemIconMuted}>
+                    <Navigation2 size={16} />
+                  </div>
+                  <div className={styles.gmapsItemInfo}>
+                    <strong>Check-in Batik Air & Super Air Jet</strong>
+                    <small>{id ? "Terminal 1 · Lantai Dasar (GF) · Baris A" : "Terminal 1 · Ground Floor (GF) · Row A"}</small>
+                  </div>
+                  <span className={styles.gmapsBadgeCheckin}>CHECK-IN</span>
+                </div>
+              </div>
             </div>
 
-            <div className={styles.positionOptionCard}>
-              <div className={styles.optionHeader}>
-                <span className={styles.optionIconGps}>
+            {/* Floating Map Controls di Kanan Bawah */}
+            <div className={styles.miniMapControls}>
+              <div className={styles.miniCompassBtn}>
+                <div className={styles.compassNeedle} />
+              </div>
+              <div className={styles.miniControlStack}>
+                <span className={styles.miniCtrlBtn}><Plus size={14} /></span>
+                <span className={styles.miniCtrlBtn}><Minus size={14} /></span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 2: PLACE DETAILS CARD (KLIK PETA / GPS) DARI HALAMAN MAPS */}
+        {active === 1 && (
+          <div className={styles.mapsPlaceCardLayout}>
+            {/* Marker terpilih pada denah peta */}
+            <div className={styles.mapSelectedMarker}>
+              <div className={styles.mapPinPulse} />
+              <div className={styles.mapPinBubble}>
+                <MapPin size={14} />
+                <span>Pintu Masuk 1A</span>
+              </div>
+            </div>
+
+            {/* Real Google Maps Place Card ala /map */}
+            <aside className={styles.gmapsPlaceCard}>
+              <div className={styles.placeCardTopBar}>
+                <span className={styles.placeBadge}>
+                  {id ? "FASILITAS BANDARA · TITIK AWAL" : "AIRPORT FACILITY · START POINT"}
+                </span>
+                <span className={styles.placeCloseBtn}><X size={15} /></span>
+              </div>
+              <div className={styles.placeContent}>
+                <h4 className={styles.placeTitle}>Pintu Masuk 1A Keberangkatan</h4>
+                <small className={styles.placeCode}>Blok: T1-GF-ENTRANCE-1A</small>
+                <p className={styles.placeCategory}>
+                  {id ? "Pintu Masuk Terminal 1 · Lantai 1 (Lantai Dasar)" : "Terminal 1 Entrance · Floor 1 (Ground Floor)"}
+                </p>
+                <div className={styles.placeStatus}>
+                  <span className={styles.openPill}>{id ? "● Buka 24 Jam" : "● Open 24 Hours"}</span>
+                </div>
+                <div className={styles.placeActions}>
+                  <button type="button" className={`${styles.gmapsBtnSecondary} ${styles.btnHighlight}`} tabIndex={-1}>
+                    <MapPin size={15} />
+                    <strong>Start Here</strong>
+                  </button>
+                  <button type="button" className={styles.gmapsBtnPrimary} tabIndex={-1}>
+                    <Navigation size={15} />
+                    <span>{id ? "Petunjuk Arah" : "Directions"}</span>
+                  </button>
+                </div>
+              </div>
+            </aside>
+
+            {/* Floating GPS button indicator di kanan bawah */}
+            <div className={styles.miniMapControls}>
+              <div className={`${styles.miniGpsBtn} ${styles.gpsActive}`}>
+                <LocateFixed size={18} />
+              </div>
+              <span className={styles.gpsStatusTag}>
+                {id ? "GPS Aktif (±5m)" : "GPS Active (±5m)"}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 3: DIRECTIONS PANEL & TURN-BY-TURN DARI HALAMAN MAPS */}
+        {active === 2 && (
+          <div className={styles.mapsDirectionsLayout}>
+            {/* Real Google Maps Directions Panel ala /map */}
+            <aside className={styles.gmapsDirectionsPanel}>
+              <div className={styles.directionsHeader}>
+                <span className={styles.directionsBackBtn}><ArrowLeft size={17} /></span>
+                <h4>{id ? "Petunjuk Arah" : "Directions"}</h4>
+                <span className={styles.directionsSwapBtn}><ArrowUpDown size={16} /></span>
+              </div>
+
+              <div className={styles.directionsBody}>
+                {/* Inputs Origin & Destination */}
+                <div className={styles.gmapsInputsContainer}>
+                  <div className={styles.gmapsInputRow}>
+                    <span className={styles.dotOrigin} />
+                    <div className={styles.inputBtnMock}>
+                      <small>{id ? "DARI" : "FROM"}</small>
+                      <span>Pintu Masuk 1A Keberangkatan</span>
+                    </div>
+                  </div>
+                  <div className={styles.inputConnectorLine} />
+                  <div className={styles.gmapsInputRow}>
+                    <span className={styles.dotDest} />
+                    <div className={styles.inputBtnMock}>
+                      <small>{id ? "TUJUAN" : "TO"}</small>
+                      <span>Gate 1 - Keberangkatan Domestik</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Estimate Row */}
+                <div className={styles.routeTimeEstimateRow}>
+                  <div className={styles.timeEstimate}>
+                    <strong>{id ? "3 Menit" : "3 Minutes"}</strong>
+                    <span>(185 m · Lantai 1 ➔ Lantai 2)</span>
+                  </div>
+                </div>
+
+                {/* Turn-by-turn guidance steps list */}
+                <div className={styles.directionsStepsList}>
+                  <div className={`${styles.stepRowItem} ${styles.stepRowActive}`}>
+                    <span className={styles.stepNumBadge}>1</span>
+                    <div className={styles.stepRowText}>
+                      <strong>{id ? "Lurus di koridor utama (50 m)" : "Walk straight on main corridor (50 m)"}</strong>
+                      <small>{id ? "Menuju eskalator Lantai 2" : "Towards Floor 2 escalator"}</small>
+                    </div>
+                    <CornerUpRight size={15} className={styles.stepTurnIcon} />
+                  </div>
+                  <div className={styles.stepRowItem}>
+                    <span className={styles.stepNumBadge}>2</span>
+                    <div className={styles.stepRowText}>
+                      <strong>{id ? "Naik eskalator ke Lantai 2 (15 m)" : "Take escalator to Floor 2 (15 m)"}</strong>
+                      <small>{id ? "Konektor lantai keberangkatan" : "Departure level connector"}</small>
+                    </div>
+                    <Layers size={15} className={styles.stepTurnIcon} />
+                  </div>
+                  <div className={styles.stepRowItem}>
+                    <span className={styles.stepNumBadge}>3</span>
+                    <div className={styles.stepRowText}>
+                      <strong>{id ? "Tiba di Boarding Gate 1" : "Arrive at Boarding Gate 1"}</strong>
+                      <small>{id ? "Ruang tunggu sayap timur" : "East concourse waiting lounge"}</small>
+                    </div>
+                    <MapPin size={15} className={styles.stepTurnIcon} />
+                  </div>
+                </div>
+              </div>
+            </aside>
+
+            {/* Glowing Wayfinding Path in background */}
+            <div className={styles.routeCanvasOverlay}>
+              <svg className={styles.canvasPathSvg} viewBox="0 0 540 180" fill="none">
+                <path className={styles.corridorTrack} d="M30 45H170V95H290V45H500M50 145H170V95H400V145H500M90 20V165M440 20V165" />
+                <path className={styles.activeRouteGlow} d="M80 145H170V95H290V50H440V30" />
+                <circle cx="80" cy="145" r="9" fill="#10B981" stroke="#FFFFFF" strokeWidth="3" />
+                <circle cx="440" cy="30" r="9" fill="#00C6F4" stroke="#FFFFFF" strokeWidth="3" />
+              </svg>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 4: KONTROL TAMPILAN POV & FLOOR SWITCHER DARI HALAMAN MAPS */}
+        {active === 3 && (
+          <div className={styles.mapsControlsLayout}>
+            {/* View Mode Switcher Pill on Top ala /map */}
+            <div className={styles.viewModeSwitcherBar}>
+              <button type="button" className={`${styles.modePillBtn} ${styles.modePillActive}`} tabIndex={-1}>
+                <Eye size={14} />
+                <span>Visitor POV</span>
+              </button>
+              <button type="button" className={styles.modePillBtn} tabIndex={-1}>
+                <Compass size={14} />
+                <span>Map View 3D</span>
+              </button>
+            </div>
+
+            {/* Floor Switcher Vertical Stack ala FloorSwitcher di /map */}
+            <div className={styles.gmapsFloorSwitcher}>
+              <button type="button" className={styles.floorBtnItem} tabIndex={-1}>
+                <span>L2</span>
+                <span className={styles.floorTooltip}>Lantai 2 - Gate 1–12</span>
+              </button>
+              <button type="button" className={`${styles.floorBtnItem} ${styles.floorBtnActive}`} tabIndex={-1}>
+                <span>L1</span>
+                <span className={styles.floorTooltip}>Lantai 1 - Check-in & Kedatangan</span>
+              </button>
+              <button type="button" className={styles.floorBtnItem} tabIndex={-1}>
+                <span>ALL</span>
+                <span className={styles.floorTooltip}>Semua Lantai</span>
+              </button>
+            </div>
+
+            {/* Bottom Controls di Kanan Bawah ala /map */}
+            <div className={styles.gmapsBottomControlsStack}>
+              <div className={styles.miniCompassBtn}>
+                <div className={styles.compassNeedle} />
+              </div>
+              <div className={styles.gmapsControlStack}>
+                <button type="button" className={`${styles.gmapsCtrlBtn} ${styles.ctrlActive}`} tabIndex={-1}>
                   <LocateFixed size={18} />
-                </span>
-                <strong>{id ? "2. Nyalakan GPS Perangkat" : "2. Turn On Device GPS"}</strong>
-                <span className={styles.optionBadgeGps}>AUTO DETECT</span>
+                </button>
+                <button type="button" className={styles.gmapsCtrlBtn} tabIndex={-1}>
+                  <Plus size={18} />
+                </button>
+                <button type="button" className={styles.gmapsCtrlBtn} tabIndex={-1}>
+                  <Minus size={18} />
+                </button>
+                <button type="button" className={styles.gmapsCtrlBtn} tabIndex={-1}>
+                  <Trees size={18} />
+                </button>
               </div>
-              <p>
-                {id
-                  ? "Aktifkan sensor lokasi ponsel/perangkat Anda untuk bantuan deteksi posisi awal secara otomatis."
-                  : "Enable your device's location sensor to automatically detect your current starting point."}
-              </p>
             </div>
-          </div>
-        </div>
-      )}
 
-      {/* STEP 3: NAVIGASI BELOKAN DEMI BELOKAN (RUTE AKTIF) */}
-      {active === 2 && (
-        <div className={styles.routeScene}>
-          <div className={styles.routeHeaderHud}>
-            <div className={styles.routeEndpoints}>
-              <span className={styles.endpointStart}>Check-in 1A</span>
-              <ArrowRight size={14} className={styles.endpointArrow} />
-              <span className={styles.endpointFinish}>Gate 1</span>
-            </div>
-            <div className={styles.routeEtaPill}>
-              <strong>185 m</strong>
-              <span>•</span>
-              <strong>{id ? "±3 Menit Jalan" : "±3 Min Walk"}</strong>
-            </div>
-          </div>
-          <div className={styles.turnGuidanceBanner}>
-            <span className={styles.turnIconCircle}>
-              <CornerUpRight size={17} />
-            </span>
-            <span>
-              {id
-                ? "Lurus 50m melewati koridor utama, lalu belok kanan menuju Gate 1"
-                : "Walk straight 50m along main corridor, then turn right toward Gate 1"}
-            </span>
-          </div>
-          <div className={styles.radarCanvasWrap}>
-            <svg className={styles.routeMap} viewBox="0 0 520 170" fill="none" role="presentation">
-              <path className={styles.mapCorridor} d="M30 40H170V88H280V40H490M50 135H170V88H390V135H490M90 18V155M430 18V155" />
-              <path className={styles.routeLine} d="M75 135H170V88H280V45H430V30" />
-              <circle cx="75" cy="135" r="9" fill="#10B981" stroke="#FFFFFF" strokeWidth="3.5" />
-              <circle cx="430" cy="30" r="9" fill="#00C6F4" stroke="#FFFFFF" strokeWidth="3.5" />
-              <circle cx="170" cy="88" r="3.5" fill="#FFFFFF" />
-              <circle cx="280" cy="45" r="3.5" fill="#FFFFFF" />
-            </svg>
-            <div className={styles.radarLegend}>
-              <span className={styles.legendStart}>
-                <i /> {id ? "Start: Check-in 1A" : "Start: Check-in 1A"}
-              </span>
-              <span className={styles.legendFinish}>
-                <i /> {id ? "Tujuan: Boarding Gate 1" : "Dest: Boarding Gate 1"}
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* STEP 4: KONTROL TAMPILAN & MULTI-LANTAI */}
-      {active === 3 && (
-        <div className={styles.floorScene}>
-          <div className={styles.controlsBarHud}>
-            <div className={styles.controlGroup}>
-              <span className={styles.controlGroupLabel}>{id ? "LANTAI" : "FLOOR"}</span>
-              <div className={styles.pillGroup}>
-                <button type="button" className={`${styles.deckPill} ${styles.deckPillActive}`}>
-                  Lantai 1 (GF)
-                </button>
-                <button type="button" className={styles.deckPill}>
-                  Lantai 2 (L2)
-                </button>
-              </div>
-            </div>
-            <div className={styles.controlGroup}>
-              <span className={styles.controlGroupLabel}>{id ? "KAMERA POV" : "CAMERA POV"}</span>
-              <div className={styles.pillGroup}>
-                <button type="button" className={`${styles.deckPill} ${styles.deckPillActive}`}>
-                  <Eye size={13} /> Visitor POV
-                </button>
-                <button type="button" className={styles.deckPill}>
-                  <Compass size={13} /> Map View 3D
-                </button>
+            {/* Center Stage: First Person Walking Perspective Avatar */}
+            <div className={styles.povCenterStage}>
+              <div className={styles.povGridPlane}>
+                <div className={styles.povCorridorLabel}>
+                  <span>KORIDOR UTAMA TERMINAL 1 (GF)</span>
+                </div>
+                <div className={styles.povAvatarIndicator}>
+                  <div className={styles.povVisionCone} />
+                  <Navigation size={22} className={styles.povAvatarArrow} />
+                  <span className={styles.povLabelTag}>{id ? "Pandangan Anda" : "Your POV"}</span>
+                </div>
               </div>
             </div>
           </div>
-
-          <div className={styles.perspectiveStage}>
-            <div className={styles.stageGrid}>
-              <div className={styles.floorBlockConcourse}>
-                <span>ZONE A · CHECK-IN & ARRIVAL (GF)</span>
-              </div>
-              <div className={styles.floorBlockGate}>
-                <span>ZONE B · BOARDING GATES 1–12 (L2)</span>
-              </div>
-              <div className={styles.stairsConnector}>
-                <span className={styles.connectorIcon}>⇅</span>
-                <small>{id ? "Eskalator / Tangga L1 ↔ L2" : "Escalator / Stairs L1 ↔ L2"}</small>
-              </div>
-              <div className={styles.visitorAvatarPin}>
-                <Navigation size={18} />
-                <span className={styles.visitorVisionCone} />
-                <small>{id ? "Posisi Anda" : "Your POV"}</small>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+        )}
+      </div>
 
       <div className={styles.previewBottom}>
         <span>
           <span className={styles.liveDot} />{" "}
-          {id ? "DIGITAL TWIN ENGINE · WAYFINDING AKTIF" : "DIGITAL TWIN ENGINE · ACTIVE WAYFINDING"}
+          {id ? "ANTARMUKA ASLI PETA 3D JUANDA T1" : "JUANDA T1 3D MAPS INTERFACE"}
         </span>
         <span>0{active + 1} / 04</span>
       </div>
@@ -445,7 +553,7 @@ export function HelpPage() {
   return (
     <div className={styles.page}>
       <SiteHeader />
-      <main className="page-fade-in" ref={pageRef}>
+      <main className={styles.mainContent} ref={pageRef}>
         <section className={styles.hero} aria-labelledby="help-title">
           <div className={styles.heroGlow} aria-hidden="true" />
           <div className={styles.heroOrbLeft} aria-hidden="true" />
@@ -473,18 +581,49 @@ export function HelpPage() {
                 <span><strong>3D</strong> {lang === "ID" ? "peta interaktif" : "interactive map"}</span>
               </div>
             </div>
+
             <div className={styles.heroArt} aria-hidden="true">
-              <span className={styles.heroArtLabel}>TERMINAL WAYFINDING / 01—04</span>
-              <svg viewBox="0 0 560 400" fill="none">
-                <path className={styles.heroGrid} d="M20 55H540M20 145H540M20 235H540M20 325H540M85 20V380M200 20V380M320 20V380M440 20V380" />
-                <path className={styles.heroTrack} d="M82 310H186V228H315V135H470V65" />
-                <path className={styles.heroRoute} d="M82 310H186V228H315V135H470V65" />
-                <circle cx="82" cy="310" r="18" fill="#0AA5DA" stroke="#D8F6FF" strokeWidth="7" />
-                <circle cx="470" cy="65" r="18" fill="#34D3A0" stroke="#D9FFF1" strokeWidth="7" />
-                <circle cx="315" cy="135" r="5" fill="white" />
-              </svg>
-              <span className={`${styles.heroLabel} ${styles.labelStart}`}>01 / START</span>
-              <span className={`${styles.heroLabel} ${styles.labelFinish}`}>04 / DESTINATION</span>
+              <div className={styles.heroArtHeader}>
+                <span className={styles.heroArtBrand}>
+                  <Radio size={15} className={styles.heroArtRadioPulse} />
+                  <span>{lang === "ID" ? "Peta Rute Interaktif T1 Juanda" : "Juanda T1 Interactive Wayfinding"}</span>
+                </span>
+                <span className={styles.heroArtBadge}>
+                  {lang === "ID" ? "LIVE 3D ENGINE" : "LIVE 3D ENGINE"}
+                </span>
+              </div>
+
+              <div className={styles.heroArtCanvas}>
+                <svg viewBox="0 0 560 310" fill="none">
+                  <path className={styles.heroGrid} d="M20 50H540M20 130H540M20 210H540M20 280H540M85 20V290M200 20V290M320 20V290M440 20V290" />
+                  <path className={styles.heroTrack} d="M82 250H186V170H315V95H470V45" />
+                  <path className={styles.heroRoute} d="M82 250H186V170H315V95H470V45" />
+                  <circle cx="82" cy="250" r="15" fill="#0AA5DA" stroke="#D8F6FF" strokeWidth="5" />
+                  <circle cx="470" cy="45" r="15" fill="#10B981" stroke="#D9FFF1" strokeWidth="5" />
+                  <circle cx="315" cy="95" r="4.5" fill="white" />
+                </svg>
+                <span className={`${styles.heroLabel} ${styles.labelStart}`}>01 / CHECK-IN</span>
+                <span className={`${styles.heroLabel} ${styles.labelFinish}`}>04 / BOARDING GATE</span>
+              </div>
+
+              <div className={styles.heroArtPills}>
+                <div className={styles.heroArtPill}>
+                  <Search size={14} />
+                  <span>{lang === "ID" ? "01 Cari Lokasi" : "01 Search Location"}</span>
+                </div>
+                <div className={styles.heroArtPill}>
+                  <MapPin size={14} />
+                  <span>{lang === "ID" ? "02 Klik Peta / GPS" : "02 Map Click / GPS"}</span>
+                </div>
+                <div className={styles.heroArtPill}>
+                  <Navigation size={14} />
+                  <span>{lang === "ID" ? "03 Ikuti Rute" : "03 Follow Route"}</span>
+                </div>
+                <div className={styles.heroArtPill}>
+                  <Layers size={14} />
+                  <span>{lang === "ID" ? "04 POV & Lantai" : "04 POV & Floors"}</span>
+                </div>
+              </div>
             </div>
           </div>
         </section>
