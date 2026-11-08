@@ -59,7 +59,7 @@ export function SiteHeader() {
         className={`${styles.header} ${isTransparentHeaderPage ? styles.homeHeader : styles.mapHeader}`}
         style={
           isTransparentHeaderPage
-            ? {
+            ? ({
                 backgroundColor: `rgba(7, 86, 168, ${scrollProgress * 0.96})`,
                 backdropFilter: scrollProgress > 0.05 ? `blur(${scrollProgress * 12}px)` : "none",
                 WebkitBackdropFilter: scrollProgress > 0.05 ? `blur(${scrollProgress * 12}px)` : "none",
@@ -68,7 +68,10 @@ export function SiteHeader() {
                     ? `0 4px 24px rgba(3, 25, 54, ${scrollProgress * 0.35})`
                     : "none",
                 borderBottom: "none",
-              }
+                "--ribbon-opacity": Math.max(0, 1 - scrollProgress * 2.5),
+                "--logo-filter": scrollProgress > 0.35 ? "brightness(0) invert(1)" : undefined,
+                "--divider-color": scrollProgress > 0.35 ? "rgba(255, 255, 255, 0.4)" : undefined,
+              } as React.CSSProperties)
             : undefined
         }
       >
