@@ -382,24 +382,6 @@ export function AboutPage() {
                   <span>{content.openGuide}</span>
                 </Link>
               </div>
-
-              {/* 4 Interactive Visual Stat Badges */}
-              <div className={styles.heroStatsGrid}>
-                {content.stats.map((st, sIdx) => {
-                  const Icon = st.icon;
-                  return (
-                    <div key={sIdx} className={styles.statPillCard}>
-                      <div className={styles.statPillIconWrap}>
-                        <Icon size={19} />
-                      </div>
-                      <div className={styles.statPillInfo}>
-                        <strong>{st.val}</strong>
-                        <span>{st.label}</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
             </div>
 
             {/* Showcase Visual Card (2D Overview Radar Map) */}

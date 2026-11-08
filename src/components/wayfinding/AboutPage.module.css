@@ -219,65 +219,6 @@
   transform: translateY(-2px);
 }
 
-/* 4 Interactive Visual Stat Badges */
-.heroStatsGrid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
-  padding-top: 26px;
-  border-top: 1px solid rgba(173, 224, 239, 0.18);
-}
-
-.statPillCard {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 14px 16px;
-  border-radius: 15px;
-  background: rgba(11, 46, 70, 0.65);
-  border: 1px solid rgba(125, 211, 252, 0.24);
-  backdrop-filter: blur(8px);
-  transition: all 0.2s ease;
-}
-
-.statPillCard:hover {
-  background: rgba(14, 58, 88, 0.85);
-  border-color: rgba(56, 189, 248, 0.45);
-  transform: translateY(-2px);
-}
-
-.statPillIconWrap {
-  display: grid;
-  place-items: center;
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
-  background: rgba(56, 189, 248, 0.2);
-  color: #38bdf8;
-  flex-shrink: 0;
-}
-
-.statPillInfo {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.statPillInfo strong {
-  color: #ffffff;
-  font-size: 15.5px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-}
-
-.statPillInfo span {
-  color: #9cd5ef;
-  font-size: 11.5px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
 /* Showcase Radar Card (Right Column) */
 .heroShowcase {
   position: relative;
@@ -963,10 +904,6 @@
   .airportGrid {
     grid-template-columns: repeat(2, 1fr);
   }
-
-  .heroStatsGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
 }
 
 @media (max-width: 760px) {
@@ -987,10 +924,6 @@
   .primaryButton,
   .ghostButton {
     width: 100%;
-  }
-
-  .heroStatsGrid {
-    grid-template-columns: 1fr;
   }
 
   .airportGrid {
