@@ -11,12 +11,11 @@ import {
   Compass,
   CornerUpRight,
   Eye,
-  Flag,
   Layers,
+  LocateFixed,
   MapPin,
   Navigation,
   Navigation2,
-  QrCode,
   Search,
 } from "lucide-react";
 import { SiteHeader } from "@/components/site/SiteHeader";
@@ -70,13 +69,13 @@ const guides = {
       },
       {
         short: "Tentukan posisi",
-        title: "Tetapkan titik awal keberangkatan Anda.",
-        desc: "Tentukan posisi awal tempat Anda berdiri saat ini. Anda dapat memindai QR code pada standee fisik bandara terdekat untuk posisi instan 0 detik, atau memilih 'Start Here' pada pintu masuk dan gedung di denah terminal.",
+        title: "Klik langsung di peta atau nyalakan GPS.",
+        desc: "Untuk menetapkan posisi awal keberangkatan, Anda cukup mengeklik langsung lokasi, gedung, atau pintu masuk pada denah peta 3D (lalu pilih 'Start Here'), atau menyalakan GPS perangkat untuk mendeteksi posisi Anda saat ini secara otomatis.",
         tips: [
-          "Pindai QR standee di lapangan untuk akurasi posisi instan tanpa GPS indoor.",
-          "Atau klik tombol 'Set Start' lalu pilih lokasi awal Anda pada denah terminal.",
+          "Klik langsung pada area, gedung, atau pintu masuk di peta untuk menetapkan titik awal.",
+          "Nyalakan GPS perangkat Anda untuk bantuan penentuan posisi otomatis saat di bandara.",
         ],
-        action: "Tetapkan posisi di peta",
+        action: "Pilih posisi di peta",
         href: "/map",
       },
       {
@@ -153,11 +152,11 @@ const guides = {
       },
       {
         short: "Set position",
-        title: "Set your departure starting point.",
-        desc: "Choose where you are currently standing. You can scan the QR code on the nearest physical terminal standee for instant positioning, or select 'Start Here' on any entrance or building on the map.",
+        title: "Click directly on the map or enable GPS.",
+        desc: "To set your starting location, simply click directly on any building, entrance, or area on the 3D map (then select 'Start Here'), or turn on your device's GPS to detect your current position automatically.",
         tips: [
-          "Scan airport QR standees for immediate corridor accuracy without indoor GPS drift.",
-          "Or click 'Set Start' and select your departure point directly on the layout.",
+          "Click any area, building, or entrance directly on the map to set your departure point.",
+          "Enable your device's GPS for automatic location detection at the airport.",
         ],
         action: "Set position on map",
         href: "/map",
@@ -193,7 +192,7 @@ const guides = {
   },
 } as const;
 
-const icons = [Search, QrCode, Navigation, Layers] as const;
+const icons = [Search, LocateFixed, Navigation, Layers] as const;
 
 function StepPreview({ active, lang }: { active: number; lang: "ID" | "EN" }) {
   const id = lang === "ID";
@@ -252,37 +251,51 @@ function StepPreview({ active, lang }: { active: number; lang: "ID" | "EN" }) {
         </div>
       )}
 
-      {/* STEP 2: TENTUKAN POSISI AWAL / QR STANDEE */}
+      {/* STEP 2: TENTUKAN POSISI AWAL (KLIK PETA / NYALAKAN GPS) */}
       {active === 1 && (
-        <div className={styles.qrScene}>
+        <div className={styles.positionScene}>
           <div className={styles.hudBadgeBox}>
             <div className={styles.hudBadgeLeft}>
               <span className={styles.hudEyebrow}>
                 {id ? "TITIK AWAL (START HERE) · TERVERIFIKASI" : "CURRENT START POSITION · VERIFIED"}
               </span>
-              <strong>Standee QR Check-in Area 1A</strong>
-              <small>{id ? "Terminal 1 Juanda · Lantai Dasar (GF) · Pintu 1A" : "Terminal 1 Juanda · Ground Floor (GF) · Gate 1A"}</small>
+              <strong>{id ? "Pintu Masuk 1A Keberangkatan" : "Departure Entrance 1A"}</strong>
+              <small>{id ? "Terminal 1 Juanda · Lantai Dasar (GF) · Titik Terpilih" : "Terminal 1 Juanda · Ground Floor (GF) · Selected Point"}</small>
             </div>
             <span className={styles.hudStatusPill}>
               <Check size={14} /> {id ? "Posisi Siap" : "Ready"}
             </span>
           </div>
-          <div className={styles.qrCardSimulation}>
-            <div className={styles.qrGlyphBox}>
-              <QrCode size={36} strokeWidth={1.75} />
-              <div className={styles.scanLaser} />
-            </div>
-            <div className={styles.qrCopyText}>
-              <strong>{id ? "Pindai QR Standee Terdekat" : "Scan Nearest Airport Standee"}</strong>
+
+          <div className={styles.positionOptionsGrid}>
+            <div className={`${styles.positionOptionCard} ${styles.positionCardActive}`}>
+              <div className={styles.optionHeader}>
+                <span className={styles.optionIconPin}>
+                  <MapPin size={18} />
+                </span>
+                <strong>{id ? "1. Klik Langsung di Peta" : "1. Click Directly on Map"}</strong>
+                <span className={styles.optionBadgeStart}>START HERE</span>
+              </div>
               <p>
                 {id
-                  ? "Akurasi koridor 100% tanpa GPS indoor. Posisi Anda otomatis tersinkronisasi langsung dengan model 3D."
-                  : "100% corridor precision without indoor GPS drift. Your position syncs automatically to the 3D model."}
+                  ? "Pilih gedung, area check-in, atau pintu masuk mana pun di denah, lalu tekan tombol 'Start Here'."
+                  : "Click any building, check-in area, or entrance on the 3D map, then press 'Start Here'."}
               </p>
-              <div className={styles.qrMetaTags}>
-                <span>{id ? "0 Detik Akses" : "Zero-install"}</span>
-                <span>{id ? "Multi-Lantai L1 & L2" : "Multi-floor L1 & L2"}</span>
+            </div>
+
+            <div className={styles.positionOptionCard}>
+              <div className={styles.optionHeader}>
+                <span className={styles.optionIconGps}>
+                  <LocateFixed size={18} />
+                </span>
+                <strong>{id ? "2. Nyalakan GPS Perangkat" : "2. Turn On Device GPS"}</strong>
+                <span className={styles.optionBadgeGps}>AUTO DETECT</span>
               </div>
+              <p>
+                {id
+                  ? "Aktifkan sensor lokasi ponsel/perangkat Anda untuk bantuan deteksi posisi awal secara otomatis."
+                  : "Enable your device's location sensor to automatically detect your current starting point."}
+              </p>
             </div>
           </div>
         </div>
