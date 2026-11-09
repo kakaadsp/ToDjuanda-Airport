@@ -51,6 +51,7 @@ const guides = {
     previewNote: "Ilustrasi antarmuka, bukan posisi terminal secara langsung.",
     reminder: "Perlu diketahui",
     reminderText: "Peta 3D saat ini hanya mencakup Terminal 1 lantai dasar. Data dan rute perlu diverifikasi di lapangan; ikuti petunjuk resmi bandara untuk perjalanan sebenarnya.",
+    passengerEyebrow: "PANDUAN KEBERANGKATAN",
     passengerTitle: "Dari tiba di bandara sampai naik pesawat.",
     passengerIntro: "Ikuti urutan keberangkatan ini setelah mengetahui maskapai dan nomor penerbanganmu.",
     passengerNote: "Denah lantai 2 sudah tersedia, tetapi rute otomatis dari lantai dasar ke gate belum aktif di Maps. Cocokkan selalu nomor gate dan waktu boarding dengan layar informasi serta arahan petugas.",
@@ -134,6 +135,7 @@ const guides = {
     previewNote: "Interface illustration, not a live terminal position.",
     reminder: "Good to know",
     reminderText: "The current 3D map covers Terminal 1 ground floor only. Location data and routes need on-site verification; follow official airport signs for real journeys.",
+    passengerEyebrow: "DEPARTURE SEQUENCE",
     passengerTitle: "From arriving at the airport to boarding your flight.",
     passengerIntro: "Follow these departure steps once you know your airline and flight number.",
     passengerNote: "A second-floor plan is available, but automated routes from the ground floor to gates are not active in Maps yet. Always confirm your gate and boarding time on airport displays and with staff.",
@@ -721,7 +723,10 @@ export function HelpPage() {
         <section className={`${styles.passengerSection} reveal-on-scroll`} aria-labelledby="passenger-title">
           <div className={styles.passengerInner}>
             <div className={styles.passengerHeading}>
-              <h2 id="passenger-title">{t.passengerTitle}</h2>
+              <div className={styles.passengerHeadingTitleWrap}>
+                <span className={styles.passengerKicker}>{t.passengerEyebrow}</span>
+                <h2 id="passenger-title">{t.passengerTitle}</h2>
+              </div>
               <p>{t.passengerIntro}</p>
             </div>
             <ol className={styles.passengerSteps}>

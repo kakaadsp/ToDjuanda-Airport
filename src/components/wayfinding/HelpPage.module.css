@@ -1777,24 +1777,46 @@
 
 .passengerHeading {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.65fr);
-  align-items: end;
+  grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr);
+  align-items: flex-end;
   gap: 36px;
-  margin-bottom: 38px;
+  margin-bottom: 42px;
+}
+
+.passengerHeadingTitleWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.passengerKicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 14px;
+  border-radius: 999px;
+  background: rgba(2, 132, 199, 0.1);
+  border: 1px solid rgba(2, 132, 199, 0.22);
+  color: #0284c7;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .passengerHeading h2 {
   max-width: 650px;
   margin: 0;
   color: #102b3b;
-  font-size: clamp(32px, 3.5vw, 48px);
-  line-height: 1.14;
-  letter-spacing: -0.05em;
+  font-size: clamp(32px, 3.5vw, 46px);
+  line-height: 1.18;
+  letter-spacing: -0.04em;
   text-wrap: balance;
 }
 
 .passengerHeading p {
-  max-width: 390px;
+  max-width: 440px;
   margin: 0 0 4px;
   color: #426373;
   font-size: 15px;
@@ -1810,24 +1832,26 @@
 
 .passengerStep {
   display: grid;
-  grid-template-columns: 74px minmax(0, 1fr) minmax(145px, 0.25fr);
-  gap: 24px;
+  grid-template-columns: 74px minmax(0, 1fr) auto;
+  gap: 28px;
   align-items: start;
   padding: 27px 0 29px;
   border-bottom: 1px solid #b8d3df;
+  transition: background-color 0.2s ease;
 }
 
 .passengerNumber {
-  color: #0878a9;
-  font-size: 31px;
-  font-weight: 700;
+  color: #0284c7;
+  font-size: 32px;
+  font-weight: 800;
   line-height: 1;
   letter-spacing: -0.05em;
+  padding-top: 2px;
 }
 
 .passengerStep h3 {
   margin: 0 0 8px;
-  color: #13394c;
+  color: #102b3b;
   font-size: clamp(19px, 1.6vw, 23px);
   line-height: 1.25;
 }
@@ -1836,17 +1860,23 @@
   max-width: 730px;
   margin: 0;
   color: #36596b;
-  font-size: 14px;
+  font-size: 14.5px;
   line-height: 1.7;
 }
 
 .passengerFloor {
   justify-self: end;
-  padding-top: 3px;
-  color: #235b75;
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 14px;
+  border-radius: 999px;
+  background: rgba(2, 132, 199, 0.08);
+  border: 1px solid rgba(2, 132, 199, 0.2);
+  color: #0284c7;
   font-size: 12px;
   font-weight: 700;
-  text-align: right;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 
 .passengerNote {
@@ -2162,6 +2192,26 @@
   .stepContent {
     padding: 30px 24px 18px;
   }
+  .passengerInner {
+    width: calc(100% - 48px);
+    padding: 72px 0 80px;
+  }
+  .passengerHeading {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .passengerHeading h2 {
+    max-width: 100%;
+    font-size: clamp(28px, 4vw, 38px);
+  }
+  .passengerHeading p {
+    max-width: 100%;
+  }
+  .passengerStep {
+    grid-template-columns: 60px minmax(0, 1fr) auto;
+    gap: 20px;
+  }
 }
 
 @media (max-width: 760px) {
@@ -2247,6 +2297,87 @@
     width: 100%;
     margin-top: 8px;
   }
+  .passengerInner {
+    width: calc(100% - 32px);
+    padding: 56px 0 64px;
+  }
+  .passengerHeading {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  .passengerHeading h2 {
+    font-size: clamp(24px, 6vw, 30px);
+    line-height: 1.25;
+    letter-spacing: -0.03em;
+    max-width: 100%;
+  }
+  .passengerHeading p {
+    font-size: 14px;
+    line-height: 1.6;
+    color: #426373;
+    max-width: 100%;
+    margin: 0;
+  }
+  .passengerSteps {
+    border-top: 1px solid #b8d3df;
+  }
+  .passengerStep {
+    display: grid;
+    grid-template-columns: 44px 1fr;
+    grid-template-areas:
+      "num floor"
+      "num body";
+    column-gap: 14px;
+    row-gap: 6px;
+    align-items: start;
+    padding: 20px 0 22px;
+    border-bottom: 1px solid #cfe0ea;
+  }
+  .passengerNumber {
+    grid-area: num;
+    font-size: 26px;
+    font-weight: 800;
+    color: #0284c7;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    padding-top: 2px;
+  }
+  .passengerFloor {
+    grid-area: floor;
+    justify-self: start;
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: rgba(2, 132, 199, 0.09);
+    border: 1px solid rgba(2, 132, 199, 0.22);
+    color: #0284c7;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+    white-space: nowrap;
+  }
+  .passengerStep > div {
+    grid-area: body;
+  }
+  .passengerStep h3 {
+    font-size: 17px;
+    font-weight: 700;
+    color: #102b3b;
+    line-height: 1.35;
+    margin: 0 0 6px;
+  }
+  .passengerStep p {
+    font-size: 13.5px;
+    line-height: 1.65;
+    color: #36596b;
+    margin: 0;
+  }
 }
 
 @media (max-width: 480px) {
@@ -2271,6 +2402,39 @@
   }
   .placeActions {
     grid-template-columns: 1fr;
+  }
+  .passengerInner {
+    width: calc(100% - 24px);
+    padding: 44px 0 52px;
+  }
+  .passengerHeading h2 {
+    font-size: 23px;
+    line-height: 1.25;
+  }
+  .passengerHeading p {
+    font-size: 13.5px;
+    line-height: 1.55;
+  }
+  .passengerStep {
+    grid-template-columns: 38px 1fr;
+    column-gap: 12px;
+    row-gap: 5px;
+    padding: 16px 0 18px;
+  }
+  .passengerNumber {
+    font-size: 22px;
+  }
+  .passengerFloor {
+    font-size: 10.5px;
+    padding: 2.5px 8px;
+  }
+  .passengerStep h3 {
+    font-size: 15.5px;
+    margin-bottom: 5px;
+  }
+  .passengerStep p {
+    font-size: 13px;
+    line-height: 1.6;
   }
 }
 
