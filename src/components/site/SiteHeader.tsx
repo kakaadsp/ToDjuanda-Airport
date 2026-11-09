@@ -150,8 +150,8 @@ export function SiteHeader() {
       </div>
     </header>
 
-    {/* Mobile Navigation Bar di Bagian Page (di bawah header, disembunyikan di home) */}
-    {!isHomePage && (
+    {/* Mobile Navigation Bar di Bagian Page (hanya di halaman dengan header statis seperti /map) */}
+    {!isTransparentHeaderPage && (
       <nav className={styles.mobilePageNav} aria-label="Mobile Navigation">
       <Link href="/" className={styles.subNavLink} data-active={pathname === "/"}>
         Home

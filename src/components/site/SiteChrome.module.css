@@ -848,16 +848,24 @@
   }
 }
 
+@media (max-width: 900px) and (min-width: 641px) {
+  .homeHeader::before {
+    width: 380px !important;
+    max-width: 50vw !important;
+    background-size: 100% 70px !important;
+  }
+}
+
 @media (max-width: 640px) {
   .header {
     min-height: 52px;
     height: 52px;
-    background-size: 260px 52px;
+    background-size: 195px 52px;
     overflow: hidden;
   }
 
   .mapHeader {
-    background-size: 260px 52px, auto !important;
+    background-size: 195px 52px, auto !important;
     min-height: 52px !important;
     height: 52px !important;
     flex-shrink: 0 !important;
@@ -873,8 +881,15 @@
     min-height: 56px !important;
     height: 56px !important;
     margin-bottom: 0 !important;
-    background-size: 260px 56px !important;
+    background-image: none !important;
     overflow: visible !important;
+  }
+
+  .homeHeader::before {
+    width: 195px !important;
+    max-width: 55vw !important;
+    height: 56px !important;
+    background: url("/header-juanda-ribbon.svg") left top / 100% 56px no-repeat !important;
   }
 
   .homeHeader .headerInner {
@@ -1050,5 +1065,17 @@
   .headerAirportLogo { width: 108px; }
   .headerRightArea { gap: 6px; }
   .languageSwitch button { min-width: 30px; padding: 0 5px; font-size: 10px; }
+  .header {
+    background-size: 175px 52px;
+  }
+  .mapHeader {
+    background-size: 175px 52px, auto !important;
+  }
+  .homeHeader::before {
+    width: 175px !important;
+    max-width: 52vw !important;
+    height: 52px !important;
+    background: url("/header-juanda-ribbon.svg") left top / 100% 52px no-repeat !important;
+  }
 }
 
