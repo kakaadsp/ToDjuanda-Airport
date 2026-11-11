@@ -54,7 +54,16 @@ export function inferCommercialCategory(displayName?: string, objectName?: strin
     return "Kavling Kosong (Belum Disewa)";
   }
 
-  // 2. Makanan & Minuman (F&B) - Subway, Killiney, A Fung, Pafu, Dough Lab, Expat, Sky Beans, dll.
+  // 2. Minimarket & Retail - FamilyMart, Circle K, Alfamart, Indomaret
+  if (
+    /(?:familymart|family\s*mart|fami\s*mart|circle\s*k|alfamart|indomaret|minimarket|convenience|retail\s*mart)/i.test(
+      name
+    )
+  ) {
+    return "Minimarket & Retail";
+  }
+
+  // 3. Makanan & Minuman (F&B) - Subway, Killiney, A Fung, Pafu, Dough Lab, Expat, Sky Beans, dll.
   if (
     /(?:subway|killiney|a\s*fung|pafu|dough\s*lab|expat|sky\s*beans|starbucks|bangi|bakmi|gocit|a&w|a\s*&\s*w|donut|king|roti|bakso|la\s*cafe|aroma\s*padang|beard\s*papa|gloria\s*jean|kuliner|sandang\s*pangan|papan\s*dahar|yogurt|bangkalan|fami\s*cafe|le\s*petit|kedai|solaria|rotiboy|shihlin|mm\s*juice|concordia|majapahit|blue\s*sky|kopi|coffee|cafe|resto|restaurant|makan|minum|snack|burger|kopitiam|tea|beverage|kitchen|dapur|soto|ayam|mie|bites|lounge)/i.test(
       name
@@ -63,7 +72,7 @@ export function inferCommercialCategory(displayName?: string, objectName?: strin
     return "Makanan & Minuman (F&B)";
   }
 
-  // 3. Oleh-oleh & Suvenir - Bogajaya, IDP Surabaya, dll.
+  // 4. Oleh-oleh & Suvenir - Bogajaya, IDP Surabaya, dll.
   if (
     /(?:bogajaya|boga\s*jaya|idp\s*surabaya|idp|oleh[- ]*oleh|suvenir|souvenir|spikoe|lapis|khas|pahlawan|kerajinan|cindera\s*mata)/i.test(
       name
@@ -72,7 +81,7 @@ export function inferCommercialCategory(displayName?: string, objectName?: strin
     return "Oleh-oleh & Suvenir";
   }
 
-  // 4. Elektronik & Gadget - JETE, Soundcore, dll.
+  // 5. Elektronik & Gadget - JETE, Soundcore, dll.
   if (
     /(?:jete|soundcore|gadget|elektronik|electronic|audio|headphone|earphone|digimap|ibox|erafone|accessories\s*hp|ponsel|phone)/i.test(
       name
@@ -81,7 +90,7 @@ export function inferCommercialCategory(displayName?: string, objectName?: strin
     return "Elektronik & Gadget";
   }
 
-  // 5. Fashion & Pakaian - Polo, Batik Keris, Gajah Duduk, Bratpack, dll.
+  // 6. Fashion & Pakaian - Polo, Batik Keris, Gajah Duduk, Bratpack, dll.
   if (
     /(?:polo|batik|keris|gajah\s*duduk|bratpack|hadinata|kemompong|kepompong|baju|kaos|apparel|clothing|fashion|busana|tekstil|textile|wear|outfit)/i.test(
       name
@@ -90,18 +99,9 @@ export function inferCommercialCategory(displayName?: string, objectName?: strin
     return "Fashion & Pakaian";
   }
 
-  // 6. Buku & Toko Buku - Periplus
+  // 7. Buku & Toko Buku - Periplus
   if (/(?:periplus|buku|bookstore|books|majalah|reading|gramedia)/i.test(name)) {
     return "Buku & Toko Buku";
-  }
-
-  // 7. Minimarket & Retail - Circle K, Alfamart
-  if (
-    /(?:circle\s*k|alfamart|indomaret|minimarket|convenience|retail\s*mart)/i.test(
-      name
-    )
-  ) {
-    return "Minimarket & Retail";
   }
 
   // 8. Jasa & Layanan - Secret Garden, Reflexology, dll.
