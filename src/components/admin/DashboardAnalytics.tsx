@@ -39,7 +39,7 @@ function isFacilityItem(tenant: TenantAnalyticsRow): boolean {
     cat.includes("mushola") ||
     cat.includes("musala") ||
     cat.includes("atm") ||
-    /(?:avsec|toilet|mushola|musala|nursery|restroom|atm|gate|door|taman|baggage|layanan|informasi|kesehatan|karantina|inspection)/i.test(name)
+    /(?:avsec|toilet|mushola|musala|nursery|restroom|atm|gate|door|taman|baggage|layanan|informasi|kesehatan|karantina|inspection|eskalator|eks|tangga|pelaporan mandiri)/i.test(name)
   );
 }
 
@@ -78,9 +78,10 @@ export function DashboardAnalytics({ tenants }: { tenants: TenantAnalyticsRow[] 
   // Total yang membutuhkan atensi (tutup sementara)
   const inactiveCount = commClosed + facilityClosed;
 
-  // Category composition (Murni untuk gerai komersial)
+  // Category composition (Murni untuk gerai komersial yang terisi)
   const categoryRows = useMemo(() => {
-    const counts = commercialSpaces.reduce<Record<string, number>>((result, tenant) => {
+    const occupiedOnly = commercialSpaces.filter((t) => t.status !== "WALKWAY" && !t.category?.includes("Kavling Kosong"));
+    const counts = occupiedOnly.reduce<Record<string, number>>((result, tenant) => {
       const cat = tenant.category || "Komersial Lainnya";
       result[cat] = (result[cat] ?? 0) + 1;
       return result;

@@ -13,7 +13,20 @@ import { SceneModel, type SceneBounds, type SceneObjectRecord } from "@/componen
 import type { SelectedObject } from "@/lib/map3d/object-metadata";
 import { FLOOR_LABELS, type FloorId } from "@/lib/map3d/floors";
 import { TERMINAL_MODEL_URL } from "@/lib/map3d/assets";
-import { defaultMapObjectConfig, fetchMapObjectConfigsFromDb, getMapObjectPhotoUrl, readMapObjectConfigs, saveMapObjectConfigToDb, writeMapObjectConfigs, type MapObjectConfig, type MapObjectConfigByName, type MapObjectDoorSide, type MapObjectOccupancy } from "@/lib/map3d/admin-object-config";
+import {
+  COMMERCIAL_CATEGORIES,
+  defaultMapObjectConfig,
+  fetchMapObjectConfigsFromDb,
+  getMapObjectPhotoUrl,
+  inferCommercialCategory,
+  readMapObjectConfigs,
+  saveMapObjectConfigToDb,
+  writeMapObjectConfigs,
+  type MapObjectConfig,
+  type MapObjectConfigByName,
+  type MapObjectDoorSide,
+  type MapObjectOccupancy,
+} from "@/lib/map3d/admin-object-config";
 
 function LegacyAdminMapPanel() {
   const [terminal, setTerminal] = useState<TerminalCode>("T1");
@@ -213,9 +226,9 @@ function AdminCamera({
 }
 
 const OCCUPANCY_OPTIONS: Array<{ value: MapObjectOccupancy; label: string; help: string }> = [
-  { value: "OCCUPIED", label: "Ditempati", help: "Lokasi aktif dan memiliki tenant/fasilitas." },
-  { value: "OBSTACLE", label: "Tembok / pilar", help: "Tetap terlihat dan menjadi penghalang rute." },
-  { value: "WALKABLE", label: "Jalan (kosong / bisa dilalui)", help: "Disembunyikan dari model 3D dan berfungsi sebagai jalan koridor yang bisa dilalui rute." },
+  { value: "OCCUPIED", label: "Ditempati (Tenant Beroperasi)", help: "Kavling aktif disewa dan ditempati unit usaha atau fasilitas." },
+  { value: "WALKABLE", label: "Tidak Ditempati (Kavling Kosong)", help: "Kavling kosong / belum disewa. Bebas dari input jam operasional dan kontak." },
+  { value: "OBSTACLE", label: "Tembok / Pilar", help: "Bukan ruang komersial, melainkan struktur dinding/pilar gedung yang menghalangi rute." },
 ];
 
 function EditorField({ label, children }: { label: string; children: React.ReactNode }) {
@@ -286,7 +299,29 @@ export function AdminMapPanel({ initialObjectName = null, focusNonce = 0 }: { in
       selectedButtonRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
   }, [selected?.uuid]);
-  const updateDraft = <K extends keyof MapObjectConfig>(key: K, value: MapObjectConfig[K]) => setDraft((current) => current ? { ...current, [key]: value } : current);
+  const updateDraft = <K extends keyof MapObjectConfig>(key: K, value: MapObjectConfig[K]) =>
+    setDraft((current) => {
+      if (!current) return current;
+      if (key === "occupancy" && value === "WALKABLE") {
+        return {
+          ...current,
+          occupancy: "WALKABLE",
+          displayName: current.displayName && current.displayName !== "Kosong" ? current.displayName : "Kosong",
+          category: "Kavling Kosong (Belum Disewa)",
+          openTime: "",
+          closeTime: "",
+        };
+      }
+      if (key === "occupancy" && value === "OCCUPIED") {
+        return {
+          ...current,
+          occupancy: "OCCUPIED",
+          displayName: current.displayName === "Kosong" ? "" : current.displayName,
+          category: current.category === "Kavling Kosong (Belum Disewa)" ? "" : current.category,
+        };
+      }
+      return { ...current, [key]: value };
+    });
   const updateDoor = (index: number, key: "side" | "open" | "position", value: string | boolean) => setDraft((current) => {
     if (!current) return current;
     const entryDoors = current.entryDoors.map((door, doorIndex) => {
@@ -302,15 +337,29 @@ export function AdminMapPanel({ initialObjectName = null, focusNonce = 0 }: { in
     setSaving(true);
     setSaveError(null);
     try {
-      await saveMapObjectConfigToDb(draft);
-      const next = { ...configs, [draft.objectName]: { ...draft, updatedAt: new Date().toISOString() } };
+      const resolvedCategory = draft.category?.trim() || inferCommercialCategory(draft.displayName, draft.objectName);
+      const cleanDesc = (draft.description || "").replace(/^\[Kategori:[^\]]+\]\s*/i, "").trim();
+      const updatedConfig: MapObjectConfig = {
+        ...draft,
+        category: resolvedCategory,
+        description: resolvedCategory ? `[Kategori: ${resolvedCategory}] ${cleanDesc}`.trim() : cleanDesc,
+      };
+      await saveMapObjectConfigToDb(updatedConfig);
+      const next = { ...configs, [draft.objectName]: { ...updatedConfig, updatedAt: new Date().toISOString() } };
       setConfigs(next);
       setDraft(next[draft.objectName]);
       setSaved(true);
     } catch (error) {
       setSaveError(error instanceof Error ? error.message : "Gagal menyimpan ke database");
       // Fallback: simpan ke localStorage saja
-      const next = { ...configs, [draft.objectName]: { ...draft, updatedAt: new Date().toISOString() } };
+      const resolvedCategory = draft.category?.trim() || inferCommercialCategory(draft.displayName, draft.objectName);
+      const cleanDesc = (draft.description || "").replace(/^\[Kategori:[^\]]+\]\s*/i, "").trim();
+      const updatedConfig: MapObjectConfig = {
+        ...draft,
+        category: resolvedCategory,
+        description: resolvedCategory ? `[Kategori: ${resolvedCategory}] ${cleanDesc}`.trim() : cleanDesc,
+      };
+      const next = { ...configs, [draft.objectName]: { ...updatedConfig, updatedAt: new Date().toISOString() } };
       writeMapObjectConfigs(next);
       setConfigs(next);
       setDraft(next[draft.objectName]);
@@ -488,6 +537,21 @@ export function AdminMapPanel({ initialObjectName = null, focusNonce = 0 }: { in
                   </span>
                 </EditorField>
 
+                {draft.entityType === "TENANT" && draft.occupancy === "OCCUPIED" && (
+                  <EditorField label="Kategori gerai">
+                    <select
+                      value={draft.category || inferCommercialCategory(draft.displayName, selected?.name)}
+                      onChange={(event) => updateDraft("category", event.target.value)}
+                    >
+                      {COMMERCIAL_CATEGORIES.map((cat) => (
+                        <option value={cat} key={cat}>
+                          {cat}
+                        </option>
+                      ))}
+                    </select>
+                  </EditorField>
+                )}
+
                 <EditorField label="Status bentuk lokasi">
                   <select
                     value={draft.occupancy}
@@ -504,14 +568,39 @@ export function AdminMapPanel({ initialObjectName = null, focusNonce = 0 }: { in
                   {OCCUPANCY_OPTIONS.find((option) => option.value === draft.occupancy)?.help}
                 </div>
 
-                {/* Status Operasional (tersedia saat Ditempati atau Kosong/Bisa Dilalui/Jalan) */}
-                {(draft.occupancy === "OCCUPIED" || draft.occupancy === "WALKABLE") && (
+                {/* Banner Informasi bila Kavling Tidak Ditempati (Kosong) */}
+                {draft.occupancy === "WALKABLE" && (
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "flex-start",
+                      gap: "12px",
+                      padding: "14px 16px",
+                      background: "rgba(2, 132, 199, 0.08)",
+                      border: "1px solid rgba(2, 132, 199, 0.22)",
+                      borderRadius: "12px",
+                      color: "#0c4a6e",
+                      marginTop: "6px",
+                    }}
+                  >
+                    <span style={{ fontSize: "20px" }}>🏬</span>
+                    <div>
+                      <strong style={{ display: "block", fontSize: "13px", fontWeight: "700", marginBottom: "4px" }}>
+                        Kavling Tidak Ditempati (Unit Kosong)
+                      </strong>
+                      <p style={{ margin: 0, fontSize: "12px", lineHeight: "1.5", color: "#334155" }}>
+                        Kavling ini ditandai sebagai unit kosong / belum disewa. Anda <strong>tidak perlu</strong> menginput jam operasional, foto, kontak, maupun media sosial. Unit ini otomatis terhitung sebagai <strong>kavling kosong</strong> pada analitik okupansi.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Status Operasional (hanya tersedia saat Ditempati) */}
+                {draft.occupancy === "OCCUPIED" && (
                   <div className="admin-operational-panel">
                     <div className="admin-operational-heading">
                       <small>STATUS OPERASIONAL</small>
-                      <strong>
-                        {draft.occupancy === "WALKABLE" ? "Status Area Jalan & Layanan" : "Jadwal & Ketersediaan Layanan"}
-                      </strong>
+                      <strong>Jadwal & Ketersediaan Layanan</strong>
                     </div>
 
                     {/* Tombol Buka, Buka 24 Jam, Tutup */}
@@ -589,7 +678,7 @@ export function AdminMapPanel({ initialObjectName = null, focusNonce = 0 }: { in
                       <div className="admin-closed-alert">
                         <AlertCircle size={16} />
                         <span>
-                          Lokasi ditandai <strong>Tutup</strong> (tidak beroperasi untuk pengunjung).
+                          Gerai ditandai <strong>Tutup Sementara</strong> (sedang renovasi atau di luar jam operasional).
                         </span>
                       </div>
                     )}

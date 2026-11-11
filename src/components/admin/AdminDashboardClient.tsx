@@ -44,7 +44,17 @@ import { AdminMapPanel } from "@/components/admin/AdminMapPanel";
 import { DashboardAnalytics } from "@/components/admin/DashboardAnalytics";
 import { MapStage } from "@/components/wayfinding/MapStage";
 import { spaces } from "@/data/demo-wayfinding";
-import { defaultMapObjectConfig, fetchMapObjectConfigsFromDb, readMapObjectConfigs, writeMapObjectConfigs, type MapObjectConfig, type MapObjectConfigByName } from "@/lib/map3d/admin-object-config";
+import {
+  defaultMapObjectConfig,
+  extractCategoryFromConfig,
+  fetchMapObjectConfigsFromDb,
+  inferCommercialCategory,
+  isFacilityObject,
+  readMapObjectConfigs,
+  writeMapObjectConfigs,
+  type MapObjectConfig,
+  type MapObjectConfigByName,
+} from "@/lib/map3d/admin-object-config";
 import type { TerminalCode } from "@/types";
 
 type TenantRow = {
@@ -70,13 +80,8 @@ type AdminUserRow = {
   updatedAt?: string;
 };
 
-function mapObjectCategory(config: MapObjectConfig) {
-  const value = `${config.objectName} ${config.displayName}`;
-  if (/(?:^|[-_ ])(?:TL|TOILET)(?:$|[-_ ])/i.test(value)) return "Toilet";
-  if (/(?:^|[-_ ])ATM(?:$|[-_ ])/i.test(value)) return "ATM";
-  if (/(?:^|[-_ ])MUS(?:$|[-_ ])|MUSH?OL/i.test(value)) return "Mushola";
-  if (/(?:AVSEC|BAGGAGE|GATE|DOOR|INFORMASI|LAYANAN|PELAYANAN|NURSERY|NR)/i.test(value)) return "Fasilitas & Layanan";
-  return config.entityType === "TENANT" ? "Komersial" : "Fasilitas & Layanan";
+function mapObjectCategory(config: MapObjectConfig): string {
+  return extractCategoryFromConfig(config);
 }
 
 function mapConfigsToDirectory(configs: MapObjectConfigByName): TenantRow[] {
@@ -85,8 +90,11 @@ function mapConfigsToDirectory(configs: MapObjectConfigByName): TenantRow[] {
     .map((config) => {
       const floorCode = /-FF-/i.test(config.objectName) ? "FF" : "GF";
       const terminal = "T1";
-      const isFacility = /(?:-avsec-|-tl-|-atm-|-nr-|-man-|-mus-|toilet|mushola|restroom)|^(?:floor_|area_visitor)/i.test(config.objectName) || config.entityType === "FACILITY";
+      const isFacility = isFacilityObject(config.objectName, config.entityType, config.displayName);
       const entityType: "TENANT" | "FACILITY" = isFacility ? "FACILITY" : "TENANT";
+      const isVacant = config.occupancy === "WALKABLE" || /(?:^|[^a-z])kosong(?:$|[^a-z])/i.test(config.displayName);
+      const isClosed = config.openTime === "CLOSED" || config.closeTime === "CLOSED";
+
       return {
         id: config.objectName,
         name: config.displayName.trim() || config.objectName,
@@ -96,14 +104,14 @@ function mapConfigsToDirectory(configs: MapObjectConfigByName): TenantRow[] {
         floor: floorCode === "FF" ? "Lantai 2" : "Lantai 1",
         floorCode,
         spaceCode: config.objectName,
-        status: config.occupancy === "WALKABLE"
+        status: isVacant
           ? "WALKWAY"
-          : (config.openTime === "CLOSED" || config.closeTime === "CLOSED")
+          : isClosed
           ? "TEMPORARILY_CLOSED"
           : "ACTIVE",
-        hours: config.occupancy === "WALKABLE"
-          ? "Area Jalan (Bisa Dilalui)"
-          : (config.openTime === "CLOSED" || config.closeTime === "CLOSED")
+        hours: isVacant
+          ? "Kavling Kosong (Siap Disewa)"
+          : isClosed
           ? "Tutup Sementara"
           : ((config.openTime === "00:00" && (config.closeTime === "23:59" || config.closeTime === "24:00" || config.closeTime === "00:00")) || config.openTime === "24 Jam")
           ? "Buka 24 Jam"
@@ -1071,12 +1079,12 @@ export function AdminDashboardClient({
                                 borderRadius: "20px",
                                 fontSize: "11px",
                                 fontWeight: "800",
-                                background: "#e0f2fe",
-                                color: "#0284c7",
-                                border: "1px solid #bae6fd",
+                                background: "#f1f5f9",
+                                color: "#475569",
+                                border: "1px solid #cbd5e1",
                               }}
                             >
-                              JALAN
+                              KAVLING KOSONG
                             </span>
                           ) : (
                             <span className={`status-pill ${t.status === "ACTIVE" ? "active" : "closed"}`}>
