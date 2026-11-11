@@ -40,7 +40,7 @@ export function isFacilityObject(nameOrCode: string, entityType?: string, displa
   if (entityType === "FACILITY") return true;
   const n = `${nameOrCode || ""} ${displayName || ""}`.toLowerCase();
   return (
-    /(?:-avsec-|-tl-|-atm-|-nr-|-man-|-mus-|toilet|mushola|musala|restroom)|^(?:floor_|area_visitor)/i.test(n) ||
+    /(?:-avsec-|-tl-|-atm-|\batm\b|-nr-|-man-|-mus-|toilet|mushola|musala|restroom)|^(?:floor_|area_visitor)/i.test(n) ||
     /(?:door__|baggage|customer\s*service|pelayanan|informasi|eskalator|eks[-_ ]|tangga|taman|lift|elevator|gate[-_ ]|boarding)/i.test(n)
   );
 }
@@ -123,6 +123,7 @@ export const FACILITY_CATEGORIES = [
   "Mushola & Ibadah",
   "Keamanan & Karantina (Avsec)",
   "Pengambilan Bagasi",
+  "Baggage Wrap (Wrapping)",
   "Ruang Laktasi (Nursery)",
   "Pusat Informasi & Self Check-in",
   "ATM Center",
@@ -138,7 +139,8 @@ export function inferFacilityCategory(displayName?: string, objectName?: string)
   if (/(?:mus[-_ ]|mushola|musala|ibadah|prayer)/i.test(val)) return "Mushola & Ibadah";
   if (/(?:eks[-_ ]|eskalator|tangga)/i.test(val)) return "Eskalator & Tangga";
   if (/(?:door__|gate[-_ ]|boarding|pintu|kedatangan|keberangkatan)/i.test(val)) return "Pintu & Gate Akses";
-  if (/(?:baggage|bagasi)/i.test(val)) return "Pengambilan Bagasi";
+  if (/(?:baggage[-_ ]?wrap|wrapping)/i.test(val)) return "Baggage Wrap (Wrapping)";
+  if (/(?:baggage[-_ ]?claim|pengambilan\s*bagasi|baggage)/i.test(val)) return "Pengambilan Bagasi";
   if (/(?:avsec|karantina|kesehatan|inspection|keamanan|bbkk)/i.test(val)) return "Keamanan & Karantina (Avsec)";
   if (/(?:customer\s*service|informasi|layanan|pelaporan\s*mandiri|man[-_ ])/i.test(val)) return "Pusat Informasi & Self Check-in";
   if (/(?:nursery|laktasi|nr[-_ ])/i.test(val)) return "Ruang Laktasi (Nursery)";
