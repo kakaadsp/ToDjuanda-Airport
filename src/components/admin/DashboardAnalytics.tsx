@@ -45,6 +45,7 @@ function isFacilityItem(tenant: TenantAnalyticsRow): boolean {
 
 export function DashboardAnalytics({ tenants }: { tenants: TenantAnalyticsRow[] }) {
   const [selectedFloor, setSelectedFloor] = useState<"ALL" | "L1" | "L2">("ALL");
+  const [categoryTab, setCategoryTab] = useState<"COMMERCIAL" | "FACILITY">("COMMERCIAL");
 
   // Filtered tenants by selected floor (Terminal 1)
   const filteredTenants = useMemo(() => {
@@ -95,6 +96,18 @@ export function DashboardAnalytics({ tenants }: { tenants: TenantAnalyticsRow[] 
     ? Math.round((Number(topCategory[1]) / commOccupied) * 100)
     : 0;
 
+  // Category composition untuk Fasilitas & Layanan Publik
+  const facilityCategoryRows = useMemo(() => {
+    const counts = facilitySpaces.reduce<Record<string, number>>((result, item) => {
+      const cat = item.category || "Fasilitas & Layanan Umum";
+      result[cat] = (result[cat] ?? 0) + 1;
+      return result;
+    }, {});
+    return Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  }, [facilitySpaces]);
+
+  const maxFacilityCategory = Math.max(1, ...facilityCategoryRows.map(([, count]) => count));
+
   // Floor distribution in Terminal 1 (Breakdown per Lantai)
   const floorBreakdown = useMemo(() => {
     const floors = [
@@ -110,10 +123,10 @@ export function DashboardAnalytics({ tenants }: { tenants: TenantAnalyticsRow[] 
         );
         const commMatching = matching.filter((t) => !isFacilityItem(t));
         const facMatching = matching.filter((t) => isFacilityItem(t));
-        const commOccupiedCount = commMatching.filter((t) => t.status !== "WALKWAY").length;
-        const commVacantCount = commMatching.filter((t) => t.status === "WALKWAY").length;
+        const commOccupiedCount = commMatching.filter((t) => t.status !== "WALKWAY" && t.status !== "VACANT").length;
+        const commVacantCount = commMatching.filter((t) => t.status === "WALKWAY" || t.status === "VACANT").length;
         const commActiveCount = commMatching.filter((t) => t.status === "ACTIVE").length;
-        const facActiveCount = facMatching.filter((t) => t.status === "ACTIVE" || t.status === "WALKWAY").length;
+        const facActiveCount = facMatching.filter((t) => t.status === "ACTIVE" || t.status === "WALKWAY" || t.status === "VACANT").length;
         const occRate = commMatching.length ? Math.round((commOccupiedCount / commMatching.length) * 100) : 0;
         return {
           ...f,
@@ -495,7 +508,7 @@ export function DashboardAnalytics({ tenants }: { tenants: TenantAnalyticsRow[] 
           </div>
         </div>
 
-        {/* CHART 2: SEBARAN KATEGORI */}
+        {/* CHART 2: SEBARAN KATEGORI (KOMERSIAL & FASILITAS) */}
         <div
           style={{
             background: "#ffffff",
@@ -507,39 +520,117 @@ export function DashboardAnalytics({ tenants }: { tenants: TenantAnalyticsRow[] 
             flexDirection: "column",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "18px" }}>
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "14px", flexWrap: "wrap", gap: "10px" }}>
             <div>
-              <strong style={{ fontSize: "15px", color: "#0f172a", display: "block" }}>Distribusi Kategori Tenant</strong>
-              <span style={{ fontSize: "12px", color: "#64748b" }}>Komposisi jenis gerai komersial</span>
+              <strong style={{ fontSize: "15px", color: "#0f172a", display: "block" }}>
+                {categoryTab === "COMMERCIAL" ? "Distribusi Kategori Tenant" : "Distribusi Fasilitas & Layanan"}
+              </strong>
+              <span style={{ fontSize: "12px", color: "#64748b" }}>
+                {categoryTab === "COMMERCIAL" ? "Komposisi gerai usaha komersial" : "Sebaran titik fasilitas publik bandara"}
+              </span>
             </div>
-            <PieChart size={18} style={{ color: "#00a8bd" }} />
+
+            {/* Toggle Kategori Komersial vs Fasilitas */}
+            <div
+              style={{
+                display: "inline-flex",
+                background: "#f1f5f9",
+                padding: "3px",
+                borderRadius: "10px",
+                border: "1px solid #e2e8f0",
+                fontSize: "11px",
+                fontWeight: "750",
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setCategoryTab("COMMERCIAL")}
+                style={{
+                  padding: "4px 9px",
+                  borderRadius: "7px",
+                  border: "none",
+                  cursor: "pointer",
+                  background: categoryTab === "COMMERCIAL" ? "#0284c7" : "transparent",
+                  color: categoryTab === "COMMERCIAL" ? "#ffffff" : "#64748b",
+                  transition: "all 0.2s ease",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "4px",
+                }}
+              >
+                <span>🏢 Gerai</span>
+                <span style={{ opacity: 0.85, fontSize: "10px" }}>({commOccupied})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setCategoryTab("FACILITY")}
+                style={{
+                  padding: "4px 9px",
+                  borderRadius: "7px",
+                  border: "none",
+                  cursor: "pointer",
+                  background: categoryTab === "FACILITY" ? "#8b5cf6" : "transparent",
+                  color: categoryTab === "FACILITY" ? "#ffffff" : "#64748b",
+                  transition: "all 0.2s ease",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "4px",
+                }}
+              >
+                <span>✨ Fasilitas</span>
+                <span style={{ opacity: 0.85, fontSize: "10px" }}>({facilityTotal})</span>
+              </button>
+            </div>
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "10px", flex: 1, justifyContent: "center" }}>
-            {categoryRows.map(([cat, count], idx) => {
-              const pct = commOccupied > 0 ? Math.round((count / commOccupied) * 100) : 0;
-              const barWidth = Math.round((count / maxCategory) * 100);
-              const colors = ["#00a8bd", "#0284c7", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981"];
-              const currentColor = colors[idx % colors.length];
+            {categoryTab === "COMMERCIAL" ? (
+              categoryRows.map(([cat, count], idx) => {
+                const pct = commOccupied > 0 ? Math.round((count / commOccupied) * 100) : 0;
+                const barWidth = Math.round((count / maxCategory) * 100);
+                const colors = ["#00a8bd", "#0284c7", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981", "#6366f1", "#14b8a6"];
+                const currentColor = colors[idx % colors.length];
 
-              return (
-                <div key={cat} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "12px" }}>
-                    <span style={{ fontWeight: "650", color: "#334155" }}>{cat}</span>
-                    <span style={{ color: "#64748b", fontSize: "11.5px" }}>
-                      <strong style={{ color: "#0f172a" }}>{count}</strong> ({pct}%)
-                    </span>
+                return (
+                  <div key={cat} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "12px" }}>
+                      <span style={{ fontWeight: "650", color: "#334155" }}>{cat}</span>
+                      <span style={{ color: "#64748b", fontSize: "11.5px" }}>
+                        <strong style={{ color: "#0f172a" }}>{count}</strong> ({pct}%)
+                      </span>
+                    </div>
+                    <div style={{ height: "7px", width: "100%", background: "#f1f5f9", borderRadius: "999px", overflow: "hidden" }}>
+                      <div style={{ height: "100%", width: `${barWidth}%`, background: currentColor, borderRadius: "999px", transition: "width 0.4s ease" }} />
+                    </div>
                   </div>
-                  <div style={{ height: "7px", width: "100%", background: "#f1f5f9", borderRadius: "999px", overflow: "hidden" }}>
-                    <div style={{ height: "100%", width: `${barWidth}%`, background: currentColor, borderRadius: "999px", transition: "width 0.4s ease" }} />
+                );
+              })
+            ) : (
+              facilityCategoryRows.map(([cat, count], idx) => {
+                const pct = facilityTotal > 0 ? Math.round((count / facilityTotal) * 100) : 0;
+                const barWidth = Math.round((count / maxFacilityCategory) * 100);
+                const facilityColors = ["#8b5cf6", "#7c3aed", "#6366f1", "#3b82f6", "#06b6d4", "#10b981", "#f59e0b", "#ec4899", "#64748b"];
+                const currentColor = facilityColors[idx % facilityColors.length];
+
+                return (
+                  <div key={cat} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "12px" }}>
+                      <span style={{ fontWeight: "650", color: "#334155" }}>{cat}</span>
+                      <span style={{ color: "#64748b", fontSize: "11.5px" }}>
+                        <strong style={{ color: "#0f172a" }}>{count}</strong> ({pct}%)
+                      </span>
+                    </div>
+                    <div style={{ height: "7px", width: "100%", background: "#f1f5f9", borderRadius: "999px", overflow: "hidden" }}>
+                      <div style={{ height: "100%", width: `${barWidth}%`, background: currentColor, borderRadius: "999px", transition: "width 0.4s ease" }} />
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </div>
 
-        {/* CHART 3: SEBARAN TERMINAL & LANTAI */}
+        {/* CHART 3: SEBARAN PER LANTAI TERMINAL (GRAFIK DENSITY BAR & STATS) */}
         <div
           style={{
             background: "#ffffff",
@@ -551,32 +642,157 @@ export function DashboardAnalytics({ tenants }: { tenants: TenantAnalyticsRow[] 
             flexDirection: "column",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "18px" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px", flexWrap: "wrap", gap: "8px" }}>
             <div>
               <strong style={{ fontSize: "15px", color: "#0f172a", display: "block" }}>Sebaran per Lantai Terminal</strong>
-              <span style={{ fontSize: "12px", color: "#64748b" }}>Kepadatan tenant di tiap tingkat bangunan</span>
+              <span style={{ fontSize: "12px", color: "#64748b" }}>Densitas komersial vs fasilitas tiap tingkat</span>
             </div>
-            <BarChart3 size={18} style={{ color: "#00a8bd" }} />
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "10.5px", fontWeight: "700" }}>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", color: "#0284c7" }}>
+                <span style={{ width: "8px", height: "8px", borderRadius: "2px", background: "#0284c7" }} />
+                Gerai
+              </span>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", color: "#64748b" }}>
+                <span style={{ width: "8px", height: "8px", borderRadius: "2px", background: "#cbd5e1" }} />
+                Kosong
+              </span>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", color: "#8b5cf6" }}>
+                <span style={{ width: "8px", height: "8px", borderRadius: "2px", background: "#8b5cf6" }} />
+                Fasilitas
+              </span>
+            </div>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: "10px", flex: 1, justifyContent: "center" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px", flex: 1, justifyContent: "center" }}>
             {floorBreakdown.map((row) => {
-              const maxTenants = Math.max(1, ...floorBreakdown.map((r) => r.total));
-              const width = Math.round((row.total / maxTenants) * 100);
+              const totalItems = row.total || 1;
+              const occPct = row.commTotal > 0 ? Math.round((row.commOccupied / row.commTotal) * 100) : 0;
+              const isGround = row.id === "T1-L1";
 
               return (
-                <div key={row.id} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "12px" }}>
-                    <span style={{ fontWeight: "700", color: "#1e293b", display: "flex", alignItems: "center", gap: "5px" }}>
-                      <MapPin size={13} style={{ color: "#00a8bd" }} />
-                      {row.label}
-                    </span>
-                    <span style={{ fontSize: "11.5px", color: "#64748b" }}>
-                      <strong style={{ color: "#0f172a" }}>{row.commOccupied}</strong>/{row.commTotal} tenant komersial ({row.occRate}% terisi{row.commVacant > 0 ? `, ${row.commVacant} jalan` : ""}) &bull; <strong style={{ color: "#7c3aed" }}>{row.facTotal}</strong> fasilitas
+                <div
+                  key={row.id}
+                  style={{
+                    background: isGround ? "#f8fafc" : "#fdfaff",
+                    border: `1.5px solid ${isGround ? "#e2e8f0" : "#f3e8ff"}`,
+                    borderRadius: "12px",
+                    padding: "12px 14px",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "9px",
+                  }}
+                >
+                  {/* Floor Header */}
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span
+                        style={{
+                          width: "28px",
+                          height: "28px",
+                          borderRadius: "8px",
+                          background: isGround ? "#0284c7" : "#8b5cf6",
+                          color: "#ffffff",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: "12px",
+                          fontWeight: "850",
+                        }}
+                      >
+                        {isGround ? "GF" : "FF"}
+                      </span>
+                      <div>
+                        <strong style={{ fontSize: "13px", color: "#0f172a", display: "block" }}>
+                          {isGround ? "Lantai 1 • Ground Floor" : "Lantai 2 • First Floor"}
+                        </strong>
+                        <span style={{ fontSize: "11px", color: "#64748b" }}>
+                          {isGround ? "Check-in, Arrival & Koridor Publik" : "Ruang Tunggu Gate 1–12 & Lounge"}
+                        </span>
+                      </div>
+                    </div>
+                    <span
+                      style={{
+                        padding: "3px 8px",
+                        borderRadius: "20px",
+                        fontSize: "11px",
+                        fontWeight: "800",
+                        background: occPct >= 90 ? "#ecfdf5" : "#eff6ff",
+                        color: occPct >= 90 ? "#059669" : "#2563eb",
+                        border: `1px solid ${occPct >= 90 ? "#a7f3d0" : "#bfdbfe"}`,
+                      }}
+                    >
+                      {occPct}% Terisi
                     </span>
                   </div>
-                  <div style={{ height: "8px", width: "100%", background: "#f1f5f9", borderRadius: "999px", overflow: "hidden" }}>
-                    <div style={{ height: "100%", width: `${width}%`, background: "linear-gradient(90deg, #00a8bd, #0284c7)", borderRadius: "999px" }} />
+
+                  {/* Multi-segment Proportional Bar */}
+                  <div
+                    style={{
+                      display: "flex",
+                      height: "10px",
+                      width: "100%",
+                      borderRadius: "999px",
+                      overflow: "hidden",
+                      background: "#e2e8f0",
+                      gap: "2px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: `${(row.commOccupied / totalItems) * 100}%`,
+                        background: "#0284c7",
+                        transition: "width 0.4s ease",
+                      }}
+                      title={`Gerai Terisi: ${row.commOccupied}`}
+                    />
+                    {row.commVacant > 0 && (
+                      <div
+                        style={{
+                          width: `${(row.commVacant / totalItems) * 100}%`,
+                          background: "#cbd5e1",
+                          transition: "width 0.4s ease",
+                        }}
+                        title={`Kavling Kosong: ${row.commVacant}`}
+                      />
+                    )}
+                    <div
+                      style={{
+                        width: `${(row.facTotal / totalItems) * 100}%`,
+                        background: "#8b5cf6",
+                        transition: "width 0.4s ease",
+                      }}
+                      title={`Fasilitas: ${row.facTotal}`}
+                    />
+                  </div>
+
+                  {/* 3 Metric Pills */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "6px" }}>
+                    <div style={{ background: "#ffffff", padding: "6px 8px", borderRadius: "6px", border: "1px solid #e2e8f0" }}>
+                      <span style={{ fontSize: "10.5px", color: "#0284c7", fontWeight: "750", display: "block" }}>
+                        🏬 Gerai
+                      </span>
+                      <strong style={{ fontSize: "13.5px", color: "#0f172a" }}>
+                        {row.commOccupied} <span style={{ fontSize: "10.5px", color: "#64748b", fontWeight: "normal" }}>/ {row.commTotal}</span>
+                      </strong>
+                    </div>
+
+                    <div style={{ background: "#ffffff", padding: "6px 8px", borderRadius: "6px", border: "1px solid #e2e8f0" }}>
+                      <span style={{ fontSize: "10.5px", color: "#64748b", fontWeight: "750", display: "block" }}>
+                        📭 Kosong
+                      </span>
+                      <strong style={{ fontSize: "13.5px", color: "#0f172a" }}>
+                        {row.commVacant} <span style={{ fontSize: "10.5px", color: "#64748b", fontWeight: "normal" }}>unit</span>
+                      </strong>
+                    </div>
+
+                    <div style={{ background: "#ffffff", padding: "6px 8px", borderRadius: "6px", border: "1px solid #e2e8f0" }}>
+                      <span style={{ fontSize: "10.5px", color: "#8b5cf6", fontWeight: "750", display: "block" }}>
+                        ✨ Fasilitas
+                      </span>
+                      <strong style={{ fontSize: "13.5px", color: "#0f172a" }}>
+                        {row.facTotal} <span style={{ fontSize: "10.5px", color: "#64748b", fontWeight: "normal" }}>titik</span>
+                      </strong>
+                    </div>
                   </div>
                 </div>
               );

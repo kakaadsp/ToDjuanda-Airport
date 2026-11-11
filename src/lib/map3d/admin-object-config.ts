@@ -116,22 +116,47 @@ export function inferCommercialCategory(displayName?: string, objectName?: strin
   return "Komersial Lainnya";
 }
 
+export const FACILITY_CATEGORIES = [
+  "Toilet & Restroom",
+  "Eskalator & Tangga",
+  "Pintu & Gate Akses",
+  "Mushola & Ibadah",
+  "Keamanan & Karantina (Avsec)",
+  "Pengambilan Bagasi",
+  "Ruang Laktasi (Nursery)",
+  "Pusat Informasi & Self Check-in",
+  "ATM Center",
+  "Taman & Area Terbuka",
+  "Fasilitas & Layanan Umum",
+] as const;
+
+export type FacilityCategory = (typeof FACILITY_CATEGORIES)[number];
+
+export function inferFacilityCategory(displayName?: string, objectName?: string): FacilityCategory {
+  const val = `${objectName || ""} ${displayName || ""}`.toLowerCase();
+  if (/(?:tl[-_ ]|toilet|restroom|wc|pria|wanita|difabel|disabilitas)/i.test(val)) return "Toilet & Restroom";
+  if (/(?:mus[-_ ]|mushola|musala|ibadah|prayer)/i.test(val)) return "Mushola & Ibadah";
+  if (/(?:eks[-_ ]|eskalator|tangga)/i.test(val)) return "Eskalator & Tangga";
+  if (/(?:door__|gate[-_ ]|boarding|pintu|kedatangan|keberangkatan)/i.test(val)) return "Pintu & Gate Akses";
+  if (/(?:baggage|bagasi)/i.test(val)) return "Pengambilan Bagasi";
+  if (/(?:avsec|karantina|kesehatan|inspection|keamanan|bbkk)/i.test(val)) return "Keamanan & Karantina (Avsec)";
+  if (/(?:customer\s*service|informasi|layanan|pelaporan\s*mandiri|man[-_ ])/i.test(val)) return "Pusat Informasi & Self Check-in";
+  if (/(?:nursery|laktasi|nr[-_ ])/i.test(val)) return "Ruang Laktasi (Nursery)";
+  if (/(?:atm|bank)/i.test(val)) return "ATM Center";
+  if (/(?:taman|garden)/i.test(val)) return "Taman & Area Terbuka";
+  return "Fasilitas & Layanan Umum";
+}
+
 export function extractCategoryFromConfig(config: Partial<MapObjectConfig>): string {
   if (config.category && config.category.trim()) return config.category.trim();
   if (config.occupancy === "VACANT" || /(?:^|[^a-z])kosong(?:$|[^a-z])/i.test(config.displayName || "")) {
     return "Kavling Kosong (Belum Disewa)";
   }
+  if (isFacilityObject(config.objectName || "", config.entityType, config.displayName)) {
+    return inferFacilityCategory(config.displayName, config.objectName);
+  }
   const descMatch = config.description?.match(/\[Kategori:\s*([^\]]+)\]/i);
   if (descMatch?.[1]) return descMatch[1].trim();
-  if (isFacilityObject(config.objectName || "", config.entityType, config.displayName)) {
-    const val = `${config.objectName || ""} ${config.displayName || ""}`.toLowerCase();
-    if (/(?:tl|toilet)/i.test(val)) return "Toilet";
-    if (/atm/i.test(val)) return "ATM";
-    if (/(?:mus|mushol)/i.test(val)) return "Mushola";
-    if (/(?:nursery|laktasi|nr)/i.test(val)) return "Ruang Laktasi / Nursery";
-    if (/(?:customer\s*service|informasi|layanan)/i.test(val)) return "Pusat Informasi";
-    return "Fasilitas & Layanan";
-  }
   return inferCommercialCategory(config.displayName, config.objectName);
 }
 
