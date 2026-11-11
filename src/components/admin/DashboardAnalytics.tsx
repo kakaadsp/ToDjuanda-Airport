@@ -62,8 +62,8 @@ export function DashboardAnalytics({ tenants }: { tenants: TenantAnalyticsRow[] 
 
   // Metrik Komersial
   const commTotal = commercialSpaces.length;
-  const commOccupied = commercialSpaces.filter((t) => t.status !== "WALKWAY").length;
-  const commVacant = commercialSpaces.filter((t) => t.status === "WALKWAY").length;
+  const commOccupied = commercialSpaces.filter((t) => t.status !== "WALKWAY" && t.status !== "VACANT").length;
+  const commVacant = commercialSpaces.filter((t) => t.status === "WALKWAY" || t.status === "VACANT").length;
   const commActive = commercialSpaces.filter((t) => t.status === "ACTIVE").length;
   const commClosed = commercialSpaces.filter((t) => t.status === "TEMPORARILY_CLOSED").length;
   const commOccupancyPercent = commTotal > 0 ? Math.round((commOccupied / commTotal) * 100) : 0;
@@ -71,7 +71,7 @@ export function DashboardAnalytics({ tenants }: { tenants: TenantAnalyticsRow[] 
 
   // Metrik Fasilitas & Layanan Publik
   const facilityTotal = facilitySpaces.length;
-  const facilityActive = facilitySpaces.filter((t) => t.status === "ACTIVE" || t.status === "WALKWAY").length;
+  const facilityActive = facilitySpaces.filter((t) => t.status === "ACTIVE" || t.status === "WALKWAY" || t.status === "VACANT").length;
   const facilityClosed = facilitySpaces.filter((t) => t.status === "TEMPORARILY_CLOSED").length;
   const facilityActivePercent = facilityTotal > 0 ? Math.round((facilityActive / facilityTotal) * 100) : 0;
 
@@ -80,7 +80,7 @@ export function DashboardAnalytics({ tenants }: { tenants: TenantAnalyticsRow[] 
 
   // Category composition (Murni untuk gerai komersial yang terisi)
   const categoryRows = useMemo(() => {
-    const occupiedOnly = commercialSpaces.filter((t) => t.status !== "WALKWAY" && !t.category?.includes("Kavling Kosong"));
+    const occupiedOnly = commercialSpaces.filter((t) => t.status !== "WALKWAY" && t.status !== "VACANT" && !t.category?.includes("Kavling Kosong"));
     const counts = occupiedOnly.reduce<Record<string, number>>((result, tenant) => {
       const cat = tenant.category || "Komersial Lainnya";
       result[cat] = (result[cat] ?? 0) + 1;

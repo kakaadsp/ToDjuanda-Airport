@@ -92,7 +92,8 @@ function mapConfigsToDirectory(configs: MapObjectConfigByName): TenantRow[] {
       const terminal = "T1";
       const isFacility = isFacilityObject(config.objectName, config.entityType, config.displayName);
       const entityType: "TENANT" | "FACILITY" = isFacility ? "FACILITY" : "TENANT";
-      const isVacant = config.occupancy === "WALKABLE" || /(?:^|[^a-z])kosong(?:$|[^a-z])/i.test(config.displayName);
+      const isWalkway = config.occupancy === "WALKABLE";
+      const isVacant = config.occupancy === "VACANT" || (!isWalkway && /(?:^|[^a-z])kosong(?:$|[^a-z])/i.test(config.displayName));
       const isClosed = config.openTime === "CLOSED" || config.closeTime === "CLOSED";
 
       return {
@@ -104,12 +105,16 @@ function mapConfigsToDirectory(configs: MapObjectConfigByName): TenantRow[] {
         floor: floorCode === "FF" ? "Lantai 2" : "Lantai 1",
         floorCode,
         spaceCode: config.objectName,
-        status: isVacant
+        status: isWalkway
           ? "WALKWAY"
+          : isVacant
+          ? "VACANT"
           : isClosed
           ? "TEMPORARILY_CLOSED"
           : "ACTIVE",
-        hours: isVacant
+        hours: isWalkway
+          ? "Area Jalan (Bisa Dilalui)"
+          : isVacant
           ? "Kavling Kosong (Siap Disewa)"
           : isClosed
           ? "Tutup Sementara"
@@ -1069,7 +1074,7 @@ export function AdminDashboardClient({
                         </td>
                         <td>{t.hours}</td>
                         <td>
-                          {t.status === "WALKWAY" ? (
+                          {t.status === "VACANT" ? (
                             <span
                               style={{
                                 display: "inline-flex",
@@ -1085,6 +1090,23 @@ export function AdminDashboardClient({
                               }}
                             >
                               KAVLING KOSONG
+                            </span>
+                          ) : t.status === "WALKWAY" ? (
+                            <span
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "4px",
+                                padding: "4px 10px",
+                                borderRadius: "20px",
+                                fontSize: "11px",
+                                fontWeight: "800",
+                                background: "#e0f2fe",
+                                color: "#0284c7",
+                                border: "1px solid #bae6fd",
+                              }}
+                            >
+                              AREA JALAN
                             </span>
                           ) : (
                             <span className={`status-pill ${t.status === "ACTIVE" ? "active" : "closed"}`}>

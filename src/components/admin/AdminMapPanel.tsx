@@ -226,9 +226,26 @@ function AdminCamera({
 }
 
 const OCCUPANCY_OPTIONS: Array<{ value: MapObjectOccupancy; label: string; help: string }> = [
-  { value: "OCCUPIED", label: "Ditempati (Tenant Beroperasi)", help: "Kavling aktif disewa dan ditempati unit usaha atau fasilitas." },
-  { value: "WALKABLE", label: "Tidak Ditempati (Kavling Kosong)", help: "Kavling kosong / belum disewa. Bebas dari input jam operasional dan kontak." },
-  { value: "OBSTACLE", label: "Tembok / Pilar", help: "Bukan ruang komersial, melainkan struktur dinding/pilar gedung yang menghalangi rute." },
+  {
+    value: "OCCUPIED",
+    label: "Ditempati (Tenant Beroperasi)",
+    help: "Kavling aktif beroperasi. Bangunan dan pintu tetap ada di 3D, lengkap dengan jam layanan dan profil tenant.",
+  },
+  {
+    value: "VACANT",
+    label: "Tidak Ditempati (Kavling Kosong)",
+    help: "Kavling kosong / belum disewa. Bangunan dan pintu TETAP ADA di peta 3D, tanpa perlu input jam buka dan kontak.",
+  },
+  {
+    value: "WALKABLE",
+    label: "Dibuat Jalan (Bangunan / Kavling Hilang)",
+    help: "Dibuat jalan: Bangunan dan kavling HILANG dari peta 3D agar menjadi koridor jalan yang dapat dilalui pejalan kaki.",
+  },
+  {
+    value: "OBSTACLE",
+    label: "Tembok / Pilar",
+    help: "Bukan ruang komersial, melainkan struktur fisik dinding/pilar gedung yang menghalangi rute.",
+  },
 ];
 
 function EditorField({ label, children }: { label: string; children: React.ReactNode }) {
@@ -302,12 +319,22 @@ export function AdminMapPanel({ initialObjectName = null, focusNonce = 0 }: { in
   const updateDraft = <K extends keyof MapObjectConfig>(key: K, value: MapObjectConfig[K]) =>
     setDraft((current) => {
       if (!current) return current;
+      if (key === "occupancy" && value === "VACANT") {
+        return {
+          ...current,
+          occupancy: "VACANT",
+          displayName: current.displayName && current.displayName !== "Area Jalan" ? current.displayName : "Kosong",
+          category: "Kavling Kosong (Belum Disewa)",
+          openTime: "",
+          closeTime: "",
+        };
+      }
       if (key === "occupancy" && value === "WALKABLE") {
         return {
           ...current,
           occupancy: "WALKABLE",
-          displayName: current.displayName && current.displayName !== "Kosong" ? current.displayName : "Kosong",
-          category: "Kavling Kosong (Belum Disewa)",
+          displayName: current.displayName && current.displayName !== "Kosong" ? current.displayName : "Area Jalan",
+          category: "",
           openTime: "",
           closeTime: "",
         };
@@ -316,7 +343,7 @@ export function AdminMapPanel({ initialObjectName = null, focusNonce = 0 }: { in
         return {
           ...current,
           occupancy: "OCCUPIED",
-          displayName: current.displayName === "Kosong" ? "" : current.displayName,
+          displayName: current.displayName === "Kosong" || current.displayName === "Area Jalan" ? "" : current.displayName,
           category: current.category === "Kavling Kosong (Belum Disewa)" ? "" : current.category,
         };
       }
@@ -465,7 +492,7 @@ export function AdminMapPanel({ initialObjectName = null, focusNonce = 0 }: { in
               >
                 <strong>{configs[record.name]?.displayName || record.selectableLabel || record.name}</strong>
                 <small>
-                  {record.name} &bull; {configs[record.name]?.occupancy === "WALKABLE" ? "Jalan" : configs[record.name]?.occupancy === "OBSTACLE" ? "Obstacle" : record.metadata.category}
+                  {record.name} &bull; {configs[record.name]?.occupancy === "WALKABLE" ? "Jalan" : configs[record.name]?.occupancy === "VACANT" ? "Kosong" : configs[record.name]?.occupancy === "OBSTACLE" ? "Obstacle" : record.metadata.category}
                 </small>
               </button>
             ))}
@@ -569,7 +596,7 @@ export function AdminMapPanel({ initialObjectName = null, focusNonce = 0 }: { in
                 </div>
 
                 {/* Banner Informasi bila Kavling Tidak Ditempati (Kosong) */}
-                {draft.occupancy === "WALKABLE" && (
+                {draft.occupancy === "VACANT" && (
                   <div
                     style={{
                       display: "flex",
@@ -589,7 +616,34 @@ export function AdminMapPanel({ initialObjectName = null, focusNonce = 0 }: { in
                         Kavling Tidak Ditempati (Unit Kosong)
                       </strong>
                       <p style={{ margin: 0, fontSize: "12px", lineHeight: "1.5", color: "#334155" }}>
-                        Kavling ini ditandai sebagai unit kosong / belum disewa. Anda <strong>tidak perlu</strong> menginput jam operasional, foto, kontak, maupun media sosial. Unit ini otomatis terhitung sebagai <strong>kavling kosong</strong> pada analitik okupansi.
+                        Kavling ini ditandai sebagai unit kosong / belum disewa. <strong>Bangunan dan pintu tetap terlihat pada peta 3D</strong>. Anda <strong>tidak perlu</strong> menginput jam operasional, foto, kontak, maupun media sosial. Unit ini otomatis terhitung sebagai <strong>kavling kosong</strong> pada analitik okupansi.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Banner Informasi bila Dibuat Area Jalan (Bangunan Hilang) */}
+                {draft.occupancy === "WALKABLE" && (
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "flex-start",
+                      gap: "12px",
+                      padding: "14px 16px",
+                      background: "rgba(16, 185, 129, 0.08)",
+                      border: "1px solid rgba(16, 185, 129, 0.25)",
+                      borderRadius: "12px",
+                      color: "#065f46",
+                      marginTop: "6px",
+                    }}
+                  >
+                    <span style={{ fontSize: "20px" }}>🚶</span>
+                    <div>
+                      <strong style={{ display: "block", fontSize: "13px", fontWeight: "700", marginBottom: "4px" }}>
+                        Dibuat Area Jalan (Bangunan / Kavling Hilang)
+                      </strong>
+                      <p style={{ margin: 0, fontSize: "12px", lineHeight: "1.5", color: "#334155" }}>
+                        Blok kavling ini dihilangkan dari peta 3D agar menjadi area koridor jalan terbuka yang dapat dilewati oleh pejalan kaki dan rute navigasi bandara.
                       </p>
                     </div>
                   </div>
@@ -685,49 +739,51 @@ export function AdminMapPanel({ initialObjectName = null, focusNonce = 0 }: { in
                   </div>
                 )}
 
-                {/* Pintu Masuk */}
-                <div className="admin-object-doors">
-                  <div className="admin-object-doors-heading">
-                    <strong>Pintu masuk (maksimal 4)</strong>
-                    <span>
-                      Rute hanya boleh masuk dari pintu yang terbuka. Posisi 0% dan 100% adalah kedua ujung sisi; 50% adalah titik tengah sisi.
-                    </span>
-                  </div>
-                  {draft.entryDoors.map((door, index) => (
-                    <div className="admin-object-door-row" key={`${draft.objectName}-door-${index}`}>
-                      <strong>Pintu {index + 1}</strong>
-                      <select
-                        value={door.side}
-                        onChange={(event) => updateDoor(index, "side", event.target.value as MapObjectDoorSide)}
-                      >
-                        <option value="NORTH">Utara</option>
-                        <option value="EAST">Timur</option>
-                        <option value="SOUTH">Selatan</option>
-                        <option value="WEST">Barat</option>
-                      </select>
-                      <label>
-                        <input
-                          type="checkbox"
-                          checked={door.open}
-                          onChange={(event) => updateDoor(index, "open", event.target.checked)}
-                        />{" "}
-                        Buka
-                      </label>
-                      <label className="admin-object-door-position">
-                        Posisi{" "}
-                        <input
-                          type="range"
-                          min="0"
-                          max="100"
-                          value={door.position}
-                          aria-label={`Posisi pintu ${index + 1}`}
-                          onChange={(event) => updateDoor(index, "position", event.target.value)}
-                        />
-                        <span>{door.position}%</span>
-                      </label>
+                {/* Pintu Masuk - tampil untuk yang Ditempati & Tidak Ditempati (hanya hilang jika dibuat Area Jalan) */}
+                {draft.occupancy !== "WALKABLE" && (
+                  <div className="admin-object-doors">
+                    <div className="admin-object-doors-heading">
+                      <strong>Pintu masuk (maksimal 4)</strong>
+                      <span>
+                        Rute hanya boleh masuk dari pintu yang terbuka. Posisi 0% dan 100% adalah kedua ujung sisi; 50% adalah titik tengah sisi.
+                      </span>
                     </div>
-                  ))}
-                </div>
+                    {draft.entryDoors.map((door, index) => (
+                      <div className="admin-object-door-row" key={`${draft.objectName}-door-${index}`}>
+                        <strong>Pintu {index + 1}</strong>
+                        <select
+                          value={door.side}
+                          onChange={(event) => updateDoor(index, "side", event.target.value as MapObjectDoorSide)}
+                        >
+                          <option value="NORTH">Utara</option>
+                          <option value="EAST">Timur</option>
+                          <option value="SOUTH">Selatan</option>
+                          <option value="WEST">Barat</option>
+                        </select>
+                        <label>
+                          <input
+                            type="checkbox"
+                            checked={door.open}
+                            onChange={(event) => updateDoor(index, "open", event.target.checked)}
+                          />{" "}
+                          Buka
+                        </label>
+                        <label className="admin-object-door-position">
+                          Posisi{" "}
+                          <input
+                            type="range"
+                            min="0"
+                            max="100"
+                            value={door.position}
+                            aria-label={`Posisi pintu ${index + 1}`}
+                            onChange={(event) => updateDoor(index, "position", event.target.value)}
+                          />
+                          <span>{door.position}%</span>
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
                 <EditorField label="Deskripsi / detail">
                   <textarea
@@ -738,75 +794,80 @@ export function AdminMapPanel({ initialObjectName = null, focusNonce = 0 }: { in
                   />
                 </EditorField>
 
-                <EditorField label="Foto tampak depan (URL)">
-                  <input
-                    type="url"
-                    value={draft.photoUrl}
-                    onChange={(event) => updateDraft("photoUrl", event.target.value)}
-                    placeholder="URL gambar langsung atau link Google Drive"
-                  />
-                  <small className="admin-object-field-help">
-                    Untuk Google Drive, ubah akses file menjadi "Anyone with the link / Siapa saja yang memiliki link dapat melihat".
-                  </small>
-                </EditorField>
+                {draft.occupancy === "OCCUPIED" && (
+                  <>
+                    <EditorField label="Foto tampak depan (URL)">
+                      <input
+                        type="url"
+                        value={draft.photoUrl}
+                        onChange={(event) => updateDraft("photoUrl", event.target.value)}
+                        placeholder="URL gambar langsung atau link Google Drive"
+                      />
+                      <small className="admin-object-field-help">
+                        Untuk Google Drive, ubah akses file menjadi &quot;Anyone with the link / Siapa saja yang memiliki link dapat melihat&quot;.
+                      </small>
+                    </EditorField>
 
-                <EditorField label="Website / sosial media">
-                  <input
-                    type="url"
-                    value={draft.websiteUrl}
-                    onChange={(event) => updateDraft("websiteUrl", event.target.value)}
-                    placeholder="https://..."
-                  />
-                </EditorField>
+                    <EditorField label="Website / sosial media">
+                      <input
+                        type="url"
+                        value={draft.websiteUrl}
+                        onChange={(event) => updateDraft("websiteUrl", event.target.value)}
+                        placeholder="https://..."
+                      />
+                    </EditorField>
 
-                <EditorField label="Instagram / link lain">
-                  <input
-                    type="url"
-                    value={draft.instagramUrl}
-                    onChange={(event) => updateDraft("instagramUrl", event.target.value)}
-                    placeholder="https://instagram.com/..."
-                  />
-                </EditorField>
+                    <EditorField label="Instagram / link lain">
+                      <input
+                        type="url"
+                        value={draft.instagramUrl}
+                        onChange={(event) => updateDraft("instagramUrl", event.target.value)}
+                        placeholder="https://instagram.com/..."
+                      />
+                    </EditorField>
 
-                <EditorField label="Kontak">
-                  <input
-                    value={draft.contact}
-                    onChange={(event) => updateDraft("contact", event.target.value)}
-                    placeholder="Telepon / email"
-                  />
-                </EditorField>
+                    <EditorField label="Kontak">
+                      <input
+                        value={draft.contact}
+                        onChange={(event) => updateDraft("contact", event.target.value)}
+                        placeholder="Telepon / email"
+                      />
+                    </EditorField>
 
-                <EditorField label="Masa aktif mulai">
-                  <input
-                    type="date"
-                    value={draft.activeFrom}
-                    onChange={(event) => updateDraft("activeFrom", event.target.value)}
-                  />
-                </EditorField>
+                    <EditorField label="Masa aktif mulai">
+                      <input
+                        type="date"
+                        value={draft.activeFrom}
+                        onChange={(event) => updateDraft("activeFrom", event.target.value)}
+                      />
+                    </EditorField>
 
-                <EditorField label="Masa aktif sampai">
-                  <input
-                    type="date"
-                    value={draft.activeUntil}
-                    onChange={(event) => updateDraft("activeUntil", event.target.value)}
-                  />
-                </EditorField>
+                    <EditorField label="Masa aktif sampai">
+                      <input
+                        type="date"
+                        value={draft.activeUntil}
+                        onChange={(event) => updateDraft("activeUntil", event.target.value)}
+                      />
+                    </EditorField>
+                  </>
+                )}
               </div>
 
-              {/* Review Foto Tampak Depan di atas tombol Simpan Konfigurasi */}
-              <div
-                style={{
-                  width: "100%",
-                  marginTop: "20px",
-                  padding: "16px",
-                  borderRadius: "14px",
-                  border: "1.5px solid #cbd5e1",
-                  background: "#f8fafc",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "10px",
-                }}
-              >
+              {/* Review Foto Tampak Depan di atas tombol Simpan Konfigurasi (hanya saat Ditempati) */}
+              {draft.occupancy === "OCCUPIED" && (
+                <div
+                  style={{
+                    width: "100%",
+                    marginTop: "20px",
+                    padding: "16px",
+                    borderRadius: "14px",
+                    border: "1.5px solid #cbd5e1",
+                    background: "#f8fafc",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "10px",
+                  }}
+                >
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <span
                     style={{
@@ -905,6 +966,7 @@ export function AdminMapPanel({ initialObjectName = null, focusNonce = 0 }: { in
                   </div>
                 )}
               </div>
+              )}
 
               {/* Tombol Simpan Konfigurasi - Full Besar & Hijau */}
               <div className="admin-object-form-actions" style={{ width: "100%", marginTop: "24px" }}>

@@ -87,7 +87,7 @@ export async function PUT(request: Request, { params }: Params) {
       create: { objectName, ...data },
     });
 
-    const action = data.occupancy === "WALKABLE" 
+    const action = (data.occupancy === "WALKABLE" || data.occupancy === "VACANT")
       ? "SET_TENANT_CLOSED" 
       : (data.openTime === "00:00" && data.closeTime === "23:59")
         ? "SET_TENANT_OPEN_24H"

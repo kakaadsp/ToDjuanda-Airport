@@ -1,4 +1,4 @@
-export type MapObjectOccupancy = "OCCUPIED" | "OBSTACLE" | "WALKABLE";
+export type MapObjectOccupancy = "OCCUPIED" | "VACANT" | "WALKABLE" | "OBSTACLE";
 export type MapObjectDoorSide = "NORTH" | "EAST" | "SOUTH" | "WEST";
 export type MapObjectDoor = { side: MapObjectDoorSide; open: boolean; position: number };
 
@@ -118,6 +118,9 @@ export function inferCommercialCategory(displayName?: string, objectName?: strin
 
 export function extractCategoryFromConfig(config: Partial<MapObjectConfig>): string {
   if (config.category && config.category.trim()) return config.category.trim();
+  if (config.occupancy === "VACANT" || /(?:^|[^a-z])kosong(?:$|[^a-z])/i.test(config.displayName || "")) {
+    return "Kavling Kosong (Belum Disewa)";
+  }
   const descMatch = config.description?.match(/\[Kategori:\s*([^\]]+)\]/i);
   if (descMatch?.[1]) return descMatch[1].trim();
   if (isFacilityObject(config.objectName || "", config.entityType, config.displayName)) {

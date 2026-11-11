@@ -368,8 +368,16 @@ export function SceneModel({ selectedUuid, onSelect, onSelectFloor, onSelectPoin
           colorMaterial.userData.baseColor = colorMaterial.color?.getHex();
           colorMaterial.userData.runtimeColorKey = "wall";
           colorMaterial.userData.runtimeColor = "#68747C";
-        }
-        if (objectConfig?.color && /^#[0-9a-f]{6}$/i.test(objectConfig.color)) {
+        } else if (objectConfig?.occupancy === "VACANT") {
+          const colorMaterial = runtimeMaterial as ColorMaterial;
+          const vacantColor = objectConfig?.color && /^#[0-9a-f]{6}$/i.test(objectConfig.color)
+            ? objectConfig.color
+            : "#CBD5E1";
+          colorMaterial.color?.set(vacantColor);
+          colorMaterial.userData.baseColor = colorMaterial.color?.getHex();
+          colorMaterial.userData.runtimeColorKey = "vacant";
+          colorMaterial.userData.runtimeColor = vacantColor;
+        } else if (objectConfig?.color && /^#[0-9a-f]{6}$/i.test(objectConfig.color)) {
           const colorMaterial = runtimeMaterial as ColorMaterial;
           colorMaterial.color?.set(objectConfig.color);
           colorMaterial.userData.baseColor = colorMaterial.color?.getHex();
