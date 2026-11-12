@@ -1,20 +1,18 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, type RefObject } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import {
-  createPlaybackSnapshot,
-  sampleRouteAtDistance,
-  VISITOR_SPEED_METERS_PER_SECOND,
-  type RouteMetrics,
-  type RoutePlaybackSnapshot,
-} from "@/lib/map3d/route-guidance";
+import { advanceSimulation } from "@/lib/map3d/distance-calibration";
+import { RouteFollowCamera } from "@/lib/map3d/map-camera";
+import { createPlaybackSnapshot, sampleRouteAtDistance, type RouteMetrics, type RoutePlaybackSnapshot } from "@/lib/map3d/route-guidance";
 
 type RoutePlaybackControllerProps = {
   metrics: RouteMetrics | null;
   active: boolean;
   paused: boolean;
+  speed?: number;
+  playbackRef?: RefObject<RoutePlaybackSnapshot | null>;
   viewMode: "map" | "pov";
   restartToken: number;
   recenterToken: number;
@@ -22,100 +20,67 @@ type RoutePlaybackControllerProps = {
   onComplete: () => void;
 };
 
-export function RoutePlaybackController({
-  metrics,
-  active,
-  paused,
-  viewMode,
-  restartToken,
-  recenterToken,
-  onProgress,
-  onComplete,
-}: RoutePlaybackControllerProps) {
+export function RoutePlaybackController({ metrics, active, paused, speed = 1, playbackRef, viewMode, restartToken, recenterToken, onProgress, onComplete }: RoutePlaybackControllerProps) {
   const { camera, invalidate } = useThree();
   const traveledDistance = useRef(0);
   const lastPublishedAt = useRef(0);
   const completed = useRef(false);
+  const cameraPose = useRef(new RouteFollowCamera());
 
-  const placeCamera = useCallback(
-    (distance: number) => {
-      if (!metrics || !(camera instanceof THREE.PerspectiveCamera)) return;
-      const current = sampleRouteAtDistance(metrics, distance);
-      const ahead = sampleRouteAtDistance(
-        metrics,
-        Math.min(distance + 1.8, metrics.totalDistance),
-      );
-      const forward = ahead.point.clone().sub(current.point);
-      forward.y = 0;
-      if (forward.lengthSq() < 0.000001) forward.copy(current.direction);
-      forward.normalize();
+  const placeCamera = useCallback((distance: number, delta?: number) => {
+    if (!metrics || !(camera instanceof THREE.PerspectiveCamera)) return;
+    const current = sampleRouteAtDistance(metrics, distance);
+    const ahead = sampleRouteAtDistance(metrics, Math.min(distance + 1.8, metrics.totalDistance));
+    const forward = ahead.point.clone().sub(current.point);
+    forward.y = 0;
+    if (forward.lengthSq() < .000001) forward.copy(current.direction);
+    forward.normalize();
+    const eye = current.point.clone().addScaledVector(forward, -3);
+    eye.y = Math.max(current.point.y + 1.53, 1.65) + 1.2;
+    const target = current.point.clone().addScaledVector(forward, .8);
+    target.y = current.point.y + .65;
+    cameraPose.current.update(camera, eye, target, delta);
+  }, [camera, metrics]);
 
-      const eye = current.point.clone();
-      eye.y = Math.max(current.point.y + 1.53, 1.65);
-      const lookTarget = eye.clone().add(forward.multiplyScalar(7));
-      lookTarget.y = eye.y - 0.08;
-      camera.position.copy(eye);
-      camera.lookAt(lookTarget);
-    },
-    [camera, metrics],
-  );
-
-  const publish = useCallback(
-    (force = false) => {
-      if (!metrics) return;
-      const now = performance.now();
-      if (!force && now - lastPublishedAt.current < 100) return;
-      lastPublishedAt.current = now;
-      onProgress(createPlaybackSnapshot(metrics, traveledDistance.current));
-    },
-    [metrics, onProgress],
-  );
+  const publish = useCallback((force = false) => {
+    if (!metrics) return;
+    const snapshot = createPlaybackSnapshot(metrics, traveledDistance.current);
+    if (playbackRef) playbackRef.current = snapshot;
+    const now = performance.now();
+    if (!force && now - lastPublishedAt.current < 100) return;
+    lastPublishedAt.current = now;
+    onProgress(snapshot);
+  }, [playbackRef, metrics, onProgress]);
 
   useEffect(() => {
     if (!metrics || !active) return;
     traveledDistance.current = 0;
     completed.current = false;
-    placeCamera(0);
+    cameraPose.current.reset();
     publish(true);
     invalidate();
-  }, [active, invalidate, metrics, placeCamera, publish, restartToken]);
+  }, [active, invalidate, metrics, publish, restartToken]);
 
   useEffect(() => {
     if (!metrics || !active || viewMode !== "pov") return;
     placeCamera(traveledDistance.current);
     publish(true);
     invalidate();
-  }, [
-    active,
-    invalidate,
-    metrics,
-    placeCamera,
-    publish,
-    recenterToken,
-    viewMode,
-  ]);
+  }, [active, invalidate, metrics, placeCamera, publish, recenterToken, viewMode]);
 
+  // Run after OrbitControls (-1) and before the hero/labels (0).
   useFrame((_state, delta) => {
-    if (!metrics || !active || paused || viewMode !== "pov") return;
-    traveledDistance.current = Math.min(
-      traveledDistance.current +
-        Math.min(delta, 0.1) * VISITOR_SPEED_METERS_PER_SECOND,
-      metrics.totalDistance,
-    );
-    placeCamera(traveledDistance.current);
+    if (!metrics || !active || viewMode !== "pov") return;
+    if (!paused) traveledDistance.current = advanceSimulation(traveledDistance.current, delta, speed, metrics.totalDistance);
+    placeCamera(traveledDistance.current, delta);
     publish();
-
-    if (
-      traveledDistance.current >= metrics.totalDistance &&
-      !completed.current
-    ) {
+    if (!paused && traveledDistance.current >= metrics.totalDistance && !completed.current) {
       completed.current = true;
       publish(true);
       onComplete();
       return;
     }
-    invalidate();
-  });
-
+    if (!paused) invalidate();
+  }, -.5);
   return null;
 }

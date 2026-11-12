@@ -1,3 +1,5 @@
+import { METERS_PER_MODEL_UNIT } from "./distance-calibration";
+
 export type GeographicPoint = {
   latitude: number;
   longitude: number;
@@ -46,15 +48,17 @@ export function geographicToT1Model(point: GeographicPoint): ModelPoint {
     ((point.latitude - calibration.origin.latitude) * Math.PI * EARTH_RADIUS_METERS) /
     180;
 
-  const px = east - calibration.centroid[0];
-  const pz = -north - calibration.centroid[1];
   const rotation = (calibration.rotationDeg * Math.PI) / 180;
   const cosine = Math.cos(rotation);
   const sine = Math.sin(rotation);
 
   return [
-    (cosine * px - sine * pz) * calibration.scale + calibration.shift[0],
-    (sine * px + cosine * pz) * calibration.scale + calibration.shift[1],
+    // Preserve the existing geographic origin registration; recalibrate only
+    // displacement, so updating metres/unit does not shift the whole map.
+    (cosine * -calibration.centroid[0] - sine * -calibration.centroid[1]) * calibration.scale + calibration.shift[0]
+      + (cosine * east + sine * north) / METERS_PER_MODEL_UNIT.x,
+    (sine * -calibration.centroid[0] + cosine * -calibration.centroid[1]) * calibration.scale + calibration.shift[1]
+      + (sine * east - cosine * north) / METERS_PER_MODEL_UNIT.z,
   ];
 }
 

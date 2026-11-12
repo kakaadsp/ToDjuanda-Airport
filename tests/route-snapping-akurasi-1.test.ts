@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { METERS_PER_MODEL_UNIT } from "../src/lib/map3d/distance-calibration";
 import { projectPointOntoRouteSegments, type RouteWorldPoint } from "../src/lib/map3d/route-guidance";
 
 test("Akurasi 1.0: projects point onto route segments and stays strictly on line", () => {
@@ -17,7 +18,7 @@ test("Akurasi 1.0: projects point onto route segments and stays strictly on line
   assert.equal(result.projected[1], 1);
   assert.equal(result.projected[2], 0);
   assert.equal(result.segmentIndex, 0);
-  assert.equal(result.distanceFromStart, 5);
+  assert.equal(result.distanceFromStart, 5 * METERS_PER_MODEL_UNIT.x);
   assert.equal(result.deviationDistance, 3);
 });
 

@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { METERS_PER_MODEL_UNIT } from "../src/lib/map3d/distance-calibration";
 import { createRouteMetrics } from "../src/lib/map3d/route-guidance";
 import { createRouteSteps, getStepPoints } from "../src/lib/map3d/route-steps";
 
@@ -13,7 +14,7 @@ test("turns an SVG route into ordered walking instructions", () => {
   assert.ok(metrics);
   const steps = createRouteSteps(metrics);
   assert.deepEqual(steps.map((step) => step.kind), ["straight", "right", "left", "arrive"]);
-  assert.deepEqual(steps.map((step) => Math.round(step.distance)), [10, 10, 10, 0]);
+  assert.deepEqual(steps.map((step) => Math.round(step.distance)), [Math.round(10 * METERS_PER_MODEL_UNIT.z), Math.round(10 * METERS_PER_MODEL_UNIT.x), Math.round(10 * METERS_PER_MODEL_UNIT.z), 0]);
   assert.deepEqual(getStepPoints(metrics, steps[1]).map((point) => point.toArray()), [
     [0, 0, 10],
     [10, 0, 10],

@@ -71,6 +71,7 @@ type SceneModelProps = {
   floorView?: FloorView;
   /** Tampilkan nama dan ikon lokasi untuk pengunjung. */
   showObjectLabels?: boolean;
+  liteMode?: boolean;
 };
 
 /**
@@ -293,7 +294,7 @@ function isFloorSurfaceName(objectName: string) {
   return key === "visitor" || key === "departure" || key === "arrival";
 }
 
-export function SceneModel({ selectedUuid, onSelect, onSelectFloor, onSelectPoint, onSelectEntryPoint, onReady, objectConfigs = {}, modelUrl = GROUND_FLOOR_MODEL_URL, floorView = "ALL", showObjectLabels = false }: SceneModelProps) {
+export function SceneModel({ selectedUuid, onSelect, onSelectFloor, onSelectPoint, onSelectEntryPoint, onReady, objectConfigs = {}, modelUrl = GROUND_FLOOR_MODEL_URL, floorView = "ALL", showObjectLabels = false, liteMode = false }: SceneModelProps) {
   const gltf = useGLTF(modelUrl);
   const sourceScene = gltf.scene;
   const sourceParser = gltf.parser as typeof gltf.parser & {
@@ -614,7 +615,7 @@ export function SceneModel({ selectedUuid, onSelect, onSelectFloor, onSelectPoin
         }}
       />
       {selectedEntryObject && selectedEntryDoors && !/^DOOR__/i.test(selectedEntryObjectName) && <EntryDoorMarkers object={selectedEntryObject} objectName={selectedEntryObjectName} doors={selectedEntryDoors} onSelect={onSelectEntryPoint} />}
-      {showObjectLabels && floorView !== "ALL" && objectLabels.filter((label) => floorView === label.floor).map((label) => (
+      {showObjectLabels && floorView !== "ALL" && objectLabels.filter((label) => floorView === label.floor && (!liteMode || label.key === selectedUuid || label.category !== "building")).map((label) => (
         <ObjectLabelMarker key={label.key} label={label.name} category={label.category} position={label.position} />
       ))}
     </>

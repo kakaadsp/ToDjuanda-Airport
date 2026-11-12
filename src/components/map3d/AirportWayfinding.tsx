@@ -5,6 +5,7 @@ import {
   Suspense,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useImperativeHandle,
   useMemo,
   useRef,
@@ -53,6 +54,9 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import * as THREE from "three";
+import { NavigationHero } from "./NavigationHero";
+import { SIMULATION_SPEEDS } from "@/lib/map3d/distance-calibration";
+import { DestinationSearchInput } from "./DestinationSearchInput";
 import { PassengerRoadmap } from "./PassengerRoadmap";
 import { FloorSwitcher } from "./FloorSwitcher";
 import { ExteriorScene } from "./ExteriorScene";
@@ -74,6 +78,7 @@ import {
   type RouteWorldPoint,
   type RoutePlaybackSnapshot,
   projectPointOntoRouteSegments,
+  VISITOR_SPEED_METERS_PER_SECOND,
 } from "@/lib/map3d/route-guidance";
 import { createRouteSteps } from "@/lib/map3d/route-steps";
 import {
@@ -123,6 +128,8 @@ const CameraController = forwardRef<
     const { camera, invalidate, size: viewportSize } = useThree();
     const controlsRef = useRef<OrbitControlsImpl>(null);
     const lastHeadingRef = useRef(Number.NaN);
+    const cameraModeRef = useRef(viewMode);
+    useLayoutEffect(() => { cameraModeRef.current = viewMode; }, [viewMode]);
 
     const updateHeading = useCallback(() => {
       const direction = camera.getWorldDirection(new THREE.Vector3());
@@ -178,6 +185,7 @@ const CameraController = forwardRef<
     );
 
     const fitView = useCallback(() => {
+      if (cameraModeRef.current !== "map") return;
       if (
         !bounds ||
         !(camera instanceof THREE.PerspectiveCamera) ||
@@ -197,6 +205,7 @@ const CameraController = forwardRef<
 
     const zoomBy = useCallback(
       (factor: number) => {
+        if (cameraModeRef.current !== "map") return;
         if (!controlsRef.current) return;
         const target = controlsRef.current.target;
         const offset = camera.position.clone().sub(target);
@@ -216,6 +225,7 @@ const CameraController = forwardRef<
 
     const focusObject = useCallback(
       (object: THREE.Object3D) => {
+        if (cameraModeRef.current !== "map") return;
         if (
           !controlsRef.current ||
           !(camera instanceof THREE.PerspectiveCamera)
@@ -244,6 +254,7 @@ const CameraController = forwardRef<
 
     const focusPoint = useCallback(
       (point: THREE.Vector3) => {
+        if (cameraModeRef.current !== "map") return;
         if (!controlsRef.current || !(camera instanceof THREE.PerspectiveCamera)) {
           return;
         }
@@ -259,6 +270,7 @@ const CameraController = forwardRef<
 
     const focusRoute = useCallback(
       (points: THREE.Vector3[]) => {
+        if (cameraModeRef.current !== "map") return;
         if (
           !points.length ||
           !controlsRef.current ||
@@ -459,7 +471,7 @@ function nearestRouteDistance(metrics: { points: THREE.Vector3[]; cumulativeDist
     const squared = projected.distanceToSquared(point);
     if (squared < bestSquared) {
       bestSquared = squared;
-      bestDistance = metrics.cumulativeDistances[index] + Math.sqrt(lengthSquared) * ratio;
+      bestDistance = metrics.cumulativeDistances[index] + (metrics.cumulativeDistances[index + 1] - metrics.cumulativeDistances[index]) * ratio;
     }
   }
   return bestDistance;
@@ -496,12 +508,21 @@ export function AirportWayfinding() {
   const [liveTracking, setLiveTracking] = useState(false);
   const [livePosition, setLivePosition] = useState<RouteWorldPoint | null>(null);
   const liveReadingTimestamp = useRef<number | null>(null);
+  const simulationFrame = useRef<RoutePlaybackSnapshot | null>(null);
   const [routeProgress, setRouteProgress] =
     useState<RoutePlaybackSnapshot | null>(null);
   const [routeRestartToken, setRouteRestartToken] = useState(0);
   const [routeRecenterToken, setRouteRecenterToken] = useState(0);
   const [floorView, setFloorView] = useState<FloorView>("ALL");
   const [showExterior, setShowExterior] = useState(true);
+  const [liteMode, setLiteMode] = useState(() => {
+    try { return typeof window !== "undefined" && localStorage.getItem("todjuanda-map-lite") === "true"; } catch { return false; }
+  });
+  const [simulationSpeed, setSimulationSpeed] = useState<number>(1);
+  const toggleLiteMode = () => setLiteMode((current) => {
+    try { localStorage.setItem("todjuanda-map-lite", String(!current)); } catch { /* Storage is optional. */ }
+    return !current;
+  });
   const [exteriorAttribution, setExteriorAttribution] = useState<string | null>(null);
   const [compassRotation, setCompassRotation] = useState(0);
   const [mobileSheetExpanded, setMobileSheetExpanded] = useState(false);
@@ -747,7 +768,7 @@ export function AirportWayfinding() {
   // Saat simulasi berjalan dengan satu lantai terpilih, peta mengikuti lantai
   // tempat pengunjung berada tanpa mengubah pilihan pengguna.
   const playbackFloor = viewMode === "pov" && routeProgress && navigation ? floorAtHeight(navigation, routeProgress.position[1]) : null;
-  const shownFloorView: FloorView = playbackFloor && floorView !== "ALL" ? playbackFloor : floorView;
+  const shownFloorView: FloorView = liteMode && floorView === "ALL" ? (playbackFloor ?? passengerFloor) : playbackFloor && floorView !== "ALL" ? playbackFloor : floorView;
   const highlightedPoints = useMemo(
     () => activeStep
       ? routeWorldPoints.slice(activeStep.startIndex, activeStep.kind === "arrive" ? activeStep.startIndex + 1 : activeStep.endIndex + 1)
@@ -1076,6 +1097,17 @@ export function AirportWayfinding() {
       .slice(0, 10);
   }, [mapObjectConfigs, query, selectableBuildings]);
 
+  const destinationOptions = useMemo(() => selectableBuildings.map(record => {
+    const displayName = mapObjectConfigs[record.name]?.displayName?.trim();
+    const name = displayName || record.selectableLabel || record.name;
+    return {
+      id: record.uuid,
+      name,
+      detail: record.metadata.category + (multiFloor ? " / " + FLOOR_LABELS[record.floor] : "") + (name !== record.name ? " / " + record.name : ""),
+      keywords: [name, record.name, record.selectableLabel ?? "", record.metadata.category].join(" "),
+    };
+  }), [mapObjectConfigs, multiFloor, selectableBuildings]);
+
   const chooseSearchResult = (record: SceneObjectRecord) => {
     if (selectingStart) {
       setQuery("");
@@ -1301,7 +1333,7 @@ export function AirportWayfinding() {
     ? Math.max(0, routeMetrics.totalDistance - traveledRouteDistance)
     : 0;
   const remainingRouteMinutes = remainingRouteDistance > 0
-    ? Math.ceil(remainingRouteDistance / 1.35 / 60)
+    ? Math.ceil(remainingRouteDistance / VISITOR_SPEED_METERS_PER_SECOND / 60)
     : 0;
   const searchPlaceholderExample = multiFloor ? "T1-GF-01, Gate 5" : "T1-GF-...";
 
@@ -1309,6 +1341,7 @@ export function AirportWayfinding() {
     <main
       className="viewer-shell"
       data-view-mode={viewMode}
+      data-lite-mode={liteMode}
       data-floor-view={shownFloorView}
       data-start-location={startName ?? ""}
       data-destination-location={destinationName ?? ""}
@@ -1324,7 +1357,7 @@ export function AirportWayfinding() {
       />
       <div className="canvas-stage">
         <Canvas
-          dpr={[1, 1.75]}
+          dpr={liteMode ? 1 : [1, 1.75]}
           frameloop="demand"
           camera={{ fov: 70, near: 0.01, far: 100000, position: [0, 10, 10] }}
           gl={{
@@ -1351,16 +1384,17 @@ export function AirportWayfinding() {
             intensity={1.85}
             color="#FFFDF7"
           />
-          <directionalLight
+          {!liteMode && <directionalLight
             position={[-10, 8, -12]}
             intensity={0.52}
             color="#D9E8FF"
-          />
+          />}
           <Suspense fallback={null}>
             <SceneModel
               modelUrl={TERMINAL_MODEL_URL}
               floorView={shownFloorView}
               showObjectLabels
+              liteMode={liteMode}
               selectedUuid={selected?.uuid ?? null}
               onSelect={handleSelect}
               onSelectPoint={selectingStart && navigation ? handleManualStartPoint : undefined}
@@ -1368,11 +1402,13 @@ export function AirportWayfinding() {
               onReady={handleReady}
             />
             {/* Lingkungan luar menempel di tanah, jadi tidak ditampilkan saat hanya Lantai 2 yang terlihat. */}
-            {bounds && shownFloorView !== "L2" && (
+            {bounds && !liteMode && showExterior && shownFloorView !== "L2" && (
               <ExteriorScene baseY={bounds.box.min.y} visible={showExterior} onAttribution={setExteriorAttribution} />
             )}
-            {bounds && showExterior && <ApronAircraft stands={aircraftStands} groundY={bounds.box.min.y} />}
+            {bounds && !liteMode && showExterior && <ApronAircraft stands={aircraftStands} groundY={bounds.box.min.y} />}
             <GridRouteLayer
+              playbackRef={viewMode === "pov" && !liveTracking ? simulationFrame : undefined}
+              heroVisible={Boolean(routeMetrics)}
               points={routeWorldPoints}
               highlightedPoints={highlightedPoints}
               start={startWorldPoint}
@@ -1389,10 +1425,19 @@ export function AirportWayfinding() {
             viewMode={viewMode}
             onHeadingChange={setCompassRotation}
           />
+          {routeMetrics && visibleRouteProgress && (
+            <Suspense fallback={null}>
+              <NavigationHero position={liveTracking && livePosition ? livePosition : visibleRouteProgress.position}
+                direction={visibleRouteProgress.direction} moving={viewMode === "pov" && !routePaused && !liveTracking}
+                speed={simulationSpeed} playbackRef={viewMode === "pov" && !liveTracking ? simulationFrame : undefined} />
+            </Suspense>
+          )}
           <RoutePlaybackController
+            playbackRef={simulationFrame}
             metrics={routeMetrics}
             active={routeSessionActive}
-            paused={routePaused}
+            paused={routePaused || liveTracking}
+            speed={simulationSpeed}
             viewMode={viewMode}
             restartToken={routeRestartToken}
             recenterToken={routeRecenterToken}
@@ -1403,7 +1448,7 @@ export function AirportWayfinding() {
       </div>
 
       <LoadingOverlay modelReady={bounds !== null} lang={lang} />
-      <FloorSwitcher view={shownFloorView} floors={modelFloors.length ? modelFloors : ["L1"]} onSelect={changeFloor} />
+      <FloorSwitcher view={shownFloorView} floors={modelFloors.length ? modelFloors : ["L1"]} onSelect={changeFloor} allowAll={!liteMode} />
 
       {/* Backdrop to close search dropdown when tapping outside */}
       {searchFocused && (
@@ -1642,19 +1687,23 @@ export function AirportWayfinding() {
 
               <div className="gmaps-input-row">
                 <span className="gmaps-dot gmaps-dot-dest" />
-                <button
-                  type="button"
-                  className={`gmaps-input-btn ${!selectingStart ? "is-focused" : ""}`}
-                  onClick={() => {
+                <DestinationSearchInput
+                  value={destinationName ?? ""}
+                  label={copy.to}
+                  placeholder={copy.chooseDestination}
+                  noResults={copy.noResults}
+                  options={destinationOptions}
+                  onFocus={() => {
                     setSelectingStart(false);
+                    setSearchFocused(false);
                     setQuery("");
-                    setSearchFocused(true);
                     setMobileSheetExpanded(true);
                   }}
-                >
-                  <small>{copy.to}</small>
-                  <span>{routeSessionActive ? destinationName : copy.chooseDestination}</span>
-                </button>
+                  onSelect={(id) => {
+                    const record = selectableBuildings.find(item => item.uuid === id);
+                    if (record) chooseSearchResult(record);
+                  }}
+                />
               </div>
             </div>
 
@@ -1751,6 +1800,11 @@ export function AirportWayfinding() {
                   </button>
                 </div>
 
+                <div className="map-simulation-speed" role="group" aria-label={lang === "ID" ? "Kecepatan simulasi" : "Simulation speed"}>
+                  <span>{lang === "ID" ? "Kecepatan simulasi" : "Simulation speed"}</span>
+                  {SIMULATION_SPEEDS.map((speed) => <button key={speed} type="button" aria-pressed={simulationSpeed === speed}
+                    onClick={() => setSimulationSpeed(speed)}>{speed}×</button>)}
+                </div>
                 <div className="gmaps-steps-container">
                   <div className="gmaps-steps-title">
                     <h4>{copy.stepTitle}</h4>
@@ -1912,6 +1966,11 @@ export function AirportWayfinding() {
 
       {/* Floating Controls di Kanan Bawah */}
       <div className="gmaps-bottom-controls" aria-label={lang === "ID" ? "Kontrol peta" : "Map controls"}>
+        <button type="button" className={`gmaps-control-btn map-lite-toggle ${liteMode ? "is-active" : ""}`}
+          aria-pressed={liteMode} onClick={toggleLiteMode}
+          title={lang === "ID" ? "Mode Lite: kurangi detail agar peta lebih ringan" : "Lite mode: reduce detail for a lighter map"}>
+          {liteMode ? "Lite ✓" : "Lite"}
+        </button>
         {/* Tombol Kompas Google Maps */}
         <button
           type="button"
@@ -1966,7 +2025,7 @@ export function AirportWayfinding() {
             type="button"
             className={`gmaps-control-btn ${showExterior ? "is-active" : ""}`}
             onClick={() => setShowExterior((v) => !v)}
-            disabled={!bounds || shownFloorView === "L2"}
+            disabled={!bounds || liteMode || shownFloorView === "L2"}
             title={lang === "ID" ? "Area Luar Gedung / Apron" : "Exterior / Apron"}
             aria-label="Toggle area luar"
           >
@@ -1975,7 +2034,7 @@ export function AirportWayfinding() {
         </div>
       </div>
 
-      {exteriorAttribution && <p className="map-attribution">Area luar: {exteriorAttribution}</p>}
+      {!liteMode && showExterior && exteriorAttribution && <p className="map-attribution">Area luar: {exteriorAttribution}</p>}
 
       {/* Google Maps Place Details Card */}
       {selected && selectedLocationConfig && (

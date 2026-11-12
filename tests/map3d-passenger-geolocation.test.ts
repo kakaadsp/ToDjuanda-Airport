@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { calibratedDistance } from "../src/lib/map3d/distance-calibration";
 import {
   distanceFromT1Origin,
   geographicToT1Model,
@@ -24,12 +25,9 @@ test("nearby movement is converted to model meters with the calibrated scale", (
     latitude: origin.latitude,
     longitude: origin.longitude + 100 / (111_320 * Math.cos((origin.latitude * Math.PI) / 180)),
   });
-  const modelDistance = Math.hypot(
-    aboutOneHundredMetersEast[0] - start[0],
-    aboutOneHundredMetersEast[1] - start[1],
-  );
+  const modelDistance = calibratedDistance([start[0], 0, start[1]], [aboutOneHundredMetersEast[0], 0, aboutOneHundredMetersEast[1]]);
 
-  assert.ok(Math.abs(modelDistance - 81) < 0.5);
+  assert.ok(Math.abs(modelDistance - 100) < 0.5);
 });
 
 test("only accurate readings near Terminal 1 are used on the indoor map", () => {

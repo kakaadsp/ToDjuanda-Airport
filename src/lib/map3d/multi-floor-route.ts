@@ -1,4 +1,5 @@
 import type * as THREE from "three";
+import { createRouteMetrics } from "./route-guidance";
 import { FLOOR_LABELS, FLOOR_ORDER, type FloorId } from "./floors";
 import { connectorAllows, connectorLabel, detectFloorConnectors, type FloorConnector } from "./floor-connectors";
 import { analyzeAllLevels } from "./scene-walkability";
@@ -143,7 +144,7 @@ export function findFloorRoute(navigation: FloorNavigation, start: RoutePlace, t
     if (!leg) return null;
     const route = new RouteBuilder();
     lift(leg.grid, leg.points).forEach((point) => route.push(point, start.floor));
-    return { points: route.points, transitions: [], pointFloors: route.floors, length: pathLength(leg.points) };
+    return { points: route.points, transitions: [], pointFloors: route.floors, length: createRouteMetrics(route.points)?.totalDistance ?? 0 };
   }
 
   const travel = FLOOR_ORDER.indexOf(target.floor) > FLOOR_ORDER.indexOf(start.floor) ? "up" : "down";
@@ -198,7 +199,7 @@ export function findFloorRoute(navigation: FloorNavigation, start: RoutePlace, t
           label: connectorLabel(candidate.connector, travel, FLOOR_LABELS[target.floor]),
         }],
         pointFloors: route.floors,
-        length,
+        length: createRouteMetrics(route.points)?.totalDistance ?? 0,
       },
     };
   }

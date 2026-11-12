@@ -4292,3 +4292,22 @@
     max-width: none;
   }
 }
+/* Lite and simulation controls: scoped to the existing map viewer. */
+.viewer-shell .map-lite-toggle { min-width: 52px; font-size: 12px; font-weight: 700; }
+.viewer-shell .map-lite-toggle[aria-pressed="true"] { background: #d9f4e9; color: #145b41; }
+.viewer-shell .map-simulation-speed { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 12px 0; font-size: 12px; }
+.viewer-shell .map-simulation-speed span { margin-right: auto; }
+.viewer-shell .map-simulation-speed button { min-width: 44px; min-height: 36px; border: 1px solid #9aaebd; border-radius: 8px; background: #fff; color: #153d57; cursor: pointer; }
+.viewer-shell .map-simulation-speed button[aria-pressed="true"] { background: #075985; color: #fff; }
+.viewer-shell[data-lite-mode="true"] .gmaps-place-card,
+.viewer-shell[data-lite-mode="true"] .gmaps-directions-panel { backdrop-filter: none; }
+
+/* Inline destination search in the directions panel. */
+.map3d-root .gmaps-destination-search { flex: 1; min-width: 0; }
+.map3d-root .gmaps-destination-search > .gmaps-input-btn { width: 100%; box-sizing: border-box; cursor: text; }
+.map3d-root .gmaps-destination-input { width: 100%; min-width: 0; padding: 0; border: 0; outline: 0; background: transparent; color: #f8fafc; font: inherit; font-size: 16px; font-weight: 600; }
+.map3d-root .gmaps-destination-input::placeholder { color: #94a3b8; opacity: 1; }
+.map3d-root .gmaps-destination-results { margin-top: 6px; max-height: 240px; overflow-y: auto; border: 1px solid #334155; border-radius: 8px; background: #0f172a; }
+.map3d-root .gmaps-destination-results .gmaps-search-item { width: 100%; text-align: left; }
+.map3d-root .gmaps-destination-results [aria-selected="true"] { background: #1e3a50; }
+.map3d-root .gmaps-destination-empty { margin: 0; padding: 12px; color: #94a3b8; font-size: 13px; }

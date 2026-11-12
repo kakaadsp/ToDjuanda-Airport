@@ -1,6 +1,7 @@
 import * as THREE from "three";
+import { calibratedDistance, METERS_PER_MODEL_UNIT } from "./distance-calibration";
 
-export const VISITOR_SPEED_METERS_PER_SECOND = 1.35;
+export { VISITOR_SPEED_METERS_PER_SECOND } from "./distance-calibration";
 
 export type RouteWorldPoint = [number, number, number];
 
@@ -39,7 +40,7 @@ export function createRouteMetrics(
   for (let index = 1; index < points.length; index += 1) {
     cumulativeDistances.push(
       cumulativeDistances[index - 1] +
-        points[index].distanceTo(points[index - 1]),
+        calibratedDistance(points[index].toArray(), points[index - 1].toArray()),
     );
   }
   return {
@@ -174,13 +175,15 @@ export function projectPointOntoRouteSegments(
     const dy = b[1] - a[1];
     const dz = b[2] - a[2];
     const segLengthSq = dx * dx + dz * dz;
-    const segLength = Math.sqrt(segLengthSq);
+    const segLength = calibratedDistance(a, b);
 
     let t = 0;
     if (segLengthSq > 0.000001) {
       const tox = target[0] - a[0];
       const toz = target[2] - a[2];
-      t = (tox * dx + toz * dz) / segLengthSq;
+      const sx = METERS_PER_MODEL_UNIT.x ** 2;
+      const sz = METERS_PER_MODEL_UNIT.z ** 2;
+      t = (tox * dx * sx + toz * dz * sz) / (dx * dx * sx + dz * dz * sz);
       t = Math.max(0, Math.min(1, t));
     }
 

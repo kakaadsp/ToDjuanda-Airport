@@ -9,12 +9,13 @@ type FloorSwitcherProps = {
   /** Lantai yang ada pada model yang dimuat. */
   floors: readonly FloorId[];
   onSelect: (view: FloorView) => void;
+  allowAll?: boolean;
 };
 
 /**
  * Pemilih lantai vertikal Google Maps style.
  */
-export function FloorSwitcher({ view, floors, onSelect }: FloorSwitcherProps) {
+export function FloorSwitcher({ view, floors, onSelect, allowAll = true }: FloorSwitcherProps) {
   const lang = useMapStore((state) => state.lang);
   const floorName = (floor: FloorId) =>
     lang === "EN" ? (floor === "L1" ? "1st Floor" : "2nd Floor") : FLOOR_LABELS[floor];
@@ -28,7 +29,7 @@ export function FloorSwitcher({ view, floors, onSelect }: FloorSwitcherProps) {
             className={`gmaps-floor-btn ${view === "L2" ? "is-active" : ""}`}
             aria-pressed={view === "L2"}
             title={lang === "EN" ? "2nd Floor - Departures & Gates" : "Lantai 2 - Keberangkatan & Gate"}
-            onClick={() => onSelect(view === "L2" ? "ALL" : "L2")}
+            onClick={() => onSelect(view === "L2" && allowAll ? "ALL" : "L2")}
           >
             <span>2</span>
             <small className="gmaps-floor-tooltip">{floorName("L2")}</small>
@@ -40,13 +41,13 @@ export function FloorSwitcher({ view, floors, onSelect }: FloorSwitcherProps) {
             className={`gmaps-floor-btn ${view === "L1" ? "is-active" : ""}`}
             aria-pressed={view === "L1"}
             title={lang === "EN" ? "1st Floor - Check-in & Arrivals" : "Lantai 1 - Check-in & Kedatangan"}
-            onClick={() => onSelect(view === "L1" ? "ALL" : "L1")}
+            onClick={() => onSelect(view === "L1" && allowAll ? "ALL" : "L1")}
           >
             <span>1</span>
             <small className="gmaps-floor-tooltip">{floorName("L1")}</small>
           </button>
         )}
-        {floors.length > 1 && (
+        {floors.length > 1 && allowAll && (
           <button
             type="button"
             className={`gmaps-floor-btn gmaps-floor-all ${view === "ALL" ? "is-active" : ""}`}
