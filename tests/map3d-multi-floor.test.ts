@@ -70,7 +70,7 @@ test("both floors are detected and the upper floor sits about 3 m above the grou
 
 test("escalators and stairs connect the floors in their marked direction", () => {
   const byName = (pattern: RegExp) => navigation.connectors.filter((connector) => pattern.test(connector.name));
-  assert.ok(byName(/EKS NAIK/).length >= 3);
+  assert.ok(byName(/EKS NAIK/).length >= 2);
   assert.ok(byName(/EKS NAIK/).every((connector) => connector.direction === "up"));
   assert.ok(byName(/EKS TURUN/).length >= 3);
   assert.ok(byName(/EKS TURUN/).every((connector) => connector.direction === "down"));

@@ -20,6 +20,7 @@ import {
   getMapObjectPhotoUrl,
   inferCommercialCategory,
   readMapObjectConfigs,
+  sanitizeSafeUrl,
   saveMapObjectConfigToDb,
   writeMapObjectConfigs,
   type MapObjectConfig,
@@ -882,9 +883,9 @@ export function AdminMapPanel({ initialObjectName = null, focusNonce = 0 }: { in
                     <ImageIcon size={16} style={{ color: "#00a8bd" }} />
                     Review Foto Tampak Depan
                   </span>
-                  {draft.photoUrl?.trim() && (
+                  {sanitizeSafeUrl(draft.photoUrl) && (
                     <a
-                      href={draft.photoUrl}
+                      href={sanitizeSafeUrl(draft.photoUrl)}
                       target="_blank"
                       rel="noopener noreferrer"
                       style={{

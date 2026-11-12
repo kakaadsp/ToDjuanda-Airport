@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { can } from "@/lib/authorization";
+import { sanitizeSafeUrl } from "@/lib/map3d/admin-object-config";
 
 /**
  * GET /api/admin/map-objects
@@ -71,47 +72,52 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Body tidak valid" }, { status: 400 });
   }
 
+  const entries = Object.entries(body);
+  if (entries.length > 500) {
+    return NextResponse.json({ error: "Ukuran batch melebihi batas maksimal (500 objek)" }, { status: 413 });
+  }
+
   try {
     const results: string[] = [];
-    for (const [objectName, rawConfig] of Object.entries(body)) {
+    for (const [objectName, rawConfig] of entries) {
       if (!objectName || typeof rawConfig !== "object" || !rawConfig) continue;
       const config = rawConfig as Record<string, unknown>;
 
       await prisma.mapObjectConfig.upsert({
-        where: { objectName },
+        where: { objectName: String(objectName).slice(0, 80) },
         update: {
-          displayName: typeof config.displayName === "string" ? config.displayName : "",
-          entityType: typeof config.entityType === "string" ? config.entityType : "TENANT",
-          color: typeof config.color === "string" ? config.color : "",
-          occupancy: typeof config.occupancy === "string" ? config.occupancy : "OCCUPIED",
-          description: typeof config.description === "string" ? config.description : "",
-          photoUrl: typeof config.photoUrl === "string" ? config.photoUrl : "",
-          websiteUrl: typeof config.websiteUrl === "string" ? config.websiteUrl : "",
-          instagramUrl: typeof config.instagramUrl === "string" ? config.instagramUrl : "",
-          contact: typeof config.contact === "string" ? config.contact : "",
-          openTime: typeof config.openTime === "string" ? config.openTime : "",
-          closeTime: typeof config.closeTime === "string" ? config.closeTime : "",
-          activeFrom: typeof config.activeFrom === "string" ? config.activeFrom : "",
-          activeUntil: typeof config.activeUntil === "string" ? config.activeUntil : "",
-          entryDoors: Array.isArray(config.entryDoors) ? config.entryDoors : [],
+          displayName: typeof config.displayName === "string" ? config.displayName.slice(0, 100) : "",
+          entityType: config.entityType === "FACILITY" ? "FACILITY" : "TENANT",
+          color: typeof config.color === "string" && /^#[0-9a-f]{6}$/i.test(config.color) ? config.color : "",
+          occupancy: typeof config.occupancy === "string" ? config.occupancy.slice(0, 20) : "OCCUPIED",
+          description: typeof config.description === "string" ? config.description.slice(0, 2000) : "",
+          photoUrl: sanitizeSafeUrl(config.photoUrl as string),
+          websiteUrl: sanitizeSafeUrl(config.websiteUrl as string),
+          instagramUrl: sanitizeSafeUrl(config.instagramUrl as string),
+          contact: typeof config.contact === "string" ? config.contact.slice(0, 100) : "",
+          openTime: typeof config.openTime === "string" ? config.openTime.slice(0, 10) : "",
+          closeTime: typeof config.closeTime === "string" ? config.closeTime.slice(0, 10) : "",
+          activeFrom: typeof config.activeFrom === "string" ? config.activeFrom.slice(0, 30) : "",
+          activeUntil: typeof config.activeUntil === "string" ? config.activeUntil.slice(0, 30) : "",
+          entryDoors: Array.isArray(config.entryDoors) ? config.entryDoors.slice(0, 4) : [],
           updatedById: session.user.id,
         },
         create: {
-          objectName,
-          displayName: typeof config.displayName === "string" ? config.displayName : "",
-          entityType: typeof config.entityType === "string" ? config.entityType : "TENANT",
-          color: typeof config.color === "string" ? config.color : "",
-          occupancy: typeof config.occupancy === "string" ? config.occupancy : "OCCUPIED",
-          description: typeof config.description === "string" ? config.description : "",
-          photoUrl: typeof config.photoUrl === "string" ? config.photoUrl : "",
-          websiteUrl: typeof config.websiteUrl === "string" ? config.websiteUrl : "",
-          instagramUrl: typeof config.instagramUrl === "string" ? config.instagramUrl : "",
-          contact: typeof config.contact === "string" ? config.contact : "",
-          openTime: typeof config.openTime === "string" ? config.openTime : "",
-          closeTime: typeof config.closeTime === "string" ? config.closeTime : "",
-          activeFrom: typeof config.activeFrom === "string" ? config.activeFrom : "",
-          activeUntil: typeof config.activeUntil === "string" ? config.activeUntil : "",
-          entryDoors: Array.isArray(config.entryDoors) ? config.entryDoors : [],
+          objectName: String(objectName).slice(0, 80),
+          displayName: typeof config.displayName === "string" ? config.displayName.slice(0, 100) : "",
+          entityType: config.entityType === "FACILITY" ? "FACILITY" : "TENANT",
+          color: typeof config.color === "string" && /^#[0-9a-f]{6}$/i.test(config.color) ? config.color : "",
+          occupancy: typeof config.occupancy === "string" ? config.occupancy.slice(0, 20) : "OCCUPIED",
+          description: typeof config.description === "string" ? config.description.slice(0, 2000) : "",
+          photoUrl: sanitizeSafeUrl(config.photoUrl as string),
+          websiteUrl: sanitizeSafeUrl(config.websiteUrl as string),
+          instagramUrl: sanitizeSafeUrl(config.instagramUrl as string),
+          contact: typeof config.contact === "string" ? config.contact.slice(0, 100) : "",
+          openTime: typeof config.openTime === "string" ? config.openTime.slice(0, 10) : "",
+          closeTime: typeof config.closeTime === "string" ? config.closeTime.slice(0, 10) : "",
+          activeFrom: typeof config.activeFrom === "string" ? config.activeFrom.slice(0, 30) : "",
+          activeUntil: typeof config.activeUntil === "string" ? config.activeUntil.slice(0, 30) : "",
+          entryDoors: Array.isArray(config.entryDoors) ? config.entryDoors.slice(0, 4) : [],
           updatedById: session.user.id,
         },
       });

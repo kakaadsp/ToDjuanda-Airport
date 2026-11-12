@@ -166,20 +166,38 @@ export type MapObjectConfigByName = Record<string, MapObjectConfig>;
 
 export const MAP_OBJECT_CONFIG_STORAGE_KEY = "todjuanda.admin.map-object-config.v1";
 
-/** Converts common Google Drive share links into an image URL usable by <img>. */
-export function getMapObjectPhotoUrl(value: string | undefined | null): string {
+/**
+ * Memastikan URL hanya menggunakan protokol https: atau http:
+ * Mencegah serangan XSS berbasis skema URL seperti javascript:, data:, atau vbscript:
+ */
+export function sanitizeSafeUrl(value: string | undefined | null): string {
   const raw = value?.trim() ?? "";
   if (!raw) return "";
   try {
     const url = new URL(raw);
+    if (url.protocol === "https:" || url.protocol === "http:") {
+      return url.toString();
+    }
+    return "";
+  } catch {
+    return "";
+  }
+}
+
+/** Converts common Google Drive share links into an image URL usable by <img>. */
+export function getMapObjectPhotoUrl(value: string | undefined | null): string {
+  const safe = sanitizeSafeUrl(value);
+  if (!safe) return "";
+  try {
+    const url = new URL(safe);
     if (!/(^|\.)drive\.google\.com$/i.test(url.hostname) && !/(^|\.)googleusercontent\.com$/i.test(url.hostname)) {
-      return raw;
+      return safe;
     }
     const fileMatch = url.pathname.match(/\/(?:file\/)?d\/([^/]+)/i);
     const id = fileMatch?.[1] ?? url.searchParams.get("id");
-    return id ? `https://lh3.googleusercontent.com/d/${id}` : raw;
+    return id ? `https://lh3.googleusercontent.com/d/${id}` : safe;
   } catch {
-    return raw;
+    return "";
   }
 }
 
