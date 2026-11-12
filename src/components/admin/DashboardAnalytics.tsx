@@ -706,7 +706,7 @@ export function DashboardAnalytics({ tenants }: { tenants: TenantAnalyticsRow[] 
                           {isGround ? "Lantai 1 • Ground Floor" : "Lantai 2 • First Floor"}
                         </strong>
                         <span style={{ fontSize: "11px", color: "#64748b" }}>
-                          {isGround ? "Check-in, Arrival & Koridor Publik" : "Ruang Tunggu Gate 1–12 & Lounge"}
+                          {isGround ? "Check-in, Arrival & Koridor Publik" : "Ruang Tunggu Gate 1–15 & Lounge"}
                         </span>
                       </div>
                     </div>

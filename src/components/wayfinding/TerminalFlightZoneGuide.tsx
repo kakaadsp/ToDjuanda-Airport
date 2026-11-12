@@ -69,10 +69,10 @@ export function TerminalFlightZoneGuide() {
       icon: Plane,
       themeClass: styles.themeEmerald,
       badge: isID ? "Ruang Tunggu · Lantai 2" : "Waiting Lounge · Level 2",
-      title: isID ? "Boarding Gate 1 – 12" : "Boarding Gate 1 – 12",
+      title: isID ? "Boarding Gate 1 – 15" : "Boarding Gate 1 – 15",
       tag: isID ? "Pintu Masuk Pesawat" : "Aircraft Boarding",
       airlinesLabel: isID ? "Pintu Boarding:" : "Boarding Gates:",
-      airlines: isID ? ["Gate 1 – 4", "Gate 5 – 8", "Gate 9 – 12"] : ["Gates 1 – 4", "Gates 5 – 8", "Gates 9 – 12"],
+      airlines: isID ? ["Gate 1 – 5", "Gate 6 – 10", "Gate 11 – 15"] : ["Gates 1 – 5", "Gates 6 – 10", "Gates 11 – 15"],
       facilities: isID
         ? [
             "Pemeriksaan Keamanan 2 (SCP 2)",

@@ -49,7 +49,7 @@ const aboutContent = {
       { val: "2 Lantai", label: "T1 Terpadu", icon: Layers },
       { val: "100% Web", label: "Tanpa Instalasi", icon: Zap },
       { val: "72 m/mnt", label: "Kecepatan Jalan", icon: Footprints },
-      { val: "Gate 1–12", label: "Pintu Boarding", icon: Plane },
+      { val: "Gate 1–15", label: "Pintu Boarding", icon: Plane },
     ],
     showcase: {
       brand: "Peta Satelit T1 Juanda",
@@ -121,8 +121,8 @@ const aboutContent = {
         {
           tag: "OMNI-SEARCH",
           title: "Direktori & Fasilitas Cepat",
-          desc: "Temukan Gate 1-12, konter maskapai, musholla, toilet, ATM, dan resto dalam 1 sentuhan.",
-          chips: ["Gate 1–12", "Toilet & Musholla", "Resto & ATM"],
+          desc: "Temukan Gate 1-15, konter maskapai, musholla, toilet, ATM, dan resto dalam 1 sentuhan.",
+          chips: ["Gate 1–15", "Toilet & Musholla", "Resto & ATM"],
           link: "Cari Tempat",
           href: "/map",
           icon: Search,
@@ -153,7 +153,7 @@ const aboutContent = {
           num: "02",
           icon: Building2,
           title: "Infrastruktur 2 Lantai",
-          desc: "Lantai 1 Check-in Departure 1–4 & Kedatangan · Lantai 2 Ruang Tunggu Gate 1–12.",
+          desc: "Lantai 1 Check-in Departure 1–4 & Kedatangan · Lantai 2 Ruang Tunggu Gate 1–15.",
         },
         {
           num: "03",

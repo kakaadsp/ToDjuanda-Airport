@@ -39,7 +39,7 @@ export function HomeHero() {
     },
     {
       label: isID ? "Pintu Keberangkatan" : "Boarding Gates",
-      value: "Gate 1 – 12",
+      value: "Gate 1 – 15",
       desc: isID ? "Lantai 2 Terminal 1" : "2nd Floor Terminal 1",
     },
     {
