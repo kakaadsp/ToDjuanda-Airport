@@ -1673,7 +1673,15 @@ export function AirportWayfinding() {
 
         {/* Category Filter Chips ala Google Maps (disembunyikan saat navigasi rute aktif agar pandangan peta lega) */}
         {!routeSessionActive && (
-          <div className="gmaps-category-chips" role="tablist">
+          <div
+            className="gmaps-category-chips"
+            role="tablist"
+            onWheel={(e) => {
+              if (e.deltaY !== 0) {
+                e.currentTarget.scrollLeft += e.deltaY;
+              }
+            }}
+          >
             {CATEGORIES.map((cat) => {
               const Icon = cat.icon;
               const active = activeCategory === cat.id;
