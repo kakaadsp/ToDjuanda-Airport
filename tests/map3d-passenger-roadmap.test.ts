@@ -22,7 +22,14 @@ test("passenger roadmap retains the three departure stages and no longer says ro
   assert.match(html, /naik ke lantai 2/i);
   assert.match(html, /Selamat menikmati keberangkatan Anda/);
   assert.doesNotMatch(html, /belum terhubung ke peta/i);
-  assert.doesNotMatch(html, /belum tersedia/i);
+  assert.doesNotMatch(html, /rute belum tersedia/i);
+  assert.match(html, /Rute dimulai dari pintu masuk sesuai area Departure/);
+});
+
+test("passenger guide explains that usable GPS takes priority over the fallback door", () => {
+  const html = renderToStaticMarkup(createElement(PassengerRoadmap, { usesCurrentLocation: true }));
+  assert.match(html, /Rute dimulai dari lokasi Anda saat ini/);
+  assert.doesNotMatch(html, /Rute dimulai dari pintu masuk sesuai area Departure/);
 });
 
 test("gate number is read from free text on the ticket", () => {

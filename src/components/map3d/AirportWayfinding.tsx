@@ -98,7 +98,7 @@ import {
   type FloorTransition,
   type RoutePlace,
 } from "@/lib/map3d/multi-floor-route";
-import { defaultMapObjectConfig, fetchMapObjectConfigsFromDb, getMapObjectPhotoUrl, readMapObjectConfigs, type MapObjectConfig } from "@/lib/map3d/admin-object-config";
+import { resolveMapObjectEntryDoors, defaultMapObjectConfig, fetchMapObjectConfigsFromDb, getMapObjectPhotoUrl, readMapObjectConfigs, type MapObjectConfig } from "@/lib/map3d/admin-object-config";
 import { geographicToT1Model, isUsableT1Position, T1_GEO_CALIBRATION } from "@/lib/map3d/passenger-geolocation";
 import { usePassengerGeolocation } from "@/hooks/usePassengerGeolocation";
 import { useMapStore } from "@/store/mapStore";
@@ -858,23 +858,26 @@ export function AirportWayfinding() {
    * eskalator/tangga. Dipakai oleh pencarian, klik peta, dan panduan penumpang.
    */
   const planRoute = useCallback(
-    (start: RoutePlace, record: SceneObjectRecord) => {
+    (start: RoutePlace, record: SceneObjectRecord, via?: SceneObjectRecord) => {
       if (!navigation) return false;
+      const routeRecord = via ?? record;
       const objectConfig = mapObjectConfigs[record.name] ?? defaultMapObjectConfig(record.name);
+      const routeConfig = mapObjectConfigs[routeRecord.name] ?? defaultMapObjectConfig(routeRecord.name);
       const target = {
-        floor: record.floor,
-        rect: recordRect(record),
-        entryDoors: objectConfig.entryDoors,
+        floor: routeRecord.floor,
+        rect: recordRect(routeRecord),
+        entryDoors: resolveMapObjectEntryDoors(routeRecord.name, routeConfig.entryDoors),
       };
-      const departure = requiredDepartureForRecord(record);
+      const departure = requiredDepartureForRecord(routeRecord);
       const requiredEntrance = departure && DEPARTURE_ENTRANCE_BY_AREA[departure]
-        ? closestEntrance(objects, record, DEPARTURE_ENTRANCE_BY_AREA[departure])
+        ? closestEntrance(objects, routeRecord, DEPARTURE_ENTRANCE_BY_AREA[departure])
         : null;
 
       // Departure 1/2/3/4 masing-masing memiliki pintu akses wajib. Jika
       // pengguna sudah memilih titik awal sendiri, rute tetap harus melewati
       // pintu yang ditentukan, bukan langsung menuju sisi terdekat bangunan.
       let route = findFloorRoute(navigation, start, target);
+      if (departure && !requiredEntrance) route = null;
       if (requiredEntrance) {
         const entrancePlace = recordCenter(requiredEntrance);
         const toEntrance = findFloorRoute(navigation, start, {
@@ -887,6 +890,16 @@ export function AirportWayfinding() {
           : snapPlace(navigation, entrancePlace);
         const fromEntrance = entranceStart ? findFloorRoute(navigation, entranceStart, target) : null;
         route = toEntrance && fromEntrance ? joinRoutes(toEntrance, fromEntrance) : null;
+      }
+      if (via && route) {
+        const end = route.points.at(-1);
+        const nextStart = end && snapPlace(navigation, { floor: via.floor, point: [end[0], end[2]] });
+        const onward = nextStart ? findFloorRoute(navigation, nextStart, {
+          floor: record.floor,
+          rect: recordRect(record),
+          entryDoors: resolveMapObjectEntryDoors(record.name, objectConfig.entryDoors),
+        }) : null;
+        route = onward ? joinRoutes(route, onward) : null;
       }
       const label = objectConfig.displayName?.trim() || record.selectableLabel || record.name;
       setRouteProgress(null);
@@ -969,7 +982,7 @@ export function AirportWayfinding() {
   );
 
   const startPassengerRoute = useCallback(
-    (from: SceneObjectRecord, fromName: string, to: SceneObjectRecord) => {
+    (from: SceneObjectRecord, fromName: string, to: SceneObjectRecord, via?: SceneObjectRecord) => {
       if (!navigation) return;
       const start = snapPlace(navigation, recordCenter(from));
       if (!start) {
@@ -980,10 +993,30 @@ export function AirportWayfinding() {
       setQuery("");
       setStartPoint(start);
       setStartName(fromName);
-      planRoute(start, to);
+      setLocationMapped(false);
+      planRoute(start, to, via);
     },
     [lang, navigation, planRoute],
   );
+
+  // Only a current usable GPS reading may replace the guide's designated door.
+  // A previously chosen manual origin must not override the Departure rule.
+  const passengerGpsStart = useMemo(() => {
+    if (!automaticLocation || passengerLocation.status !== "tracking" || !usableLocationReading || !navigation) return null;
+    const [x, z] = geographicToT1Model(usableLocationReading);
+    return snapPlace(navigation, { floor: passengerFloor, point: [x, z] });
+  }, [automaticLocation, navigation, passengerFloor, passengerLocation.status, usableLocationReading]);
+
+  const startPassengerGpsRoute = useCallback((target: SceneObjectRecord) => {
+    if (!passengerGpsStart) return false;
+    setSelectingStart(false);
+    setQuery("");
+    setStartPoint(passengerGpsStart);
+    setStartName(copy.yourLocation);
+    setLocationMapped(true);
+    planRoute(passengerGpsStart, target);
+    return true;
+  }, [copy.yourLocation, passengerGpsStart, planRoute]);
 
   const routeToDeparture = useCallback(
     (departure: number) => {
@@ -998,9 +1031,9 @@ export function AirportWayfinding() {
         setRouteMessage(lang === "ID" ? `Pintu Keberangkatan ${door} belum ditandai pada peta.` : `Departure door ${door} is not marked on the map yet.`);
         return;
       }
-      startPassengerRoute(entrance, entranceLabel(entrance.name), target);
+      if (!startPassengerGpsRoute(target)) startPassengerRoute(entrance, entranceLabel(entrance.name), target);
     },
-    [entranceForDeparture, lang, objects, startPassengerRoute],
+    [entranceForDeparture, lang, objects, startPassengerGpsRoute, startPassengerRoute],
   );
 
   const routeToGate = useCallback(
@@ -1010,19 +1043,17 @@ export function AirportWayfinding() {
         setRouteMessage(lang === "ID" ? `Gate ${gate} tidak ada pada peta Lantai 2.` : `Gate ${gate} is not available on the second-floor map.`);
         return;
       }
+      if (startPassengerGpsRoute(target)) return;
       const checkIn = departure === null ? null : objects.find((record) => record.selectableLabel === `Departure ${departure}`);
-      if (checkIn) {
-        startPassengerRoute(checkIn, `Departure ${departure}`, target);
-        return;
-      }
-      if (startPoint) {
-        planRoute(startPoint, target);
+      if (checkIn && departure !== null) {
+        const entrance = entranceForDeparture(checkIn, departure);
+        if (entrance) startPassengerRoute(entrance, entranceLabel(entrance.name), target, checkIn);
         return;
       }
       const entrance = nearestEntrance(target);
       if (entrance) startPassengerRoute(entrance, entranceLabel(entrance.name), target);
     },
-    [gateRecords, nearestEntrance, objects, planRoute, startPassengerRoute, startPoint],
+    [entranceForDeparture, gateRecords, lang, nearestEntrance, objects, startPassengerGpsRoute, startPassengerRoute],
   );
 
   const handleSelect = useCallback(
@@ -1366,6 +1397,7 @@ export function AirportWayfinding() {
       <PassengerRoadmap
         routeReady={Boolean(navigation)}
         gates={gateNumbers}
+        usesCurrentLocation={Boolean(passengerGpsStart)}
         onRouteToDeparture={routeToDeparture}
         onRouteToGate={routeToGate}
       />

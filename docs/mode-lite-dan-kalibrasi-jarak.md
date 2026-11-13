@@ -34,7 +34,7 @@ ketepatan absolut seluruh bagian gedung atau posisi geografis.
 jarak kumulatif dalam meter, sambil mempertahankan posisi dalam unit model.
 Petunjuk langkah, jarak tersisa, ETA, panjang rute, sampling simulasi, dan progres
 proyeksi GPS mengikuti metrik tersebut. Kecepatan jalan normal tetap 1,35 m/detik.
-Kecepatan simulasi 1x/1,5x/2x tidak mengubah estimasi waktu jalan normal.
+Kecepatan simulasi 1x/2x/3x tidak mengubah estimasi waktu jalan normal.
 
 Konversi GPS mempertahankan titik origin geografis, rotasi, dan registrasi awal
 yang sudah ada; hanya displacement yang menggunakan kebalikan faktor X/Z baru.
@@ -69,11 +69,11 @@ Peningkatan FPS/baterai perlu pengukuran pada HP sasaran.
   agar hero terlihat; kamera peta umum tidak diubah.
 - Idle tidak memicu render terus-menerus. Walk dianimasikan selama simulasi
   berjalan pada Normal maupun Lite. Skala avatar menyesuaikan meter/unit peta,
-  dengan ukuran visual 65% dari versi awal.
+  dengan ukuran visual 45% dari versi awal.
 - Hero dan label mengikuti sampel rute setiap frame melalui ref bersama dengan
   controller, sementara pembaruan teks/progres React tetap dibatasi 100 ms.
   Posisi tetap di polyline rute; rotasi hero dan kamera dihaluskan saat belokan.
-- Tombol 1x, 1,5x, 2x ada di panel rute. Mengganti kecepatan tidak mereset progres.
+- Tombol 1x, 2x, dan 3x (bawaan 1x) ada di panel rute. Mengganti kecepatan tidak mereset progres.
 - Generator sumber: `scripts/create-navigation-hero.py`. Setelah regenerasi,
   jalankan `scripts/optimize-navigation-hero.py` dengan Blender untuk membuat
   GLB runtime satu primitive. Sumber blend tetap mudah diedit dengan material asli.

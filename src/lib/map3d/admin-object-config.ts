@@ -229,6 +229,12 @@ export function defaultMapObjectConfig(objectName: string): MapObjectConfig {
   };
 }
 
+/** An empty database array means no door configuration yet. An explicit list
+ * with open:false is a deliberate closure and must never be reopened. */
+export function resolveMapObjectEntryDoors(objectName: string, doors?: readonly MapObjectDoor[] | null): MapObjectDoor[] {
+  return doors?.length ? doors.slice(0, 4) : defaultMapObjectConfig(objectName).entryDoors;
+}
+
 export function readMapObjectConfigs(): MapObjectConfigByName {
   if (typeof window === "undefined") return {};
   try {
@@ -245,7 +251,7 @@ export function readMapObjectConfigs(): MapObjectConfigByName {
             ...config,
             objectName,
             category: resolvedCategory,
-            entryDoors: config.entryDoors?.slice(0, 4) ?? base.entryDoors,
+            entryDoors: resolveMapObjectEntryDoors(objectName, config.entryDoors),
           },
         ];
       }),
@@ -280,7 +286,7 @@ export async function fetchMapObjectConfigsFromDb(): Promise<MapObjectConfigByNa
           ...config,
           objectName,
           category: resolvedCategory,
-          entryDoors: config.entryDoors?.slice(0, 4) ?? base.entryDoors,
+          entryDoors: resolveMapObjectEntryDoors(objectName, config.entryDoors),
         },
       ];
     }),

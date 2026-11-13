@@ -12,8 +12,9 @@ type PassengerRoadmapProps = {
   routeReady?: boolean;
   /** Nomor gate yang ada pada model Lantai 2. */
   gates?: readonly number[];
+  usesCurrentLocation?: boolean;
   onRouteToDeparture?: (departure: number) => void;
-  /** `departure` adalah area check-in yang dipilih, dipakai sebagai titik awal. */
+  /** Area check-in menentukan pintu masuk saat GPS tidak tersedia. */
   onRouteToGate?: (gate: number, departure: number | null) => void;
 };
 
@@ -31,7 +32,7 @@ function gateRangeText(gates: readonly number[]) {
   return `${sorted[0]}–${sorted.at(-1)}`;
 }
 
-export function PassengerRoadmap({ routeReady = false, gates = [], onRouteToDeparture, onRouteToGate }: PassengerRoadmapProps) {
+export function PassengerRoadmap({ routeReady = false, gates = [], usesCurrentLocation = false, onRouteToDeparture, onRouteToGate }: PassengerRoadmapProps) {
   const lang = useMapStore((state) => state.lang);
   const en = lang === "EN";
   const [open, setOpen] = useState(false);
@@ -103,6 +104,9 @@ export function PassengerRoadmap({ routeReady = false, gates = [], onRouteToDepa
             <span className="passenger-roadmap-kicker">Panduan penumpang · Terminal 1</span>
             <h2 id="passenger-roadmap-title">{en ? "From check-in to your gate" : "Dari check-in sampai ke gate"}</h2>
             <p>{en ? "Follow the departure sequence. Departure is a check-in area, not a counter number." : "Ikuti urutan keberangkatan. Area Departure adalah area check-in, bukan nomor loket."}</p>
+            <p>{usesCurrentLocation
+              ? (en ? "Routes start from your current location. Check the starting floor in directions." : "Rute dimulai dari lokasi Anda saat ini. Periksa lantai titik awal pada petunjuk arah.")
+              : (en ? "Current location is unavailable. Routes start from the entrance for your selected Departure area." : "Lokasi saat ini belum tersedia. Rute dimulai dari pintu masuk sesuai area Departure yang dipilih.")}</p>
             <div className="passenger-roadmap-summary" aria-live="polite">
               <span>{en ? "Your journey plan" : "Rencana perjalananmu"}</span>
               <strong>{departure ? `Departure ${departure}` : (en ? "Choose a Departure area" : "Pilih area Departure")}</strong>
@@ -163,7 +167,9 @@ export function PassengerRoadmap({ routeReady = false, gates = [], onRouteToDepa
                   onClick={() => showRoute(() => onRouteToGate(gateNumber, departure))}
                 >
                   {en ? "Show route to Gate" : "Tunjukkan rute ke Gate"} {gateNumber}
-                  <small>{departure ? `Dari Departure ${departure}, naik ke Lantai 2` : "Naik ke Lantai 2"}</small>
+                  <small>{usesCurrentLocation
+                    ? (en ? "From your current location" : "Dari lokasi Anda saat ini")
+                    : departure ? `Dari pintu masuk Departure ${departure}, melalui area check-in ke Lantai 2` : "Dari pintu keberangkatan terdekat, naik ke Lantai 2"}</small>
                 </button>
               )}
               {gateAnswer === "yes" && gate.trim() !== "" && !gateOnMap && (

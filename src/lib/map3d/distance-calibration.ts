@@ -21,7 +21,7 @@ export function calibratedDistance(a: readonly number[], b: readonly number[]) {
     (b[2] - a[2]) * METERS_PER_MODEL_UNIT.z);
 }
 
-export const SIMULATION_SPEEDS = [1, 1.5, 2] as const;
+export const SIMULATION_SPEEDS = [1, 2, 3] as const;
 export const VISITOR_SPEED_METERS_PER_SECOND = 1.35;
 export function advanceSimulation(distance: number, delta: number, speed: number, total: number) {
   return Math.min(total, distance + Math.min(Math.max(delta, 0), .1) * VISITOR_SPEED_METERS_PER_SECOND * speed);

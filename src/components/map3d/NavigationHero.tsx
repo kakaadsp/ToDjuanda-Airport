@@ -51,7 +51,7 @@ export function NavigationHero({ position, direction, moving, speed = 1, playbac
     if (moving) mixer.update(Math.min(delta, .1) * speed);
   });
   return <group ref={group} position={position}
-    scale={[.65 / METERS_PER_MODEL_UNIT.x, .65, .65 / METERS_PER_MODEL_UNIT.z]}>
+    scale={[.45 / METERS_PER_MODEL_UNIT.x, .45, .45 / METERS_PER_MODEL_UNIT.z]}>
     <primitive object={model} dispose={null} raycast={() => undefined} />
   </group>;
 }

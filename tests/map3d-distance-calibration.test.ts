@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import * as THREE from "three";
-import { calibratedDistance, T1_DISTANCE_REFERENCES, advanceSimulation } from "../src/lib/map3d/distance-calibration";
+import { calibratedDistance, T1_DISTANCE_REFERENCES, advanceSimulation, SIMULATION_SPEEDS } from "../src/lib/map3d/distance-calibration";
 import { createRouteMetrics, sampleRouteAtDistance, projectPointOntoRouteSegments } from "../src/lib/map3d/route-guidance";
 import { createRouteSteps } from "../src/lib/map3d/route-steps";
 import { geographicToT1Model, T1_GEO_CALIBRATION } from "../src/lib/map3d/passenger-geolocation";
@@ -39,7 +39,7 @@ test("step distances, 3D slopes, projection progress and ETA share metres", () =
 });
 
 test("simulation multipliers change travel time without changing route distance", () => {
-  for (const speed of [1, 1.5, 2]) {
+  for (const speed of SIMULATION_SPEEDS) {
     let distance = 0;
     for (let i=0; i<100; i++) distance = advanceSimulation(distance, .1, speed, 1000);
     near(distance, 13.5*speed);
