@@ -38,10 +38,23 @@ export function matchesFacility(space: MapSpace, category: string): boolean {
   }
 }
 
-export function findFacilities(items: MapSpace[], terminal: TerminalCode, category: string, query = "") {
+export type FloorFilter = "all" | "L1" | "L2";
+
+export function findFacilities(
+  items: MapSpace[],
+  terminal: TerminalCode,
+  category: string,
+  query = "",
+  floorFilter: FloorFilter = "all"
+) {
   const needle = query.trim().toLowerCase();
   return items.filter((space) => {
     if (space.terminal !== terminal || space.status === "INACTIVE" || !matchesFacility(space, category)) return false;
+    if (floorFilter !== "all") {
+      const isL1 = space.floorId.endsWith("L1") || space.floorId.includes("L1") || space.floorId.includes("GF");
+      if (floorFilter === "L1" && !isL1) return false;
+      if (floorFilter === "L2" && isL1) return false;
+    }
     const text = [space.label, space.code, space.tenant?.name, getSpaceLabel(space, "ID"), getSpaceLabel(space, "EN"),
       getCategoryLabel(space.category, "ID"), getCategoryLabel(space.category, "EN"),
       ...facilityShortcuts.filter((item) => matchesFacility(space, item.id)).flatMap((item) => [item.ID, item.EN])].join(" ").toLowerCase();

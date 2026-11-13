@@ -1,16 +1,18 @@
 "use client";
 
-import { ChevronRight, MapPin, Search, X } from "lucide-react";
+import { useState } from "react";
+import { Building2, ChevronRight, Layers, MapPin, Search, X } from "lucide-react";
 import { spaces } from "@/data/demo-wayfinding";
 import { getCategoryLabel, getSpaceLabel } from "@/lib/wayfinding-language";
 import { useMapStore } from "@/store/mapStore";
 import type { MapSpace, TerminalCode } from "@/types";
-import { findFacilities, poiCategoryIds } from "@/lib/facility-search";
+import { findFacilities, poiCategoryIds, type FloorFilter } from "@/lib/facility-search";
 import { facilityCategoryIcons, getFacilityCategoryIcon } from "./facility-category-icons";
 
 export function SearchOverlayModal() {
   const store = useMapStore();
   const lang = store.lang;
+  const [floorFilter, setFloorFilter] = useState<FloorFilter>("all");
 
   if (!store.isSearchOpen) return null;
 
@@ -20,7 +22,7 @@ export function SearchOverlayModal() {
     icon: facilityCategoryIcons[id],
   }));
 
-  const visibleSpaces = findFacilities(spaces, store.terminal, store.category, store.query);
+  const visibleSpaces = findFacilities(spaces, store.terminal, store.category, store.query, floorFilter);
 
   const handleSelectSpace = (space: MapSpace) => {
     if (space.terminal !== store.terminal) store.setTerminal(space.terminal);
@@ -79,6 +81,34 @@ export function SearchOverlayModal() {
             )}
           </div>
 
+          {/* Floor Level Filter Tabs */}
+          <div className="search-floor-tabs-bar" role="radiogroup" aria-label={lang === "ID" ? "Filter lantai" : "Floor filter"}>
+            <button
+              type="button"
+              className={`search-floor-tab ${floorFilter === "all" ? "is-active" : ""}`}
+              onClick={() => setFloorFilter("all")}
+            >
+              <Layers size={14} />
+              <span>{lang === "ID" ? "Semua Lantai" : "All Floors"}</span>
+            </button>
+            <button
+              type="button"
+              className={`search-floor-tab ${floorFilter === "L1" ? "is-active" : ""}`}
+              onClick={() => setFloorFilter("L1")}
+            >
+              <Building2 size={14} />
+              <span>{lang === "ID" ? "Lantai 1 (GF)" : "Floor 1 (GF)"}</span>
+            </button>
+            <button
+              type="button"
+              className={`search-floor-tab ${floorFilter === "L2" ? "is-active" : ""}`}
+              onClick={() => setFloorFilter("L2")}
+            >
+              <Building2 size={14} />
+              <span>{lang === "ID" ? "Lantai 2 (FF)" : "Floor 2 (FF)"}</span>
+            </button>
+          </div>
+
           {/* Quick Categories */}
           <div className="search-modal-cats" aria-label={lang === "ID" ? "Kategori pencarian" : "Search categories"}>
             {quickCategories.map((cat) => {
@@ -121,7 +151,13 @@ export function SearchOverlayModal() {
               >
                 <option value="T1">Terminal 1</option>
               </select>
-              <span>{lang === "ID" ? "Semua lantai" : "All floors"}</span>
+              <span>
+                {floorFilter === "all"
+                  ? (lang === "ID" ? "Semua lantai" : "All floors")
+                  : floorFilter === "L1"
+                  ? (lang === "ID" ? "Lantai 1" : "Floor 1")
+                  : (lang === "ID" ? "Lantai 2" : "Floor 2")}
+              </span>
             </div>
           </div>
         </div>
@@ -132,6 +168,7 @@ export function SearchOverlayModal() {
             visibleSpaces.map((space) => {
               const categoryLabel = getCategoryLabel(space.category, lang);
               const ResultIcon = getFacilityCategoryIcon(space.category) ?? MapPin;
+              const isL1 = space.floorId.endsWith("L1");
               return (
                 <button
                   type="button"
@@ -149,9 +186,12 @@ export function SearchOverlayModal() {
                         <span className="search-result-code" aria-label={`${lang === "ID" ? "Kode lokasi" : "Location code"}: ${space.code}`}>
                           {space.code}
                         </span>
+                        <span className={`search-floor-badge ${isL1 ? "badge-l1" : "badge-l2"}`}>
+                          {isL1 ? (lang === "ID" ? "L1" : "F1") : (lang === "ID" ? "L2" : "F2")}
+                        </span>
                       </div>
                       <div className="search-result-meta">
-                        {space.terminal} • {space.floorId.endsWith("L1") ? (lang === "ID" ? "Lantai 1" : "Floor 1") : (lang === "ID" ? "Lantai 2" : "Floor 2")} • {categoryLabel}
+                        {space.terminal} • {isL1 ? (lang === "ID" ? "Lantai 1" : "Floor 1") : (lang === "ID" ? "Lantai 2" : "Floor 2")} • {categoryLabel}
                       </div>
                     </div>
                   </div>

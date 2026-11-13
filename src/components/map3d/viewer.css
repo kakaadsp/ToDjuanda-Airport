@@ -4311,3 +4311,87 @@
 .map3d-root .gmaps-destination-results .gmaps-search-item { width: 100%; text-align: left; }
 .map3d-root .gmaps-destination-results [aria-selected="true"] { background: #1e3a50; }
 .map3d-root .gmaps-destination-empty { margin: 0; padding: 12px; color: #94a3b8; font-size: 13px; }
+
+
+/* Floor Filter Tabs in 3D Map Search Dropdown */
+.map3d-root .gmaps-search-floor-bar {
+  padding: 8px 12px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.map3d-root .gmaps-floor-pill-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(30, 41, 59, 0.65);
+  padding: 4px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.map3d-root .gmaps-floor-pill {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 7px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #94a3b8;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.map3d-root .gmaps-floor-pill:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.map3d-root .gmaps-floor-pill.is-active {
+  color: #ffffff;
+  background: #0284c7;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.4);
+}
+
+.map3d-root .gmaps-floor-list-heading {
+  padding: 10px 16px 4px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #38bdf8;
+}
+
+.map3d-root .gmaps-item-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.map3d-root .gmaps-floor-tag {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1.5px 5.5px;
+  border-radius: 5px;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+
+.map3d-root .gmaps-floor-tag.tag-l1 {
+  background: rgba(56, 189, 248, 0.18);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+}
+
+.map3d-root .gmaps-floor-tag.tag-l2 {
+  background: rgba(192, 132, 252, 0.18);
+  color: #c084fc;
+  border: 1px solid rgba(192, 132, 252, 0.35);
+}

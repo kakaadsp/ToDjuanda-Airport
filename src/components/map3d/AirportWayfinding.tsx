@@ -514,6 +514,7 @@ export function AirportWayfinding() {
   const [routeRestartToken, setRouteRestartToken] = useState(0);
   const [routeRecenterToken, setRouteRecenterToken] = useState(0);
   const [floorView, setFloorView] = useState<FloorView>("ALL");
+  const [searchFloorFilter, setSearchFloorFilter] = useState<FloorView>("ALL");
   const [showExterior, setShowExterior] = useState(true);
   const [liteMode, setLiteMode] = useState(() => {
     try { return typeof window !== "undefined" && localStorage.getItem("todjuanda-map-lite") === "true"; } catch { return false; }
@@ -1074,7 +1075,18 @@ export function AirportWayfinding() {
 
   const searchResults = useMemo(() => {
     const rawQuery = query.trim().toLocaleLowerCase("id-ID");
-    if (!rawQuery) return [];
+
+    if (!rawQuery) {
+      if (searchFloorFilter === "ALL") return [];
+      return selectableBuildings
+        .filter((item) => item.floor === searchFloorFilter)
+        .sort((a, b) => {
+          const nameA = mapObjectConfigs[a.name]?.displayName || a.selectableLabel || a.name;
+          const nameB = mapObjectConfigs[b.name]?.displayName || b.selectableLabel || b.name;
+          return nameA.localeCompare(nameB, "id-ID");
+        })
+        .slice(0, 30);
+    }
 
     let matchKeywords = [rawQuery];
     if (rawQuery === "komersial") matchKeywords = ["komersial", "toko", "resto", "restoran", "kafe", "cafe", "store", "shop", "tenant", "building", "kios"];
@@ -1086,6 +1098,8 @@ export function AirportWayfinding() {
 
     return selectableBuildings
       .filter((item) => {
+        if (searchFloorFilter !== "ALL" && item.floor !== searchFloorFilter) return false;
+
         const displayName = (mapObjectConfigs[item.name]?.displayName ?? "").toLocaleLowerCase("id-ID");
         const cat = (item.metadata?.category ?? "").toLocaleLowerCase("id-ID");
         const name = item.name.toLocaleLowerCase("id-ID");
@@ -1094,8 +1108,8 @@ export function AirportWayfinding() {
 
         return matchKeywords.some((kw) => haystack.includes(kw));
       })
-      .slice(0, 10);
-  }, [mapObjectConfigs, query, selectableBuildings]);
+      .slice(0, 15);
+  }, [mapObjectConfigs, query, searchFloorFilter, selectableBuildings]);
 
   const destinationOptions = useMemo(() => selectableBuildings.map(record => {
     const displayName = mapObjectConfigs[record.name]?.displayName?.trim();
@@ -1539,7 +1553,39 @@ export function AirportWayfinding() {
           {/* Search Results & Quick Categories Dropdown */}
           {searchFocused && (
             <div className="gmaps-search-dropdown">
-              {!query ? (
+              {multiFloor && (
+                <div className="gmaps-search-floor-bar">
+                  <div className="gmaps-floor-pill-group" role="radiogroup" aria-label={lang === "EN" ? "Filter floor" : "Filter lantai"}>
+                    <button
+                      type="button"
+                      className={`gmaps-floor-pill ${searchFloorFilter === "ALL" ? "is-active" : ""}`}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => setSearchFloorFilter("ALL")}
+                    >
+                      <Layers size={13} />
+                      <span>{lang === "EN" ? "All Floors" : "Semua Lantai"}</span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`gmaps-floor-pill ${searchFloorFilter === "L1" ? "is-active" : ""}`}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => setSearchFloorFilter("L1")}
+                    >
+                      <span>Lantai 1 (GF)</span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`gmaps-floor-pill ${searchFloorFilter === "L2" ? "is-active" : ""}`}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => setSearchFloorFilter("L2")}
+                    >
+                      <span>Lantai 2 (FF)</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {!query && searchFloorFilter === "ALL" ? (
                 <div className="gmaps-search-quick-wrap">
                   <div className="gmaps-quick-heading">
                     <span>{lang === "EN" ? "Quick categories" : "Kategori Cepat"}</span>
@@ -1565,36 +1611,61 @@ export function AirportWayfinding() {
                     })}
                   </div>
                 </div>
-              ) : searchResults.length > 0 ? (
-                searchResults.map((record) => {
-                  const displayName = mapObjectConfigs[record.name]?.displayName?.trim();
-                  const floorNote = multiFloor ? ` · ${FLOOR_LABELS[record.floor]}` : "";
-                  return (
-                    <button
-                      key={record.uuid}
-                      type="button"
-                      className="gmaps-search-item"
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => chooseSearchResult(record)}
-                    >
-                      <div className="gmaps-item-icon">
-                        <MapPin size={18} />
-                      </div>
-                      <div className="gmaps-item-info">
-                        <strong>{displayName || record.selectableLabel || record.name}</strong>
-                        <small>
-                          {record.metadata.category}
-                          {displayName || record.selectableLabel ? ` · ${record.name}` : ""}
-                          {floorNote}
-                        </small>
-                      </div>
-                    </button>
-                  );
-                })
               ) : (
-                <div className="gmaps-search-empty">
-                  <p>{copy.noResults}</p>
-                </div>
+                <>
+                  {!query && searchFloorFilter !== "ALL" && (
+                    <div className="gmaps-floor-list-heading">
+                      <span>
+                        {lang === "EN"
+                          ? `Places on ${FLOOR_LABELS[searchFloorFilter as FloorId]} (${searchResults.length} locations)`
+                          : `Daftar Lokasi di ${FLOOR_LABELS[searchFloorFilter as FloorId]} (${searchResults.length} lokasi)`}
+                      </span>
+                    </div>
+                  )}
+                  {searchResults.length > 0 ? (
+                    searchResults.map((record) => {
+                      const displayName = mapObjectConfigs[record.name]?.displayName?.trim();
+                      const floorLabel = FLOOR_LABELS[record.floor];
+                      const isL1 = record.floor === "L1";
+                      return (
+                        <button
+                          key={record.uuid}
+                          type="button"
+                          className="gmaps-search-item"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => chooseSearchResult(record)}
+                        >
+                          <div className="gmaps-item-icon">
+                            <MapPin size={18} />
+                          </div>
+                          <div className="gmaps-item-info">
+                            <div className="gmaps-item-title-row">
+                              <strong>{displayName || record.selectableLabel || record.name}</strong>
+                              <span className={`gmaps-floor-tag ${isL1 ? "tag-l1" : "tag-l2"}`}>
+                                {isL1 ? "L1" : "L2"}
+                              </span>
+                            </div>
+                            <small>
+                              {record.metadata.category}
+                              {displayName || record.selectableLabel ? ` · ${record.name}` : ""}
+                              {multiFloor ? ` · ${floorLabel}` : ""}
+                            </small>
+                          </div>
+                        </button>
+                      );
+                    })
+                  ) : (
+                    <div className="gmaps-search-empty">
+                      <p>
+                        {searchFloorFilter !== "ALL"
+                          ? lang === "EN"
+                            ? `No matching locations found on ${FLOOR_LABELS[searchFloorFilter as FloorId]}. Try selecting "All Floors".`
+                            : `Tidak ditemukan lokasi di ${FLOOR_LABELS[searchFloorFilter as FloorId]}. Coba pilih "Semua Lantai".`
+                          : copy.noResults}
+                      </p>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           )}

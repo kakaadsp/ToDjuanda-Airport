@@ -85,3 +85,15 @@ test("confirming the same terminal preserves the QR origin", () => {
   assert.equal(store.getState().floorId, "T1-L2");
   store.setState(store.getInitialState(), true);
 });
+
+test("floor filter filters facilities by floor level while preserving all floors by default", () => {
+  const allResults = findFacilities(spaces, "T1", "all", "", "all");
+  const l1Results = findFacilities(spaces, "T1", "all", "", "L1");
+  const l2Results = findFacilities(spaces, "T1", "all", "", "L2");
+
+  assert.ok(l1Results.length > 0, "Lantai 1 must contain spaces");
+  assert.ok(l2Results.length > 0, "Lantai 2 must contain spaces");
+  assert.equal(l1Results.length + l2Results.length, allResults.length, "Sum of L1 and L2 spaces should equal total spaces");
+  assert.ok(l1Results.every((s) => s.floorId.endsWith("L1")), "All L1 results must have floorId ending with L1");
+  assert.ok(l2Results.every((s) => s.floorId.endsWith("L2")), "All L2 results must have floorId ending with L2");
+});
