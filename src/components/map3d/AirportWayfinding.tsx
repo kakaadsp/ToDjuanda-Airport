@@ -16,7 +16,6 @@ import { OrbitControls, useProgress } from "@react-three/drei";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import {
   ArrowLeft,
-  ArrowUpDown,
   Bath,
   Box,
   ChevronDown,
@@ -56,7 +55,7 @@ import Link from "next/link";
 import * as THREE from "three";
 import { NavigationHero } from "./NavigationHero";
 import { SIMULATION_SPEEDS } from "@/lib/map3d/distance-calibration";
-import { DestinationSearchInput } from "./DestinationSearchInput";
+import { DestinationSearchInput, type DestinationOption } from "./DestinationSearchInput";
 import { PassengerRoadmap } from "./PassengerRoadmap";
 import { FloorSwitcher } from "./FloorSwitcher";
 import { ExteriorScene } from "./ExteriorScene";
@@ -117,7 +116,7 @@ type CameraMode = "map" | "pov";
 
 const mapCopy = {
   ID: {
-    loading: "MEMUAT MODEL LANTAI", directions: "Petunjuk arah", from: "Dari", to: "Ke", chooseStart: "Pilih titik awal", chooseDestination: "Pilih tujuan", searchStart: "Cari titik awal", searchDestination: "Cari tujuan", clearSearch: "Hapus pencarian", noResults: "Tidak ditemukan. Coba nama tenant, kode building, atau nomor gate.", routeHint: "Rute terdekat menghindari tembok dan pilar, melalui bukaan pintu yang ada pada model.", chooseStartHint: "Titik awal berada di area jalan terdekat. Pilih tujuan.", selectStartHint: "Pilih posisi awal terlebih dahulu.", noSafeRoute: "Tidak ditemukan jalur aman pada lantai ini. Coba titik awal atau tujuan lain.", noFloorRoute: "Tidak ditemukan jalur lewat eskalator atau tangga menuju lantai tujuan.", stepTitle: "Langkah perjalanan", previous: "Sebelumnya", next: "Berikutnya", mapView: "Lihat peta", simulation: "Mulai simulasi 3D", continueSimulation: "Lanjutkan simulasi 3D", pause: "Jeda", resume: "Lanjutkan", center: "Pusatkan", estimate: "Perkiraan", minutes: "menit", arrive: "Tiba di tujuan", straight: "Jalan lurus", left: "Belok kiri", right: "Belok kanan", floorDirection: "Ikuti papan petunjuk ke lantai tujuan", operationalHours: "Jam operasional", open24: "Buka 24 jam", activePeriod: "Masa aktif", now: "Sekarang", unspecified: "Tidak ditentukan", facility: "FASILITAS BANDARA", tenant: "TENANT KOMERSIAL", frontPhoto: "Tampak depan", resetRoute: "Hapus rute", showMap: "Tampilkan seluruh peta", zoomIn: "Perbesar peta", zoomOut: "Perkecil peta", hideExterior: "Sembunyikan area luar gedung", showExterior: "Tampilkan area luar gedung", compass: "Arah mata angin pada model peta", locating: "Mengalibrasi GPS Akurasi 1.0...", locationActive: "Lokasi Anda Aktif (Akurasi 1.0)", locationDenied: "Izin lokasi diblokir", locationUnavailable: "Lokasi hanya tersedia melalui HTTPS atau localhost", locationTimeout: "GPS belum merespons", locationOutside: "Anda belum terdeteksi di sekitar Terminal 1", locationInaccurate: "Akurasi GPS belum cukup", retryLocation: "Coba lagi", yourLocation: "Lokasi Anda (GPS)", locationFloorNote: "GPS tidak dapat mendeteksi lantai. Koreksi bila perlu." },
+    loading: "MEMUAT MODEL LANTAI", directions: "Petunjuk arah", from: "Dari", to: "Ke", chooseStart: "Pilih titik awal", chooseDestination: "Pilih tujuan", searchStart: "Cari titik awal", searchDestination: "Cari tujuan", clearSearch: "Hapus pencarian", noResults: "Tidak ditemukan. Coba nama tenant, kode building, atau nomor gate.", routeHint: "Rute terdekat menghindari tembok dan pilar, melalui bukaan pintu yang ada pada model.", chooseStartHint: "Titik awal berada di area jalan terdekat. Pilih tujuan.", selectStartHint: "Pilih posisi awal terlebih dahulu.", noSafeRoute: "Tidak ditemukan jalur aman pada lantai ini. Coba titik awal atau tujuan lain.", noFloorRoute: "Tidak ditemukan jalur lewat eskalator atau tangga menuju lantai tujuan.", stepTitle: "Langkah perjalanan", previous: "Sebelumnya", next: "Berikutnya", mapView: "Lihat peta", simulation: "Mulai Simulasi", continueSimulation: "Mulai Simulasi", pause: "Jeda", resume: "Lanjutkan", center: "Pusatkan", estimate: "Perkiraan", minutes: "menit", arrive: "Tiba di tujuan", straight: "Jalan lurus", left: "Belok kiri", right: "Belok kanan", floorDirection: "Ikuti papan petunjuk ke lantai tujuan", operationalHours: "Jam operasional", open24: "Buka 24 jam", activePeriod: "Masa aktif", now: "Sekarang", unspecified: "Tidak ditentukan", facility: "FASILITAS BANDARA", tenant: "TENANT KOMERSIAL", frontPhoto: "Tampak depan", resetRoute: "Hapus rute", showMap: "Tampilkan seluruh peta", zoomIn: "Perbesar peta", zoomOut: "Perkecil peta", hideExterior: "Sembunyikan area luar gedung", showExterior: "Tampilkan area luar gedung", compass: "Arah mata angin pada model peta", locating: "Mengalibrasi GPS Akurasi 1.0...", locationActive: "Lokasi Anda Aktif (Akurasi 1.0)", locationDenied: "Izin lokasi diblokir", locationUnavailable: "Lokasi hanya tersedia melalui HTTPS atau localhost", locationTimeout: "GPS belum merespons", locationOutside: "Anda belum terdeteksi di sekitar Terminal 1", locationInaccurate: "Akurasi GPS belum cukup", retryLocation: "Coba lagi", yourLocation: "Lokasi Anda (GPS)", locationFloorNote: "GPS tidak dapat mendeteksi lantai. Koreksi bila perlu." },
   EN: {
     loading: "LOADING FLOOR MODEL", directions: "Directions", from: "From", to: "To", chooseStart: "Choose starting point", chooseDestination: "Choose destination", searchStart: "Search starting point", searchDestination: "Search destination", clearSearch: "Clear search", noResults: "No results. Try a tenant name, building code, or gate number.", routeHint: "The shortest route avoids walls and pillars through the model's available doorways.", chooseStartHint: "Your start is on the nearest walkway. Choose a destination.", selectStartHint: "Choose a starting point first.", noSafeRoute: "No safe route was found on this floor. Try another start or destination.", noFloorRoute: "No route via an escalator or staircase was found to the destination floor.", stepTitle: "Walking steps", previous: "Previous", next: "Next", mapView: "View map", simulation: "Start 3D simulation", continueSimulation: "Continue 3D simulation", pause: "Pause", resume: "Resume", center: "Recenter", estimate: "Estimated", minutes: "min", arrive: "Arrive at destination", straight: "Walk straight", left: "Turn left", right: "Turn right", floorDirection: "Follow signs to the destination floor", operationalHours: "Operating hours", open24: "Open 24 hours", activePeriod: "Active period", now: "Now", unspecified: "Not specified", facility: "AIRPORT FACILITY", tenant: "COMMERCIAL TENANT", frontPhoto: "Front view", resetRoute: "Clear route", showMap: "Show full map", zoomIn: "Zoom in", zoomOut: "Zoom out", hideExterior: "Hide exterior area", showExterior: "Show exterior area", compass: "Map compass", locating: "Calibrating GPS Accuracy 1.0...", locationActive: "Live location active (Accuracy 1.0)", locationDenied: "Location permission is blocked", locationUnavailable: "Location requires HTTPS or localhost", locationTimeout: "GPS has not responded", locationOutside: "You are not detected near Terminal 1", locationInaccurate: "GPS accuracy is not sufficient yet", retryLocation: "Try again", yourLocation: "Your location (GPS)", locationFloorNote: "GPS cannot detect floors. Correct it if needed." },
 } as const;
@@ -766,10 +765,23 @@ export function AirportWayfinding() {
     setStartName(copy.yourLocation);
   }, [copy.yourLocation, livePosition, liveTracking, navigation, passengerFloor, routeMetrics, routeWorldPoints, usableLocationReading]);
 
-  // Saat simulasi berjalan dengan satu lantai terpilih, peta mengikuti lantai
-  // tempat pengunjung berada tanpa mengubah pilihan pengguna.
-  const playbackFloor = viewMode === "pov" && routeProgress && navigation ? floorAtHeight(navigation, routeProgress.position[1]) : null;
-  const shownFloorView: FloorView = liteMode && floorView === "ALL" ? (playbackFloor ?? passengerFloor) : playbackFloor && floorView !== "ALL" ? playbackFloor : floorView;
+  // Sinkronisasi otomatis lantai saat simulasi berjalan (POV):
+  // Ketika avatar berpindah lantai riil (misal naik eskalator/tangga),
+  // ubah floorView ke lantai baru secara otomatis, tanpa menimpa pilihan manual pengguna saat menekan tombol lantai.
+  const prevAvatarFloorRef = useRef<FloorId | null>(null);
+  useEffect(() => {
+    if (viewMode === "pov" && routeProgress && navigation) {
+      const currentFloor = floorAtHeight(navigation, routeProgress.position[1]);
+      if (currentFloor && currentFloor !== prevAvatarFloorRef.current) {
+        prevAvatarFloorRef.current = currentFloor;
+        setFloorView(currentFloor);
+      }
+    } else if (viewMode !== "pov") {
+      prevAvatarFloorRef.current = null;
+    }
+  }, [viewMode, routeProgress, navigation]);
+
+  const shownFloorView: FloorView = liteMode && floorView === "ALL" ? (passengerFloor ?? "L1") : floorView;
   const highlightedPoints = useMemo(
     () => activeStep
       ? routeWorldPoints.slice(activeStep.startIndex, activeStep.kind === "arrive" ? activeStep.startIndex + 1 : activeStep.endIndex + 1)
@@ -1153,6 +1165,25 @@ export function AirportWayfinding() {
     };
   }), [mapObjectConfigs, multiFloor, selectableBuildings]);
 
+  const originOptions = useMemo(() => {
+    const list: DestinationOption[] = [
+      {
+        id: "__GPS__",
+        name: lang === "EN" ? "Your Location (GPS)" : "Lokasi Anda (GPS)",
+        detail: lang === "EN" ? "Use device GPS sensor" : "Gunakan sensor lokasi perangkat",
+        keywords: "gps lokasi anda saya current position",
+      },
+      {
+        id: "__MANUAL__",
+        name: lang === "EN" ? "Choose on map (Manual)" : "Pilih pada peta (Manual)",
+        detail: lang === "EN" ? "Tap on walkway or building" : "Klik area jalan atau gedung 3D",
+        keywords: "manual klik peta pilih point map",
+      },
+      ...destinationOptions,
+    ];
+    return list;
+  }, [destinationOptions, lang]);
+
   const chooseSearchResult = (record: SceneObjectRecord) => {
     if (selectingStart) {
       setQuery("");
@@ -1289,6 +1320,7 @@ export function AirportWayfinding() {
     setRouteProgress(createPlaybackSnapshot(routeMetrics, 0));
     setViewMode("pov");
     setRouteRestartToken((value) => value + 1);
+    setMobileSheetExpanded(false);
   }, [routeMetrics]);
 
   const startOrResumeRoute = useCallback(() => {
@@ -1302,6 +1334,7 @@ export function AirportWayfinding() {
     setRoutePaused(false);
     setViewMode("pov");
     setRouteRecenterToken((value) => value + 1);
+    setMobileSheetExpanded(false);
   }, [restartActiveRoute, routeMetrics, routeProgress]);
 
   const handlePlaybackComplete = useCallback(() => {
@@ -1394,13 +1427,15 @@ export function AirportWayfinding() {
       data-route-paused={routePaused ? "true" : "false"}
       data-has-selected={Boolean(selected)}
     >
-      <PassengerRoadmap
-        routeReady={Boolean(navigation)}
-        gates={gateNumbers}
-        usesCurrentLocation={Boolean(passengerGpsStart)}
-        onRouteToDeparture={routeToDeparture}
-        onRouteToGate={routeToGate}
-      />
+      {!routeSessionActive && (
+        <PassengerRoadmap
+          routeReady={Boolean(navigation)}
+          gates={gateNumbers}
+          usesCurrentLocation={Boolean(passengerGpsStart)}
+          onRouteToDeparture={routeToDeparture}
+          onRouteToGate={routeToGate}
+        />
+      )}
       <div className="canvas-stage">
         <Canvas
           dpr={liteMode ? 1 : [1, 1.75]}
@@ -1749,7 +1784,11 @@ export function AirportWayfinding() {
             aria-hidden="true"
           />
 
-          <div className="gmaps-directions-header">
+          <div
+            className="gmaps-directions-header"
+            onTouchStart={handleSheetTouchStart}
+            onTouchEnd={handleSheetTouchEnd}
+          >
             <button
               type="button"
               className="gmaps-icon-btn gmaps-back-btn"
@@ -1763,16 +1802,25 @@ export function AirportWayfinding() {
             >
               <ArrowLeft size={20} />
             </button>
-            <h2>{copy.directions}</h2>
+            <div
+              className="gmaps-directions-title-area"
+              onClick={() => setMobileSheetExpanded((prev) => !prev)}
+            >
+              <h2>{copy.directions}</h2>
+              {!mobileSheetExpanded && destinationName && routeMetrics && (
+                <span className="gmaps-header-mini-route">
+                  {remainingRouteMinutes} {copy.minutes} ({Math.round(remainingRouteDistance)} m)
+                </span>
+              )}
+            </div>
             <button
               type="button"
-              className="gmaps-icon-btn gmaps-swap-btn"
-              onClick={swapOriginDestination}
-              disabled={!startPoint || !destinationPoint}
-              aria-label={lang === "EN" ? "Reverse starting point and destination" : "Tukar titik awal dan tujuan"}
-              title={lang === "EN" ? "Swap" : "Tukar"}
+              className="gmaps-icon-btn gmaps-sheet-toggle-btn"
+              onClick={() => setMobileSheetExpanded((prev) => !prev)}
+              title={mobileSheetExpanded ? (lang === "EN" ? "Minimize card" : "Turunkan kartu") : (lang === "EN" ? "Expand card" : "Naikkan kartu")}
+              aria-label={mobileSheetExpanded ? "Turunkan kartu" : "Naikkan kartu"}
             >
-              <ArrowUpDown size={18} />
+              {mobileSheetExpanded ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
             </button>
           </div>
 
@@ -1781,17 +1829,49 @@ export function AirportWayfinding() {
             <div className="gmaps-inputs-container">
               <div className="gmaps-input-row">
                 <span className="gmaps-dot gmaps-dot-origin" />
-                <button
-                  type="button"
-                  className={`gmaps-input-btn ${selectingStart ? "is-focused" : ""}`}
-                  onClick={() => {
-                    beginStartSelection();
+                <DestinationSearchInput
+                  value={startName ?? (automaticLocation && locationMapped ? copy.yourLocation : "")}
+                  label={copy.from}
+                  placeholder={copy.chooseStart}
+                  noResults={copy.noResults}
+                  options={originOptions}
+                  onFocus={() => {
+                    setSearchFocused(false);
+                    setQuery("");
                     setMobileSheetExpanded(true);
                   }}
-                >
-                  <small>{copy.from}</small>
-                  <span>{startName ?? (automaticLocation && locationMapped ? copy.yourLocation : copy.chooseStart)}</span>
-                </button>
+                  onSelect={(id) => {
+                    if (id === "__GPS__") {
+                      if (!automaticLocation) togglePassengerLocation();
+                      setSelectingStart(false);
+                      const destRecord = destinationName
+                        ? objects.find(
+                            (r) =>
+                              r.name === destinationName ||
+                              r.selectableLabel === destinationName ||
+                              mapObjectConfigs[r.name]?.displayName === destinationName,
+                          )
+                        : null;
+                      if (destRecord) calculateRoute(destRecord);
+                    } else if (id === "__MANUAL__") {
+                      beginStartSelection();
+                    } else {
+                      const record = selectableBuildings.find((item) => item.uuid === id);
+                      if (record) {
+                        setBuildingAsStart(record);
+                        const destRecord = destinationName
+                          ? objects.find(
+                              (r) =>
+                                r.name === destinationName ||
+                                r.selectableLabel === destinationName ||
+                                mapObjectConfigs[r.name]?.displayName === destinationName,
+                            )
+                          : null;
+                        if (destRecord) calculateRoute(destRecord);
+                      }
+                    }
+                  }}
+                />
               </div>
 
               <div className="gmaps-input-connector" />
@@ -1883,14 +1963,26 @@ export function AirportWayfinding() {
 
                 <div className="gmaps-cta-row">
                   {viewMode === "pov" ? (
-                    <button
-                      type="button"
-                      className="gmaps-action-primary"
-                      onClick={showMapView}
-                    >
-                      <RotateCcw size={15} />
-                      <span>{copy.mapView}</span>
-                    </button>
+                    <>
+                      <button
+                        type="button"
+                        className="gmaps-action-primary"
+                        onClick={() => setRoutePaused((prev) => !prev)}
+                        title={routePaused ? (lang === "EN" ? "Resume simulation" : "Lanjutkan simulasi") : (lang === "EN" ? "Pause simulation" : "Jeda simulasi")}
+                      >
+                        {routePaused ? <Play size={15} fill="currentColor" /> : <Pause size={15} fill="currentColor" />}
+                        <span>{routePaused ? (lang === "EN" ? "Resume" : "Lanjutkan") : "Pause"}</span>
+                      </button>
+                      <button
+                        type="button"
+                        className="gmaps-action-secondary"
+                        onClick={showMapView}
+                        title={lang === "EN" ? "View full map" : "Kembali ke tampilan peta"}
+                      >
+                        <MapPin size={15} />
+                        <span>{copy.mapView}</span>
+                      </button>
+                    </>
                   ) : (
                     <button
                       type="button"
@@ -1898,16 +1990,17 @@ export function AirportWayfinding() {
                       onClick={startOrResumeRoute}
                     >
                       <Play size={15} fill="currentColor" />
-                      <span>{routeProgress && routeProgress.progress < 1 ? copy.continueSimulation : copy.simulation}</span>
+                      <span>{routeProgress && routeProgress.progress < 1 && routePaused ? (lang === "EN" ? "Resume" : "Lanjutkan") : copy.simulation}</span>
                     </button>
                   )}
                   <button
                     type="button"
                     className={`gmaps-action-secondary ${liveTracking ? "is-tracking" : ""}`}
                     onClick={toggleLiveTracking}
+                    title={liveTracking ? "Hentikan GPS" : "Navigasi GPS"}
                   >
                     <MousePointer2 size={15} />
-                    <span>{liveTracking ? "Stop GPS" : "GPS Nav"}</span>
+                    <span>{liveTracking ? "Stop GPS" : "GPS"}</span>
                   </button>
                 </div>
 
