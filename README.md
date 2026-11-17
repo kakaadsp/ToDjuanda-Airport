@@ -1,161 +1,165 @@
-﻿# Juanda Smart Airport Navigation & Indoor Wayfinding System
+﻿<div align="center">
 
-<div align="center">
+<img src="public/Logo-ToDjuanda/Logo.png" alt="ToDjuanda Logo" width="140" />
 
-![Juanda Wayfinding Banner](public/map/juanda-terminal-1.png)
+# ToDjuanda — Smart Airport Navigation System
+
+**Sistem Navigasi Cerdas & Indoor Wayfinding 3D Berbasis Web**  
+**Bandar Udara Internasional Juanda Surabaya (SUB) — InJourney Airports**
+
+<br/>
+
+https://github.com/kakaadsp/ToDjuanda-Airport/raw/main/public/media/todjuanda.mp4
+
+<br/>
 
 [![Next.js](https://img.shields.io/badge/Next.js-16.3.1-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
-[![React](https://img.shields.io/badge/React-19.2.4-blue?style=for-the-badge&logo=react)](https://react.dev/)
+[![React](https://img.shields.io/badge/React-19.2.4-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
-[![Three.js](https://img.shields.io/badge/Three.js-3D%20Digital%20Twin-black?style=for-the-badge&logo=three.js)](https://threejs.org/)
+[![Three.js](https://img.shields.io/badge/Three.js-3D%20Digital%20Twin-000000?style=for-the-badge&logo=three.js)](https://threejs.org/)
 [![Prisma](https://img.shields.io/badge/Prisma-7.9.1-2D3748?style=for-the-badge&logo=prisma)](https://www.prisma.io/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-4169E1?style=for-the-badge&logo=postgresql)](https://www.postgresql.org/)
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com)
-[![Database on Neon](https://img.shields.io/badge/Database-Neon%20PostgreSQL-00E699?style=for-the-badge)](https://neon.tech)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 
-**Sistem Navigasi Cerdas & Indoor Wayfinding 3D Berbasis Web untuk Bandar Udara Internasional Juanda (SUB) — InJourney Airports**
+[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-000000?style=for-the-badge&logo=vercel)](https://vercel.com)
+[![Database on Neon](https://img.shields.io/badge/Database-Neon%20PostgreSQL-00E699?style=for-the-badge&logo=postgresql&logoColor=black)](https://neon.tech)
+[![Tests](https://img.shields.io/badge/Tests-74%20Passing-22c55e?style=for-the-badge&logo=checkmarx&logoColor=white)](#)
+[![License](https://img.shields.io/badge/License-Educational%20%26%20Research-orange?style=for-the-badge)](#lisensi--hak-cipta)
 
-[Fitur Utama](#fitur-utama) | [Arsitektur](#arsitektur--teknologi) | [Instalasi Lokal](#panduan-instalasi--menjalankan-lokal) | [Deploy Vercel](#deploy-ke-vercel-gratis) | [Tim](#tim-pengembang--kontributor)
+<br/>
+
+[🗺️ Fitur Utama](#-fitur-utama) · [🏗️ Arsitektur](#-arsitektur--teknologi) · [🚀 Instalasi](#-panduan-instalasi--menjalankan-lokal) · [☁️ Deploy](#-deploy-ke-vercel-gratis) · [👥 Kontributor](#-tim-pengembang--kontributor)
 
 </div>
 
 ---
 
-## Ringkasan Proyek
+## 📖 Ringkasan Proyek
 
-**Juanda Smart Airport Navigation System** adalah platform navigasi dalam ruangan (*indoor wayfinding*) berbasis web 3D interaktif yang dirancang khusus untuk memandu penumpang di **Bandar Udara Internasional Juanda Surabaya (SUB)**.
+**ToDjuanda Smart Airport Navigation System** adalah platform navigasi dalam ruangan (*indoor wayfinding*) berbasis web 3D interaktif yang dirancang khusus untuk memandu penumpang di **Bandar Udara Internasional Juanda Surabaya (SUB)**.
 
-Melalui visualisasi *Digital Twin 3D*, penumpang dapat menelusuri denah Terminal 1 (Lantai Dasar / *Ground Floor* dan Lantai 2 / *First Floor*), mencari lokasi *boarding gate*, konter *check-in*, fasilitas umum (mushola, toilet, ruang laktasi, ATM, baggage claim), hingga tenant komersial, serta mendapatkan panduan rute navigasi langkah-demi-langkah (*step-by-step turn guidance*) yang memperhitungkan eskalator, tangga, dan jarak tempuh riil.
+Melalui visualisasi **Digital Twin 3D**, penumpang dapat menelusuri denah Terminal 1 secara multi-lantai, mencari lokasi *boarding gate*, konter *check-in*, fasilitas umum (mushola, toilet, ATM, baggage claim), hingga tenant komersial, serta mendapatkan panduan rute navigasi langkah-demi-langkah (*step-by-step turn guidance*) yang memperhitungkan eskalator, tangga, dan jarak tempuh riil.
 
-Sistem ini terintegrasi penuh dengan **Portal Administrasi Bandara** terproteksi yang memungkinkan pengelola bandara memperbarui direktori tenant, status fasilitas, serta menyinkronkan metadata objek peta 3D secara langsung ke database PostgreSQL secara *real-time*.
-
----
-
-## Fitur Utama
-
-### 1. Peta 3D Digital Twin Interaktif (Terminal 1)
-- **Model 3D Multi-Lantai Terpadu**: Model GLB gabungan (`t1-gabungan.glb`) mencakup Lantai 1 (GF) dan Lantai 2 (FF) dengan sinkronisasi elevasi presisi berdasarkan struktur pilar bandara.
-- **Peralihan Lantai Mulus (Floor Switcher)**: Beralih antara Lantai 1, Lantai 2, atau Seluruh Gedung tanpa reload.
-- **Apron & Pesawat Realistis**: Visualisasi area apron dengan model pesawat pada setiap garbarata.
-- **Kamera & Orbit Kontrol Responsif**: Dukungan navigasi sentuh untuk mobile, tablet, desktop, dan layar kiosk.
-
-### 2. Mesin Navigasi & Algoritma Rute Antarlantai
-- **Dijkstra Multi-Floor Route Engine**: Rute terpendek berbasis walkable grid dengan dukungan multi-lantai.
-- **Konektor Vertikal Arah-Tertentu**: Eskalator searah dan tangga dengan instruksi kontekstual.
-- **Estimasi Waktu Tempuh (ETA)**: Jarak riil dalam meter dan estimasi waktu berjalan (72 m/menit).
-- **Passenger Roadmap**: Panduan alur penumpang dari pintu masuk hingga gate keberangkatan.
-
-### 3. Pencarian & Direktori Fasilitas
-- **Pencarian Cepat (Omni-search)**: Autocomplete instan untuk gate, tenant F&B, toko ritel, dan fasilitas.
-- **Filter Berdasarkan Kategori**: Restoran, Kafe, Belanja, ATM, Toilet, Mushola, Medis, Layanan Informasi.
-- **Jadwal Keberangkatan**: Nomor penerbangan, maskapai, waktu terbang, status, dan gate tujuan.
-
-### 4. Portal Manajemen Admin
-- **Sinkronisasi Objek Peta 3D (Map Object Config)**: Edit nama, kategori, jam operasional, foto, dan status langsung ke PostgreSQL.
-- **Role-Based Access Control (RBAC)**:
-  - **Super Admin**: Akses penuh ke seluruh sistem termasuk manajemen user dan audit log.
-  - **Airport Admin**: Pengelolaan harian tenant, POI, jam operasional, dan konfigurasi peta.
-- **Audit Logging**: Rekam jejak seluruh mutasi data untuk akuntabilitas operasional.
+Sistem ini terintegrasi penuh dengan **Portal Administrasi Bandara** berbasis RBAC yang memungkinkan pengelola bandara memperbarui direktori tenant, status fasilitas, serta menyinkronkan metadata objek peta 3D ke database PostgreSQL secara *real-time*.
 
 ---
 
-## Arsitektur & Teknologi
+## ✨ Fitur Utama
+
+<table>
+<tr>
+<td width="50%">
+
+### 🗺️ Peta 3D Digital Twin Interaktif
+- Model GLB multi-lantai Terminal 1 (GF + FF)
+- Peralihan antar lantai tanpa reload
+- Visualisasi apron & pesawat realistis
+- Orbit kontrol responsif (mobile, tablet, kiosk)
+
+### 🧭 Mesin Navigasi Cerdas
+- **Dijkstra Multi-Floor Route Engine**
+- Konektor vertikal arah-tertentu (eskalator + tangga)
+- Estimasi waktu tempuh nyata (ETA)
+- Panduan rute langkah-demi-langkah (*Passenger Roadmap*)
+
+</td>
+<td width="50%">
+
+### 🔍 Pencarian & Direktori Fasilitas
+- Pencarian omni *autocomplete* instan
+- Filter kategori: F&B, Ritel, ATM, Mushola, Medis
+- Jadwal penerbangan & gate keberangkatan
+
+### 🛡️ Portal Manajemen Admin
+- Sinkronisasi objek peta 3D ke PostgreSQL
+- **RBAC** dua tingkat: Super Admin & Airport Admin
+- Audit log terpadu untuk seluruh mutasi data
+- Direktori peta dengan status operasional real-time
+
+</td>
+</tr>
+</table>
+
+---
+
+## 🏗️ Arsitektur & Teknologi
 
 ```
-+------------------------------------------------------------------------+
-|                          CLIENT / BROWSER                              |
-|   [ Public Wayfinding UI ]          [ Admin Management Portal ]        |
-|   - Three.js / React Three Fiber    - Tenant & Facility Editor         |
-|   - Walkable Grid & Dijkstra        - 3D Map Object Synchronizer       |
-|   - Zustand State Store             - RBAC Security Guard              |
-+-------------------^----------------------------------^-----------------+
-                    |  REST API / Server Actions       |
-                    v                                  v
-+------------------------------------------------------------------------+
-|               NEXT.JS APP ROUTER (Deployed on Vercel)                  |
-|   - /api/route              Perhitungan Rute & Graph                   |
-|   - /api/admin/map-objects  Sync Konfigurasi Objek 3D                  |
-|   - /api/tenants/[id]       Mutasi Direktori Tenant                    |
-|   - /api/auth               Autentikasi Session via Auth.js            |
-+-----------------------------------^------------------------------------+
-                                    |
-                                    v
-+------------------------------------------------------------------------+
-|                        DOMAIN & DATA LAYER                             |
-|   - Authorization Engine    can(role, PERMISSION)                      |
-|   - Validation Layer        Zod Schema Enforcement                     |
-|   - Prisma ORM Client       PostgreSQL Object-Relational Model         |
-+-----------------------------------^------------------------------------+
-                                    |
-                                    v
-+------------------------------------------------------------------------+
-|         POSTGRESQL DATABASE — Neon Serverless (ap-southeast-1)         |
-|   - MapObjectConfig   - Tenant & Space     - AuditLog                  |
-|   - RouteNode & Edge  - Facility & Category - Admin User & Account     |
-+------------------------------------------------------------------------+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                           CLIENT / BROWSER                              │
+│   [ Public Wayfinding UI ]           [ Admin Management Portal ]        │
+│   · Three.js / React Three Fiber     · Tenant & Facility Editor         │
+│   · Walkable Grid & Dijkstra         · 3D Map Object Synchronizer       │
+│   · Step-by-step Route Guidance      · Audit Log & RBAC Dashboard       │
+└──────────────────────────┬──────────────────────┬───────────────────────┘
+                           │  Next.js App Router   │
+                           │  (RSC + Server Actions│)
+┌──────────────────────────▼──────────────────────▼───────────────────────┐
+│                        SERVER / API LAYER                               │
+│   [ Route Handlers ]         [ Auth.js Session ]    [ Zod Validator ]   │
+│   · /api/route               · JWT (8h expiry)      · Input sanitasi    │
+│   · /api/tenants             · bcryptjs (12 rounds) · RBAC middleware   │
+│   · /api/facilities          · Permission matrix    · Audit logger      │
+└──────────────────────────┬──────────────────────────────────────────────┘
+                           │  Prisma ORM
+┌──────────────────────────▼──────────────────────────────────────────────┐
+│                     DATABASE (PostgreSQL / Neon)                        │
+│   Users · Tenants · Facilities · MapObjects · Sessions · AuditLogs      │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Tech Stack
+### Stack Teknologi
 
-| Komponen | Teknologi | Deskripsi |
+| Layer | Teknologi | Versi |
 |---|---|---|
-| **Framework** | Next.js 16 (App Router) | Server Components & optimasi streaming |
-| **Pustaka UI** | React 19 + TypeScript 5 | Antarmuka deklaratif type-safe |
-| **Mesin 3D** | Three.js + React Three Fiber + Drei | Render model GLB performa tinggi |
-| **Animasi** | GSAP + @gsap/react | Micro-interactions dan transisi halus |
-| **Desain** | Tailwind CSS 4 | Glassmorphism, responsif, tema bandara modern |
-| **State** | Zustand | State store global ringan |
-| **Database** | PostgreSQL 15+ + Prisma 7 | Relational DB dengan migrasi otomatis |
-| **DB Hosting** | Neon | PostgreSQL serverless, free tier 512 MB, ap-southeast-1 |
-| **App Hosting** | Vercel | Auto-deploy dari GitHub, edge network global, free tier |
-| **Autentikasi** | Auth.js (NextAuth v5) + bcryptjs | JWT session, bcrypt cost 12 |
-| **Validasi** | Zod | Schema validation ketat di sisi server |
-| **Ikonografi** | Lucide React | Ikon modern konsisten |
+| **Framework** | Next.js (App Router) | 16.3.1 |
+| **UI Library** | React | 19.2.4 |
+| **Language** | TypeScript | 5.x |
+| **3D Engine** | Three.js + React Three Fiber | Latest |
+| **ORM** | Prisma | 7.9.1 |
+| **Database** | PostgreSQL (Neon Cloud) | 15+ |
+| **Auth** | Auth.js (NextAuth v5) | 5.x |
+| **Validation** | Zod | Latest |
+| **Hosting** | Vercel | — |
 
 ---
 
-## Struktur Repositori
+## 📁 Struktur Proyek
 
 ```
-ToDjuanda-Airport/
-├── prisma/
-│   ├── schema.prisma        # Source of truth model data Prisma
-│   └── seed.ts              # Script seeding data demo & admin awal
+smart-airport-navigation-system/
 ├── public/
-│   ├── airlines/            # Logo maskapai (Garuda, Lion, Citilink, dll.)
-│   ├── models/
-│   │   └── t1-gabungan.glb  # Model 3D Terminal 1 (GF + FF)
-│   └── map/                 # Aset visual referensi denah Juanda
-├── scripts/
-│   └── dev-network.mjs      # Server dev yang bind ke IP jaringan lokal
+│   ├── Logo-ToDjuanda/       # Logo & brand assets
+│   ├── media/                # Video simulasi (todjuanda.mp4)
+│   ├── models/               # Model 3D GLB (t1-gabungan.glb)
+│   ├── navigation/           # SVG navigation graph
+│   └── exterior/             # Data eksterior bandara
+├── prisma/
+│   └── schema.prisma         # Skema database
 ├── src/
-│   ├── app/
-│   │   ├── (public)/        # Halaman publik: beranda, map, help
-│   │   ├── admin/           # Dashboard portal administrasi
-│   │   ├── api/             # Route handler: route, map-objects, tenants, auth
-│   │   └── auth/signin/     # Halaman login admin
+│   ├── app/                  # Next.js App Router (pages + API routes)
+│   │   ├── (public)/         # Halaman publik (wayfinding)
+│   │   ├── admin/            # Portal admin (protected)
+│   │   └── api/              # REST API endpoints
 │   ├── components/
-│   │   ├── admin/           # Admin Map Panel, Tenant Editor, POI Manager
-│   │   ├── map3d/           # AirportWayfinding, SceneModel, FloorSwitcher, Apron
-│   │   ├── wayfinding/      # HomeHero, HelpPage, PassengerRoadmap, Search
-│   │   └── site/            # Header, Footer, Navbar
+│   │   ├── wayfinding/       # Komponen peta 3D & navigasi
+│   │   └── admin/            # Komponen dashboard admin
 │   ├── lib/
-│   │   ├── map3d/           # Routing, walkable grid, connectors
-│   │   ├── authorization.ts # Server-side RBAC engine
-│   │   ├── dijkstra.ts      # Algoritma rute terpendek
-│   │   └── prisma.ts        # Prisma singleton instance
-│   └── types/               # Kontrak tipe TypeScript
-└── tests/                   # Unit & integrasi test
+│   │   ├── map3d/            # Routing, walkable grid, konektor
+│   │   ├── authorization.ts  # Server-side RBAC engine
+│   │   ├── dijkstra.ts       # Algoritma rute terpendek
+│   │   └── prisma.ts         # Prisma singleton instance
+│   └── types/                # Kontrak tipe TypeScript
+└── tests/                    # Unit & integrasi test (74 test)
 ```
 
 ---
 
-## Panduan Instalasi & Menjalankan (Lokal)
+## 🚀 Panduan Instalasi & Menjalankan (Lokal)
 
 ### Prasyarat
-- Node.js v20.x atau lebih baru
-- NPM v10.x atau lebih baru
-- PostgreSQL 15+ (lokal atau cloud — direkomendasikan: [Neon](https://neon.tech))
+- **Node.js** v20.x atau lebih baru
+- **NPM** v10.x atau lebih baru
+- **PostgreSQL** 15+ (lokal atau cloud — direkomendasikan: [Neon](https://neon.tech))
 
 ### Langkah 1: Clone Repositori
 ```bash
@@ -200,13 +204,15 @@ npm run seed
 npm run dev
 ```
 
-- Wayfinding Map: `http://localhost:3000/map`
-- Beranda: `http://localhost:3000/`
-- Portal Admin: `http://localhost:3000/admin`
+| Halaman | URL |
+|---|---|
+| 🗺️ Wayfinding Map | `http://localhost:3000/map` |
+| 🏠 Beranda | `http://localhost:3000/` |
+| 🔐 Portal Admin | `http://localhost:3000/admin` |
 
 ---
 
-## Deploy ke Vercel (Gratis)
+## ☁️ Deploy ke Vercel (Gratis)
 
 ### Stack Hosting
 
@@ -218,8 +224,7 @@ npm run dev
 ### Langkah Deploy
 
 **1. Siapkan Database Neon**
-- Daftar di [neon.tech](https://neon.tech) (bisa login via GitHub)
-- Buat project baru, region: **Asia Pacific (Singapore)**
+- Daftar di [neon.tech](https://neon.tech) → Buat project baru, region: **Asia Pacific (Singapore)**
 - Ambil dua connection string dari Connection Details:
   - Tab **Pooled** → `DATABASE_URL`
   - Tab **Direct** → `DIRECT_URL`
@@ -235,7 +240,7 @@ npx auth secret
 ```
 
 **3. Import & Deploy di Vercel**
-- Daftar di [vercel.com](https://vercel.com) → Add New Project → Import `kakaadsp/ToDjuanda-Airport`
+- Daftar di [vercel.com](https://vercel.com) → **Add New Project** → Import `kakaadsp/ToDjuanda-Airport`
 - Tambahkan Environment Variables:
 
 | Variable | Nilai |
@@ -246,55 +251,94 @@ npx auth secret
 | `AUTH_URL` | `https://[nama-project].vercel.app` |
 | `SEED_ADMIN_PASSWORD` | Password admin (min 12 karakter) |
 
-- Klik **Deploy** (estimasi 3-5 menit)
-- Setelah deploy: update `AUTH_URL` dengan URL production dari Vercel, lalu Redeploy.
+- Klik **Deploy** (estimasi 3–5 menit)
+- Setelah deploy: update `AUTH_URL` dengan URL production, lalu **Redeploy**
 
 > Setiap `git push` ke `main` akan memicu auto-deploy di Vercel.
 
 ---
 
-## Perintah Pengembangan
+## 🛠️ Perintah Pengembangan
 
 ```bash
-npm run dev          # Dev server
+npm run dev          # Dev server (http://localhost:3000)
 npm run build        # Build produksi
 npm run typecheck    # Validasi tipe TypeScript
 npm run lint         # ESLint
-npm test             # Automated test suite
+npm test             # Automated test suite (74 tests)
 npm run seed         # Seed data database
 ```
 
 ---
 
-## Model Keamanan
+## 🔐 Model Keamanan
 
-1. **RBAC di level API**: Setiap mutasi memverifikasi permission spesifik (`MANAGE_MAP_OBJECTS`, `MANAGE_TENANTS`, dll.) — bukan hanya hide tombol di UI.
-2. **Password Hashing**: bcryptjs salt round 12.
-3. **Session JWT**: Kedaluwarsa otomatis setelah 8 jam.
-4. **Zod Validation**: Semua input API divalidasi ketat di sisi server.
-5. **XSS Prevention**: Data tenant dirender sebagai plain text.
+| Aspek | Implementasi |
+|---|---|
+| **RBAC di API** | Setiap mutasi memverifikasi permission (`MANAGE_MAP_OBJECTS`, `MANAGE_TENANTS`, dll.) |
+| **Password Hashing** | bcryptjs salt round 12 |
+| **Session JWT** | Kedaluwarsa otomatis setelah 8 jam |
+| **Input Validation** | Zod schema validation di sisi server |
+| **XSS Prevention** | Data tenant dirender sebagai plain text |
 
 ---
 
-## Tim Pengembang & Kontributor
+## 👥 Tim Pengembang & Kontributor
 
 <div align="center">
 
-| Kontributor | Peran |
-|---|---|
-| **Naufal** | 3D Digital Twin & Scene Architecture |
-| **Fatih** | Full-Stack Engineering & Project Lead |
-| **Aqilla** | 3D Asset Modeling & Pipeline Optimization |
-| **Kaka** | Wayfinding Engine & Walkability Routing |
-| **Vero** | UI/UX Design & Frontend Experience |
-| **Alvino** | Backend Services, RBAC & API Development |
-| **Ragil** | Data Engineering, Quality Assurance & Testing |
+<table>
+<tr>
+  <td align="center" width="140">
+    <img src="https://github.com/identicons/naufal.png" width="64" height="64" style="border-radius:50%" alt="Naufal" /><br/>
+    <b>Naufal</b><br/>
+    <sub>🧊 3D Digital Twin<br/>& Scene Architecture</sub>
+  </td>
+  <td align="center" width="140">
+    <img src="https://github.com/identicons/fatih.png" width="64" height="64" style="border-radius:50%" alt="Fatih" /><br/>
+    <b>Fatih</b><br/>
+    <sub>⚙️ Full-Stack Engineering<br/>& Project Lead</sub>
+  </td>
+  <td align="center" width="140">
+    <img src="https://github.com/identicons/aqilla.png" width="64" height="64" style="border-radius:50%" alt="Aqilla" /><br/>
+    <b>Aqilla</b><br/>
+    <sub>🎨 3D Asset Modeling<br/>& Pipeline Optimization</sub>
+  </td>
+  <td align="center" width="140">
+    <img src="https://github.com/identicons/kaka.png" width="64" height="64" style="border-radius:50%" alt="Kaka" /><br/>
+    <b>Kaka</b><br/>
+    <sub>🧭 Wayfinding Engine<br/>& Walkability Routing</sub>
+  </td>
+</tr>
+<tr>
+  <td align="center" width="140">
+    <img src="https://github.com/identicons/vero.png" width="64" height="64" style="border-radius:50%" alt="Vero" /><br/>
+    <b>Vero</b><br/>
+    <sub>🎀 UI/UX Design<br/>& Frontend Experience</sub>
+  </td>
+  <td align="center" width="140">
+    <img src="https://github.com/identicons/alvino.png" width="64" height="64" style="border-radius:50%" alt="Alvino" /><br/>
+    <b>Alvino</b><br/>
+    <sub>🔐 Backend Services<br/>RBAC & API Development</sub>
+  </td>
+  <td align="center" width="140">
+    <img src="https://github.com/identicons/ragil.png" width="64" height="64" style="border-radius:50%" alt="Ragil" /><br/>
+    <b>Ragil</b><br/>
+    <sub>🧪 Data Engineering<br/>QA & Testing</sub>
+  </td>
+  <td align="center" width="140">
+    <br/>
+    <br/>
+    <sub><i>+1 contributor<br/>welcome! 🚀</i></sub>
+  </td>
+</tr>
+</table>
 
 </div>
 
 ---
 
-## Lisensi & Hak Cipta
+## 📄 Lisensi & Hak Cipta
 
 Dibuat untuk keperluan pengembangan dan inovasi navigasi cerdas **Bandar Udara Internasional Juanda (PT Angkasa Pura Indonesia / InJourney Airports)**.
 
@@ -303,5 +347,15 @@ Seluruh model 3D, logo, dan data tata letak merupakan hak milik masing-masing pe
 ---
 
 <div align="center">
-  <sub>Dibangun dengan dedikasi untuk meningkatkan pengalaman perjalanan jutaan penumpang di Bandara Internasional Juanda Surabaya.</sub>
+
+<img src="public/Logo-ToDjuanda/Logo.png" alt="ToDjuanda" width="60" />
+
+<sub>Dibangun dengan ❤️ untuk meningkatkan pengalaman perjalanan jutaan penumpang di Bandara Internasional Juanda Surabaya.</sub>
+
+<br/><br/>
+
+<a href="https://github.com/kakaadsp/ToDjuanda-Airport">⭐ Beri Bintang di GitHub</a> &nbsp;·&nbsp;
+<a href="https://github.com/kakaadsp/ToDjuanda-Airport/issues">🐛 Laporkan Bug</a> &nbsp;·&nbsp;
+<a href="https://github.com/kakaadsp/ToDjuanda-Airport/pulls">🔧 Kontribusi</a>
+
 </div>
