@@ -9,7 +9,11 @@
 
 <br/>
 
-<video src="https://github.com/kakaadsp/ToDjuanda-Airport/raw/main/public/media/todjuanda.mp4" autoplay loop muted playsinline width="100%"></video>
+<a href="https://github.com/kakaadsp/ToDjuanda-Airport/raw/main/public/media/todjuanda.mp4">
+  <img src="https://github.com/kakaadsp/ToDjuanda-Airport/raw/main/public/media/preview.gif" alt="ToDjuanda Demo — Klik untuk putar video" width="100%" />
+</a>
+
+<sub>▶️ <i>Klik GIF di atas untuk memutar video demo lengkap</i></sub>
 
 <br/>
 
