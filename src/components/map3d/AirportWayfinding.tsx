@@ -937,7 +937,7 @@ export function AirportWayfinding() {
       setRouteMessage(route.transitions.length
         ? `${lang === "ID" ? "Rute melewati" : "Route via"} ${route.transitions.map((transition) => transition.label.toLocaleLowerCase(lang === "ID" ? "id-ID" : "en-US")).join(", ")}.`
         : copy.routeHint);
-      setSelected(createSelectedObject(record.object));
+      setSelected(null);
       setDirectionsOpen(true);
       setMobileSheetExpanded(true);
       // Mulai dari lantai titik awal. Lantai lain disembunyikan agar rute tidak
@@ -1083,10 +1083,12 @@ export function AirportWayfinding() {
         return;
       }
       if (!record) return;
-      if (startPoint) calculateRoute(record);
-      else setBuildingAsStart(record);
+      setSelected(selection);
+      setDirectionsOpen(false);
+      if (multiFloor) setFloorView(record.floor);
+      viewerApi.current?.focusObject(record.object);
     },
-    [calculateRoute, lang, mapObjectConfigs, objects, selectingStart, setBuildingAsStart, startPoint],
+    [lang, mapObjectConfigs, multiFloor, objects, selectingStart, setBuildingAsStart],
   );
 
   const CATEGORIES = useMemo(
@@ -1228,12 +1230,13 @@ export function AirportWayfinding() {
       setMobileSheetExpanded(true);
       return;
     }
-    if (startPoint) {
+    if (directionsOpen) {
       calculateRoute(record);
       setDirectionsOpen(true);
       setMobileSheetExpanded(true);
     } else {
       setSelected(createSelectedObject(record.object));
+      setDirectionsOpen(false);
       if (multiFloor) setFloorView(record.floor);
       viewerApi.current?.focusObject(record.object);
     }
@@ -1906,7 +1909,7 @@ export function AirportWayfinding() {
       </div>
 
       {/* Floating Directions Panel */}
-      {directionsOpen && (
+      {directionsOpen && !selected && (
         <aside
           className="gmaps-directions-panel"
           data-expanded={mobileSheetExpanded ? "true" : "false"}
