@@ -1,4 +1,4 @@
-﻿<div align="center">
+<div align="center">
 
 <img src="public/Logo-ToDjuanda/Logo.png" alt="ToDjuanda Logo" width="140" />
 
@@ -9,7 +9,7 @@
 
 <br/>
 
-https://github.com/kakaadsp/ToDjuanda-Airport/raw/main/public/media/todjuanda.mp4
+<video src="https://github.com/kakaadsp/ToDjuanda-Airport/raw/main/public/media/todjuanda.mp4" autoplay loop muted playsinline width="100%"></video>
 
 <br/>
 
@@ -290,46 +290,53 @@ npm run seed         # Seed data database
 <table>
 <tr>
   <td align="center" width="140">
-    <img src="https://github.com/identicons/naufal.png" width="64" height="64" style="border-radius:50%" alt="Naufal" /><br/>
-    <b>Naufal</b><br/>
+    <a href="https://github.com/Naufal-Ghani22">
+      <img src="https://github.com/Naufal-Ghani22.png" width="64" height="64" style="border-radius:50%" alt="Naufal" /><br/>
+      <b>Naufal</b>
+    </a><br/>
     <sub>🧊 3D Digital Twin<br/>& Scene Architecture</sub>
   </td>
   <td align="center" width="140">
-    <img src="https://github.com/identicons/fatih.png" width="64" height="64" style="border-radius:50%" alt="Fatih" /><br/>
-    <b>Fatih</b><br/>
+    <a href="https://github.com/fatihathala1">
+      <img src="https://github.com/fatihathala1.png" width="64" height="64" style="border-radius:50%" alt="Fatih" /><br/>
+      <b>Fatih</b>
+    </a><br/>
     <sub>⚙️ Full-Stack Engineering<br/>& Project Lead</sub>
   </td>
   <td align="center" width="140">
-    <img src="https://github.com/identicons/aqilla.png" width="64" height="64" style="border-radius:50%" alt="Aqilla" /><br/>
-    <b>Aqilla</b><br/>
+    <a href="https://github.com/AqillaRamadhani20">
+      <img src="https://github.com/AqillaRamadhani20.png" width="64" height="64" style="border-radius:50%" alt="Aqilla" /><br/>
+      <b>Aqilla</b>
+    </a><br/>
     <sub>🎨 3D Asset Modeling<br/>& Pipeline Optimization</sub>
   </td>
   <td align="center" width="140">
-    <img src="https://github.com/identicons/kaka.png" width="64" height="64" style="border-radius:50%" alt="Kaka" /><br/>
-    <b>Kaka</b><br/>
+    <a href="https://github.com/kakaadsp">
+      <img src="https://github.com/kakaadsp.png" width="64" height="64" style="border-radius:50%" alt="Kaka" /><br/>
+      <b>Kaka</b>
+    </a><br/>
     <sub>🧭 Wayfinding Engine<br/>& Walkability Routing</sub>
   </td>
 </tr>
 <tr>
   <td align="center" width="140">
-    <img src="https://github.com/identicons/vero.png" width="64" height="64" style="border-radius:50%" alt="Vero" /><br/>
+    <img src="https://ui-avatars.com/api/?name=Vero&background=e879f9&color=fff&size=64&rounded=true&bold=true" width="64" height="64" alt="Vero" /><br/>
     <b>Vero</b><br/>
-    <sub>🎀 UI/UX Design<br/>& Frontend Experience</sub>
+    <sub>🗺️ Tracing Maps<br/>di Figma</sub>
   </td>
   <td align="center" width="140">
-    <img src="https://github.com/identicons/alvino.png" width="64" height="64" style="border-radius:50%" alt="Alvino" /><br/>
+    <img src="https://ui-avatars.com/api/?name=Alvino&background=3b82f6&color=fff&size=64&rounded=true&bold=true" width="64" height="64" alt="Alvino" /><br/>
     <b>Alvino</b><br/>
-    <sub>🔐 Backend Services<br/>RBAC & API Development</sub>
+    <sub>📄 Laporan<br/>& Proposal</sub>
   </td>
   <td align="center" width="140">
-    <img src="https://github.com/identicons/ragil.png" width="64" height="64" style="border-radius:50%" alt="Ragil" /><br/>
+    <img src="https://ui-avatars.com/api/?name=Ragil&background=f59e0b&color=fff&size=64&rounded=true&bold=true" width="64" height="64" alt="Ragil" /><br/>
     <b>Ragil</b><br/>
-    <sub>🧪 Data Engineering<br/>QA & Testing</sub>
+    <sub>🗺️ Tracing Maps<br/>di Figma</sub>
   </td>
   <td align="center" width="140">
     <br/>
-    <br/>
-    <sub><i>+1 contributor<br/>welcome! 🚀</i></sub>
+    <sub><i>Open for contributions!<br/>🚀 <a href="https://github.com/kakaadsp/ToDjuanda-Airport/pulls">Submit a PR</a></i></sub>
   </td>
 </tr>
 </table>
