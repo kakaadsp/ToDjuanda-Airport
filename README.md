@@ -324,8 +324,10 @@ npm run seed         # Seed data database
 </tr>
 <tr>
   <td align="center" width="140">
-    <img src="https://ui-avatars.com/api/?name=Vero&background=e879f9&color=fff&size=64&rounded=true&bold=true" width="64" height="64" alt="Vero" /><br/>
-    <b>Vero</b><br/>
+    <a href="https://github.com/Alvero0311">
+      <img src="https://github.com/Alvero0311.png" width="64" height="64" style="border-radius:50%" alt="Alvero" /><br/>
+      <b>Alvero</b>
+    </a><br/>
     <sub>🗺️ Tracing Maps<br/>di Figma</sub>
   </td>
   <td align="center" width="140">
@@ -334,8 +336,10 @@ npm run seed         # Seed data database
     <sub>📄 Laporan<br/>& Proposal</sub>
   </td>
   <td align="center" width="140">
-    <img src="https://ui-avatars.com/api/?name=Ragil&background=f59e0b&color=fff&size=64&rounded=true&bold=true" width="64" height="64" alt="Ragil" /><br/>
-    <b>Ragil</b><br/>
+    <a href="https://github.com/Raiisakha">
+      <img src="https://github.com/Raiisakha.png" width="64" height="64" style="border-radius:50%" alt="Ragil" /><br/>
+      <b>Ragil</b>
+    </a><br/>
     <sub>🗺️ Tracing Maps<br/>di Figma</sub>
   </td>
   <td align="center" width="140">
