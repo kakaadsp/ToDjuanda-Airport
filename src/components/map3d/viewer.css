@@ -3365,6 +3365,21 @@
   flex-direction: column;
   overflow: hidden;
   animation: gmapsSlideIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(56, 189, 248, 0.35) transparent;
+}
+
+.map3d-root .gmaps-directions-panel::-webkit-scrollbar {
+  width: 5px;
+}
+
+.map3d-root .gmaps-directions-panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.map3d-root .gmaps-directions-panel::-webkit-scrollbar-thumb {
+  background: rgba(56, 189, 248, 0.35);
+  border-radius: 999px;
 }
 
 @keyframes gmapsSlideIn {
@@ -3386,9 +3401,15 @@
   align-items: center;
   gap: 8px;
   min-width: 0;
-  cursor: pointer;
+  cursor: default;
   flex: 1;
-  margin: 0 8px;
+  margin: 0;
+}
+
+.map3d-root .gmaps-directions-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .map3d-root .gmaps-directions-title-area h2 {
@@ -3435,12 +3456,43 @@
   background: rgba(56, 189, 248, 0.12);
 }
 
+.map3d-root .gmaps-close-btn {
+  color: #94a3b8;
+  transition: all 0.16s ease;
+}
+
+.map3d-root .gmaps-close-btn:hover {
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.18);
+}
+
 .map3d-root .gmaps-directions-body {
   display: flex;
   flex-direction: column;
   padding: 16px;
   overflow-y: auto;
+  overflow-x: hidden;
   gap: 12px;
+  box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(56, 189, 248, 0.35) transparent;
+}
+
+.map3d-root .gmaps-directions-body::-webkit-scrollbar {
+  width: 5px;
+}
+
+.map3d-root .gmaps-directions-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.map3d-root .gmaps-directions-body::-webkit-scrollbar-thumb {
+  background: rgba(56, 189, 248, 0.35);
+  border-radius: 999px;
+}
+
+.map3d-root .gmaps-directions-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(56, 189, 248, 0.6);
 }
 
 /* Inputs Container (Dark Mode) */
@@ -3731,6 +3783,26 @@
   gap: 4px;
   max-height: 220px;
   overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(56, 189, 248, 0.35) transparent;
+}
+
+.map3d-root .gmaps-steps-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.map3d-root .gmaps-steps-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.map3d-root .gmaps-steps-list::-webkit-scrollbar-thumb {
+  background: rgba(56, 189, 248, 0.35);
+  border-radius: 999px;
+}
+
+.map3d-root .gmaps-steps-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(56, 189, 248, 0.6);
 }
 
 .map3d-root .gmaps-steps-list li button {

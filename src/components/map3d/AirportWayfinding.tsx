@@ -15,7 +15,6 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls, useProgress } from "@react-three/drei";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import {
-  ArrowLeft,
   Bath,
   Box,
   ChevronDown,
@@ -1641,7 +1640,10 @@ export function AirportWayfinding() {
             <button
               type="button"
               className="gmaps-active-route-pill"
-              onClick={() => setDirectionsOpen(true)}
+              onClick={() => {
+                setDirectionsOpen(true);
+                setMobileSheetExpanded(true);
+              }}
               title={lang === "EN" ? "Open directions panel" : "Buka kembali petunjuk arah"}
             >
               <span className="gmaps-pulse-dot" />
@@ -1917,39 +1919,29 @@ export function AirportWayfinding() {
             onTouchStart={handleSheetTouchStart}
             onTouchEnd={handleSheetTouchEnd}
           >
-            <button
-              type="button"
-              className="gmaps-icon-btn gmaps-back-btn"
-              onClick={() => {
-                setDirectionsOpen(false);
-                setSelectingStart(false);
-                setSearchFocused(false);
-              }}
-              aria-label={lang === "EN" ? "Close directions" : "Tutup petunjuk arah"}
-              title={lang === "EN" ? "Back to map" : "Kembali ke peta"}
-            >
-              <ArrowLeft size={20} />
-            </button>
-            <div
-              className="gmaps-directions-title-area"
-              onClick={() => setMobileSheetExpanded((prev) => !prev)}
-            >
+            <div className="gmaps-directions-title-area">
               <h2>{copy.directions}</h2>
-              {!mobileSheetExpanded && destinationName && routeMetrics && (
-                <span className="gmaps-header-mini-route">
-                  {remainingRouteMinutes} {copy.minutes} ({Math.round(remainingRouteDistance)} m)
-                </span>
-              )}
             </div>
-            <button
-              type="button"
-              className="gmaps-icon-btn gmaps-sheet-toggle-btn"
-              onClick={() => setMobileSheetExpanded((prev) => !prev)}
-              title={mobileSheetExpanded ? (lang === "EN" ? "Minimize card" : "Turunkan kartu") : (lang === "EN" ? "Expand card" : "Naikkan kartu")}
-              aria-label={mobileSheetExpanded ? "Turunkan kartu" : "Naikkan kartu"}
-            >
-              {mobileSheetExpanded ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
-            </button>
+            <div className="gmaps-directions-header-actions">
+              <button
+                type="button"
+                className="gmaps-icon-btn gmaps-sheet-toggle-btn"
+                onClick={() => setDirectionsOpen(false)}
+                title={lang === "EN" ? "Minimize directions" : "Minimalkan petunjuk arah"}
+                aria-label={lang === "EN" ? "Minimize directions" : "Minimalkan petunjuk arah"}
+              >
+                <ChevronUp size={20} />
+              </button>
+              <button
+                type="button"
+                className="gmaps-icon-btn gmaps-close-btn"
+                onClick={resetRoute}
+                title={copy.resetRoute}
+                aria-label={copy.resetRoute}
+              >
+                <X size={18} />
+              </button>
+            </div>
           </div>
 
           <div className="gmaps-directions-body">
@@ -2078,15 +2070,6 @@ export function AirportWayfinding() {
                     <strong>{remainingRouteMinutes} {copy.minutes}</strong>
                     <span>({Math.round(remainingRouteDistance)} m{routeFloorsText ? ` · ${routeFloorsText}` : ""})</span>
                   </div>
-                  <button
-                    type="button"
-                    className="gmaps-clear-route-btn"
-                    onClick={resetRoute}
-                    title={copy.resetRoute}
-                    aria-label={copy.resetRoute}
-                  >
-                    <X size={17} />
-                  </button>
                 </div>
 
                 <div className="gmaps-cta-row">
