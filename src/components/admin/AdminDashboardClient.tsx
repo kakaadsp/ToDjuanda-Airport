@@ -1,13 +1,16 @@
 "use client";
 
 import {
-  useEffect, useMemo, useState } from "react";
+  useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
 import {
   Activity,
+  AlertCircle,
   AlertTriangle,
+  ArrowRight,
+  Bell,
   PanelLeftClose,
   PanelLeftOpen,
   BarChart3,
@@ -22,6 +25,7 @@ import {
   FileText,
   LogOut,
   Map,
+  MapPin,
   MapPinned,
   Pencil,
   RefreshCw,
@@ -209,6 +213,41 @@ export function AdminDashboardClient({
   const [mapObjectToEdit, setMapObjectToEdit] = useState<string | null>(null);
   const [mapEditNonce, setMapEditNonce] = useState(0);
   const [tenants, setTenants] = useState<TenantRow[]>([]);
+  const [showNotificationPopover, setShowNotificationPopover] = useState(false);
+  const notifDropdownRef = useRef<HTMLDivElement>(null);
+
+  const attentionTenants = useMemo(() => {
+    return tenants.filter(
+      (t) => t.status === "TEMPORARILY_CLOSED" || (t.hours && t.hours.toLowerCase().includes("tutup"))
+    );
+  }, [tenants]);
+
+  const handleInspectOnMap = (spaceCode: string) => {
+    setMapObjectToEdit(spaceCode);
+    setMapEditNonce((n) => n + 1);
+    setActiveTab("map");
+    setShowNotificationPopover(false);
+  };
+
+  useEffect(() => {
+    if (!showNotificationPopover) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      if (notifDropdownRef.current && !notifDropdownRef.current.contains(event.target as Node)) {
+        setShowNotificationPopover(false);
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setShowNotificationPopover(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [showNotificationPopover]);
   const [users, setUsers] = useState<AdminUserRow[]>(INITIAL_USERS);
   const [usersLoading, setUsersLoading] = useState(false);
   const [showAddUserModal, setShowAddUserModal] = useState(false);
@@ -781,6 +820,107 @@ export function AdminDashboardClient({
         </div>
 
         <div className="admin-header-right">
+          {/* Operational Alerts Bell Notification */}
+          <div className="admin-notif-container" ref={notifDropdownRef}>
+            <button
+              type="button"
+              className={`admin-notif-bell-btn ${showNotificationPopover ? "is-active" : ""}`}
+              onClick={() => setShowNotificationPopover((prev) => !prev)}
+              aria-label={`Pemberitahuan Operasional (${attentionTenants.length} isu)`}
+              aria-expanded={showNotificationPopover}
+              title="Pemberitahuan Operasional Bandara"
+            >
+              <Bell size={18} />
+              {attentionTenants.length > 0 && (
+                <span className="admin-notif-badge">
+                  {attentionTenants.length}
+                </span>
+              )}
+            </button>
+
+            {/* Popover Dropdown */}
+            {showNotificationPopover && (
+              <div className="admin-notif-popover" role="dialog" aria-label="Daftar Perhatian Operasional">
+                <div className="admin-notif-popover-header">
+                  <div className="admin-notif-popover-title">
+                    <AlertCircle size={16} className="admin-notif-alert-icon" />
+                    <strong>Perhatian Operasional</strong>
+                    <span className="admin-notif-count-tag">{attentionTenants.length} Isu</span>
+                  </div>
+                  <button
+                    type="button"
+                    className="admin-notif-close-btn"
+                    onClick={() => setShowNotificationPopover(false)}
+                    aria-label="Tutup notifikasi"
+                  >
+                    <X size={15} />
+                  </button>
+                </div>
+
+                <div className="admin-notif-popover-body">
+                  {attentionTenants.length === 0 ? (
+                    <div className="admin-notif-empty">
+                      <CheckCircle2 size={32} style={{ color: "#10b981", margin: "0 auto 8px" }} />
+                      <strong>Semua Operasional Normal</strong>
+                      <p>Tidak ada tenant atau fasilitas yang berstatus tutup sementara.</p>
+                    </div>
+                  ) : (
+                    <div className="admin-notif-list">
+                      {attentionTenants.map((t, idx) => (
+                        <div
+                          key={t.id || idx}
+                          className="admin-notif-item"
+                          onClick={() => handleInspectOnMap(t.spaceCode || t.name)}
+                          role="button"
+                          tabIndex={0}
+                          title={`Inspeksi ${t.name} di Peta 3D`}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              handleInspectOnMap(t.spaceCode || t.name);
+                            }
+                          }}
+                        >
+                          <div className="admin-notif-item-icon">
+                            {t.category?.toLowerCase().includes("eskalator") || t.name?.toLowerCase().includes("eskalator") || t.name?.toLowerCase().includes("tangga") ? (
+                              <AlertTriangle size={15} />
+                            ) : (
+                              <Store size={15} />
+                            )}
+                          </div>
+                          <div className="admin-notif-item-info">
+                            <strong className="admin-notif-item-name">{t.name || "Tenant"}</strong>
+                            <span className="admin-notif-item-sub">
+                              {t.terminal} • {t.floor || "L1"} • {t.spaceCode || "-"}
+                            </span>
+                          </div>
+                          <div className="admin-notif-item-actions">
+                            <span className="admin-notif-tag-closed">TUTUP</span>
+                            <MapPin size={14} className="admin-notif-item-pin-hint" />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="admin-notif-popover-footer">
+                  <button
+                    type="button"
+                    className="admin-notif-footer-link"
+                    onClick={() => {
+                      setActiveTab("overview");
+                      setShowNotificationPopover(false);
+                    }}
+                  >
+                    <span>Lihat Rincian di Dashboard</span>
+                    <ArrowRight size={13} />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
           <span className="session-role-badge">
             {activeRole === "SUPER_ADMIN" ? <ShieldCheck size={14} /> : <Store size={14} />}
             {activeRole === "SUPER_ADMIN" ? "Superadmin" : "Admin Komersil"}
@@ -893,7 +1033,7 @@ export function AdminDashboardClient({
           )}
 
           {/* Dynamic Content Views */}
-          {activeTab === "overview" && <DashboardAnalytics tenants={tenants} />}
+          {activeTab === "overview" && <DashboardAnalytics tenants={tenants} onInspectOnMap={handleInspectOnMap} />}
 
           {activeTab === "map" && <AdminMapPanel initialObjectName={mapObjectToEdit} focusNonce={mapEditNonce} />}
 

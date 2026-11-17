@@ -43,7 +43,13 @@ function isFacilityItem(tenant: TenantAnalyticsRow): boolean {
   );
 }
 
-export function DashboardAnalytics({ tenants }: { tenants: TenantAnalyticsRow[] }) {
+export function DashboardAnalytics({
+  tenants,
+  onInspectOnMap,
+}: {
+  tenants: TenantAnalyticsRow[];
+  onInspectOnMap?: (spaceCode: string) => void;
+}) {
   const [selectedFloor, setSelectedFloor] = useState<"ALL" | "L1" | "L2">("ALL");
   const [categoryTab, setCategoryTab] = useState<"COMMERCIAL" | "FACILITY">("COMMERCIAL");
 
@@ -821,6 +827,17 @@ export function DashboardAnalytics({ tenants }: { tenants: TenantAnalyticsRow[] 
             {attentionTenants.map((t, idx) => (
               <div
                 key={t.id || idx}
+                className="dashboard-attention-card"
+                onClick={() => onInspectOnMap?.(t.spaceCode || t.name || "")}
+                role={onInspectOnMap ? "button" : undefined}
+                tabIndex={onInspectOnMap ? 0 : undefined}
+                title={onInspectOnMap ? `Klik untuk inspeksi ${t.name} di Peta 3D Terminal` : undefined}
+                onKeyDown={(e) => {
+                  if (onInspectOnMap && (e.key === "Enter" || e.key === " ")) {
+                    e.preventDefault();
+                    onInspectOnMap(t.spaceCode || t.name || "");
+                  }
+                }}
                 style={{
                   background: "#ffffff",
                   border: "1px solid #fef3c7",
@@ -829,26 +846,37 @@ export function DashboardAnalytics({ tenants }: { tenants: TenantAnalyticsRow[] 
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
+                  cursor: onInspectOnMap ? "pointer" : "default",
+                  transition: "all 0.16s ease",
+                  userSelect: "none",
                 }}
               >
                 <div>
-                  <strong style={{ color: "#1e293b", fontSize: "13px", display: "block" }}>{t.name || "Tenant"}</strong>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <strong style={{ color: "#1e293b", fontSize: "13px", display: "block" }}>{t.name || "Tenant"}</strong>
+                    {onInspectOnMap && <MapPin size={12} style={{ color: "#00a8bd" }} />}
+                  </div>
                   <span style={{ color: "#64748b", fontSize: "11px" }}>
                     {t.terminal} • {t.floor || "L1"} • {t.spaceCode || "-"}
                   </span>
                 </div>
-                <span
-                  style={{
-                    padding: "3px 8px",
-                    borderRadius: "6px",
-                    fontSize: "11px",
-                    fontWeight: "800",
-                    background: "#fee2e2",
-                    color: "#dc2626",
-                  }}
-                >
-                  TUTUP
-                </span>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span
+                    style={{
+                      padding: "3px 8px",
+                      borderRadius: "6px",
+                      fontSize: "11px",
+                      fontWeight: "800",
+                      background: "#fee2e2",
+                      color: "#dc2626",
+                    }}
+                  >
+                    TUTUP
+                  </span>
+                  {onInspectOnMap && (
+                    <span style={{ fontSize: "11px", color: "#00a8bd", fontWeight: "700" }}>Peta →</span>
+                  )}
+                </div>
               </div>
             ))}
           </div>
