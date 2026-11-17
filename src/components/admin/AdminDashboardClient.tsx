@@ -229,6 +229,11 @@ export function AdminDashboardClient({
     setShowNotificationPopover(false);
   };
 
+  const handleOpenClosedInDirectory = () => {
+    setReportFilters({ terminal: "ALL", category: "ALL", status: "TEMPORARILY_CLOSED" });
+    setActiveTab("tenants");
+  };
+
   useEffect(() => {
     if (!showNotificationPopover) return;
     const handleClickOutside = (event: MouseEvent) => {
@@ -909,11 +914,11 @@ export function AdminDashboardClient({
                     type="button"
                     className="admin-notif-footer-link"
                     onClick={() => {
-                      setActiveTab("overview");
+                      handleOpenClosedInDirectory();
                       setShowNotificationPopover(false);
                     }}
                   >
-                    <span>Lihat Rincian di Dashboard</span>
+                    <span>Kelola Semua di Direktori Peta</span>
                     <ArrowRight size={13} />
                   </button>
                 </div>
@@ -1033,7 +1038,13 @@ export function AdminDashboardClient({
           )}
 
           {/* Dynamic Content Views */}
-          {activeTab === "overview" && <DashboardAnalytics tenants={tenants} onInspectOnMap={handleInspectOnMap} />}
+          {activeTab === "overview" && (
+            <DashboardAnalytics
+              tenants={tenants}
+              onInspectOnMap={handleInspectOnMap}
+              onOpenDirectoryClosed={handleOpenClosedInDirectory}
+            />
+          )}
 
           {activeTab === "map" && <AdminMapPanel initialObjectName={mapObjectToEdit} focusNonce={mapEditNonce} />}
 

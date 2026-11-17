@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import {
   AlertCircle,
+  ArrowRight,
   BarChart3,
   Building2,
   CheckCircle2,
@@ -46,9 +47,11 @@ function isFacilityItem(tenant: TenantAnalyticsRow): boolean {
 export function DashboardAnalytics({
   tenants,
   onInspectOnMap,
+  onOpenDirectoryClosed,
 }: {
   tenants: TenantAnalyticsRow[];
   onInspectOnMap?: (spaceCode: string) => void;
+  onOpenDirectoryClosed?: () => void;
 }) {
   const [selectedFloor, setSelectedFloor] = useState<"ALL" | "L1" | "L2">("ALL");
   const [categoryTab, setCategoryTab] = useState<"COMMERCIAL" | "FACILITY">("COMMERCIAL");
@@ -807,78 +810,96 @@ export function DashboardAnalytics({
         </div>
       </div>
 
-      {/* QUICK ATTENTION & MONITORING TABLE */}
+      {/* EXECUTIVE OPERATIONAL ATTENTION BAR (COMPACT & NEVER CLUTTERED) */}
       {attentionTenants.length > 0 ? (
         <div
           style={{
             background: "#fffbeb",
             border: "1px solid #fde68a",
-            borderRadius: "16px",
-            padding: "18px 20px",
+            borderRadius: "14px",
+            padding: "12px 18px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: "12px",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.02)",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
-            <AlertCircle size={18} style={{ color: "#d97706" }} />
-            <strong style={{ color: "#92400e", fontSize: "14px" }}>
-              Perhatian Operasional: {attentionTenants.length} Tenant Berstatus Tutup / Jam Layanan Terbatas
-            </strong>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: "0" }}>
+            <div
+              style={{
+                width: "32px",
+                height: "32px",
+                borderRadius: "8px",
+                background: "#fef3c7",
+                color: "#d97706",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
+            >
+              <AlertCircle size={18} />
+            </div>
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                <strong style={{ color: "#92400e", fontSize: "13.5px" }}>
+                  Perhatian Operasional: {attentionTenants.length} Unit Usaha & Fasilitas Berstatus Tutup
+                </strong>
+                <span
+                  style={{
+                    padding: "2px 7px",
+                    borderRadius: "999px",
+                    fontSize: "10px",
+                    fontWeight: "800",
+                    background: "#fee2e2",
+                    color: "#dc2626",
+                    letterSpacing: "0.04em",
+                  }}
+                >
+                  TUTUP SEMENTARA
+                </span>
+              </div>
+              <span style={{ color: "#78350f", fontSize: "11.5px" }}>
+                Rute pejalan kaki dan informasi tenant di peta wayfinding otomatis menyesuaikan status ini.
+              </span>
+            </div>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "10px" }}>
-            {attentionTenants.map((t, idx) => (
-              <div
-                key={t.id || idx}
-                className="dashboard-attention-card"
-                onClick={() => onInspectOnMap?.(t.spaceCode || t.name || "")}
-                role={onInspectOnMap ? "button" : undefined}
-                tabIndex={onInspectOnMap ? 0 : undefined}
-                title={onInspectOnMap ? `Klik untuk inspeksi ${t.name} di Peta 3D Terminal` : undefined}
-                onKeyDown={(e) => {
-                  if (onInspectOnMap && (e.key === "Enter" || e.key === " ")) {
-                    e.preventDefault();
-                    onInspectOnMap(t.spaceCode || t.name || "");
-                  }
-                }}
+
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            {onOpenDirectoryClosed && (
+              <button
+                type="button"
+                onClick={onOpenDirectoryClosed}
                 style={{
-                  background: "#ffffff",
-                  border: "1px solid #fef3c7",
-                  borderRadius: "10px",
-                  padding: "10px 14px",
-                  display: "flex",
+                  display: "inline-flex",
                   alignItems: "center",
-                  justifyContent: "space-between",
-                  cursor: onInspectOnMap ? "pointer" : "default",
-                  transition: "all 0.16s ease",
-                  userSelect: "none",
+                  gap: "6px",
+                  padding: "7px 14px",
+                  borderRadius: "8px",
+                  background: "#ffffff",
+                  border: "1px solid #fcd34d",
+                  color: "#92400e",
+                  fontSize: "12px",
+                  fontWeight: "750",
+                  cursor: "pointer",
+                  boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+                  transition: "all 0.15s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "#fef3c7";
+                  e.currentTarget.style.borderColor = "#f59e0b";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "#ffffff";
+                  e.currentTarget.style.borderColor = "#fcd34d";
                 }}
               >
-                <div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                    <strong style={{ color: "#1e293b", fontSize: "13px", display: "block" }}>{t.name || "Tenant"}</strong>
-                    {onInspectOnMap && <MapPin size={12} style={{ color: "#00a8bd" }} />}
-                  </div>
-                  <span style={{ color: "#64748b", fontSize: "11px" }}>
-                    {t.terminal} • {t.floor || "L1"} • {t.spaceCode || "-"}
-                  </span>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <span
-                    style={{
-                      padding: "3px 8px",
-                      borderRadius: "6px",
-                      fontSize: "11px",
-                      fontWeight: "800",
-                      background: "#fee2e2",
-                      color: "#dc2626",
-                    }}
-                  >
-                    TUTUP
-                  </span>
-                  {onInspectOnMap && (
-                    <span style={{ fontSize: "11px", color: "#00a8bd", fontWeight: "700" }}>Peta →</span>
-                  )}
-                </div>
-              </div>
-            ))}
+                <span>Kelola Semua di Direktori Peta</span>
+                <ArrowRight size={13} />
+              </button>
+            )}
           </div>
         </div>
       ) : (
@@ -886,16 +907,16 @@ export function DashboardAnalytics({
           style={{
             background: "#f0fdf4",
             border: "1px solid #bbf7d0",
-            borderRadius: "16px",
-            padding: "14px 20px",
+            borderRadius: "14px",
+            padding: "12px 18px",
             display: "flex",
             alignItems: "center",
             gap: "10px",
           }}
         >
-          <CheckCircle2 size={18} style={{ color: "#16a34a" }} />
+          <CheckCircle2 size={18} style={{ color: "#16a34a", flexShrink: 0 }} />
           <span style={{ fontSize: "13px", color: "#166534", fontWeight: "650" }}>
-            Seluruh tenant terdata saat ini berstatus operasional aktif dan siap melayani penumpang di bandara.
+            Seluruh tenant komersial dan fasilitas bandara saat ini berstatus operasional aktif dan siap melayani penumpang.
           </span>
         </div>
       )}
