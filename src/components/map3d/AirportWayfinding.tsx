@@ -524,7 +524,7 @@ export function AirportWayfinding() {
   });
   const [exteriorAttribution, setExteriorAttribution] = useState<string | null>(null);
   const [compassRotation, setCompassRotation] = useState(0);
-  const [mobileSheetExpanded, setMobileSheetExpanded] = useState(false);
+  const [mobileSheetExpanded, setMobileSheetExpanded] = useState(true);
   const [passengerFloor, setPassengerFloor] = useState<FloorId>("L1");
   const [automaticLocation, setAutomaticLocation] = useState(true);
   const [locationMapped, setLocationMapped] = useState(false);
@@ -916,7 +916,7 @@ export function AirportWayfinding() {
       setRouteProgress(null);
       setRoutePaused(false);
       setActiveStepIndex(0);
-      setMobileSheetExpanded(false);
+      setMobileSheetExpanded(true);
       setViewMode("map");
       if (!route) {
         setRouteWorldPoints([]);
@@ -939,6 +939,7 @@ export function AirportWayfinding() {
         : copy.routeHint);
       setSelected(createSelectedObject(record.object));
       setDirectionsOpen(true);
+      setMobileSheetExpanded(true);
       // Mulai dari lantai titik awal. Lantai lain disembunyikan agar rute tidak
       // tertutup pelat lantai di atasnya.
       if (multiFloor) setFloorView(start.floor);
@@ -1224,11 +1225,13 @@ export function AirportWayfinding() {
       setSearchFocused(false);
       setBuildingAsStart(record);
       setDirectionsOpen(true);
+      setMobileSheetExpanded(true);
       return;
     }
     if (startPoint) {
       calculateRoute(record);
       setDirectionsOpen(true);
+      setMobileSheetExpanded(true);
     } else {
       setSelected(createSelectedObject(record.object));
       if (multiFloor) setFloorView(record.floor);
@@ -1625,7 +1628,11 @@ export function AirportWayfinding() {
               type="button"
               className={`gmaps-directions-trigger ${directionsOpen ? "is-active" : ""}`}
               onClick={() => {
-                setDirectionsOpen((prev) => !prev);
+                setDirectionsOpen((prev) => {
+                  const next = !prev;
+                  if (next) setMobileSheetExpanded(true);
+                  return next;
+                });
                 if (!startPoint) beginStartSelection();
               }}
               title={lang === "EN" ? "Directions" : "Petunjuk arah"}
@@ -1919,7 +1926,10 @@ export function AirportWayfinding() {
             onTouchStart={handleSheetTouchStart}
             onTouchEnd={handleSheetTouchEnd}
           >
-            <div className="gmaps-directions-title-area">
+            <div
+              className="gmaps-directions-title-area"
+              onClick={() => setMobileSheetExpanded((prev) => !prev)}
+            >
               <h2>{copy.directions}</h2>
             </div>
             <div className="gmaps-directions-header-actions">
@@ -2426,6 +2436,7 @@ export function AirportWayfinding() {
                       }
                     }
                     setDirectionsOpen(true);
+                    setMobileSheetExpanded(true);
                     setSelected(null);
                   }
                 }}
@@ -2441,6 +2452,7 @@ export function AirportWayfinding() {
                   if (record) {
                     setBuildingAsStart(record);
                     setDirectionsOpen(true);
+                    setMobileSheetExpanded(true);
                     setSelected(null);
                   }
                 }}
