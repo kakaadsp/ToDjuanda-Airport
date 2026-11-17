@@ -798,16 +798,6 @@ export function AdminDashboardClient({
             {activeRole === "SUPER_ADMIN" ? <ShieldCheck size={14} /> : <Store size={14} />}
             {activeRole === "SUPER_ADMIN" ? "Superadmin" : "Admin Komersil"}
           </span>
-          <button
-            type="button"
-            className="admin-signout-button"
-            onClick={handleLogout}
-            disabled={loggingOut}
-            title="Keluar dari akun admin"
-          >
-            <LogOut size={14} />
-            <span>{loggingOut ? "Keluar..." : "Keluar"}</span>
-          </button>
         </div>
       </header>
 
@@ -887,6 +877,18 @@ export function AdminDashboardClient({
             )}
           </nav>
 
+          <div className="sidebar-bottom-actions">
+            <button
+              type="button"
+              className="sidebar-signout-button"
+              onClick={handleLogout}
+              disabled={loggingOut}
+              title="Keluar dari akun admin"
+            >
+              <LogOut size={16} />
+              <span>{loggingOut ? "Keluar..." : "Keluar"}</span>
+            </button>
+          </div>
         </aside>
 
         {/* Main Content Area */}
