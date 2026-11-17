@@ -1361,6 +1361,7 @@ export function AirportWayfinding() {
     setViewMode("pov");
     setRouteRestartToken((value) => value + 1);
     setMobileSheetExpanded(false);
+    setDirectionsOpen(false);
   }, [routeMetrics]);
 
   const startOrResumeRoute = useCallback(() => {
@@ -1375,6 +1376,7 @@ export function AirportWayfinding() {
     setViewMode("pov");
     setRouteRecenterToken((value) => value + 1);
     setMobileSheetExpanded(false);
+    setDirectionsOpen(false);
   }, [restartActiveRoute, routeMetrics, routeProgress]);
 
   const handlePlaybackComplete = useCallback(() => {
@@ -2091,7 +2093,14 @@ export function AirportWayfinding() {
                       <button
                         type="button"
                         className="gmaps-action-primary"
-                        onClick={() => setRoutePaused((prev) => !prev)}
+                        onClick={() => {
+                          if (routePaused) {
+                            setRoutePaused(false);
+                            setDirectionsOpen(false);
+                          } else {
+                            setRoutePaused(true);
+                          }
+                        }}
                         title={routePaused ? (lang === "EN" ? "Resume simulation" : "Lanjutkan simulasi") : (lang === "EN" ? "Pause simulation" : "Jeda simulasi")}
                       >
                         {routePaused ? <Play size={15} fill="currentColor" /> : <Pause size={15} fill="currentColor" />}
