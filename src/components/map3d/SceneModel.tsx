@@ -58,6 +58,7 @@ export type SceneBounds = {
 
 type SceneModelProps = {
   selectedUuid: string | null;
+  selectedDoorSide?: MapObjectDoor["side"] | null;
   onSelect: (selection: SelectedObject) => void;
   onSelectFloor?: (point: THREE.Vector3, objectName?: string) => void;
   /** Dipanggil saat pengunjung sedang memilih titik awal secara manual. */
@@ -294,7 +295,7 @@ function isFloorSurfaceName(objectName: string) {
   return key === "visitor" || key === "departure" || key === "arrival";
 }
 
-export function SceneModel({ selectedUuid, onSelect, onSelectFloor, onSelectPoint, onSelectEntryPoint, onReady, objectConfigs = {}, modelUrl = GROUND_FLOOR_MODEL_URL, floorView = "ALL", showObjectLabels = false, liteMode = false }: SceneModelProps) {
+export function SceneModel({ selectedUuid, selectedDoorSide, onSelect, onSelectFloor, onSelectPoint, onSelectEntryPoint, onReady, objectConfigs = {}, modelUrl = GROUND_FLOOR_MODEL_URL, floorView = "ALL", showObjectLabels = false, liteMode = false }: SceneModelProps) {
   const gltf = useGLTF(modelUrl);
   const sourceScene = gltf.scene;
   const sourceParser = gltf.parser as typeof gltf.parser & {
@@ -614,7 +615,15 @@ export function SceneModel({ selectedUuid, onSelect, onSelectFloor, onSelectPoin
           pointerStart.current = null;
         }}
       />
-      {selectedEntryObject && selectedEntryDoors && !/^DOOR__/i.test(selectedEntryObjectName) && <EntryDoorMarkers object={selectedEntryObject} objectName={selectedEntryObjectName} doors={selectedEntryDoors} onSelect={onSelectEntryPoint} />}
+      {selectedEntryObject && selectedEntryDoors && !/^DOOR__/i.test(selectedEntryObjectName) && (
+        <EntryDoorMarkers
+          object={selectedEntryObject}
+          objectName={selectedEntryObjectName}
+          doors={selectedEntryDoors}
+          onSelect={onSelectEntryPoint}
+          selectedSide={selectedDoorSide}
+        />
+      )}
       {showObjectLabels && floorView !== "ALL" && objectLabels.filter((label) => floorView === label.floor && (!liteMode || label.key === selectedUuid || label.category !== "building")).map((label) => (
         <ObjectLabelMarker key={label.key} label={label.name} category={label.category} position={label.position} />
       ))}
@@ -659,28 +668,90 @@ function ObjectLabelMarker({ label, category, position }: { label: string; categ
   );
 }
 
-function EntryDoorMarkers({ object, objectName, doors, onSelect }: { object: THREE.Object3D; objectName: string; doors: MapObjectDoor[]; onSelect?: SceneModelProps["onSelectEntryPoint"] }) {
-  const box = new THREE.Box3().setFromObject(object);
+export function calculateDoorPoint(box: THREE.Box3, door: MapObjectDoor): THREE.Vector3 {
   const width = Math.max(box.max.x - box.min.x, 0.6);
   const depth = Math.max(box.max.z - box.min.z, 0.6);
   const y = box.min.y + 0.85;
+  const ratio = Math.max(0, Math.min(100, door.position ?? 50)) / 100;
+  return door.side === "NORTH"
+    ? new THREE.Vector3(box.min.x + width * ratio, y, box.min.z - 0.2)
+    : door.side === "SOUTH"
+      ? new THREE.Vector3(box.min.x + width * ratio, y, box.max.z + 0.2)
+      : door.side === "WEST"
+        ? new THREE.Vector3(box.min.x - 0.2, y, box.min.z + depth * ratio)
+        : new THREE.Vector3(box.max.x + 0.2, y, box.min.z + depth * ratio);
+}
+
+function EntryDoorMarkers({
+  object,
+  objectName,
+  doors,
+  onSelect,
+  selectedSide,
+}: {
+  object: THREE.Object3D;
+  objectName: string;
+  doors: MapObjectDoor[];
+  onSelect?: SceneModelProps["onSelectEntryPoint"];
+  selectedSide?: MapObjectDoor["side"] | null;
+}) {
+  const box = new THREE.Box3().setFromObject(object);
+  const width = Math.max(box.max.x - box.min.x, 0.6);
+  const depth = Math.max(box.max.z - box.min.z, 0.6);
   const labels: Record<MapObjectDoor["side"], string> = { NORTH: "U", EAST: "T", SOUTH: "S", WEST: "B" };
-  return <group>
-    {doors.slice(0, 4).map((door, index) => {
-      const ratio = Math.max(0, Math.min(100, door.position ?? 50)) / 100;
-      const point = door.side === "NORTH" ? new THREE.Vector3(box.min.x + width * ratio, y, box.min.z - 0.2)
-        : door.side === "SOUTH" ? new THREE.Vector3(box.min.x + width * ratio, y, box.max.z + 0.2)
-          : door.side === "WEST" ? new THREE.Vector3(box.min.x - 0.2, y, box.min.z + depth * ratio)
-            : new THREE.Vector3(box.max.x + 0.2, y, box.min.z + depth * ratio);
-      return <group key={`${objectName}-entry-door-${index}`} position={point}>
-        <mesh renderOrder={1000} onPointerUp={(event) => { event.stopPropagation(); if (door.open) onSelect?.(point.clone(), objectName, door.side); }}>
-          <sphereGeometry args={[Math.max(Math.min(width, depth) * 0.045, 0.3), 20, 12]} />
-          <meshBasicMaterial color={door.open ? "#16C784" : "#E05252"} depthTest={false} depthWrite={false} />
-        </mesh>
-        <Html center distanceFactor={8} style={{ pointerEvents: "none" }}><span className={`map-door-marker-label${door.open ? " is-open" : " is-closed"}`}>{labels[door.side]} {door.open ? "Pintu" : "Tutup"}</span></Html>
-      </group>;
-    })}
-  </group>;
+  return (
+    <group>
+      {doors.slice(0, 4).map((door, index) => {
+        const point = calculateDoorPoint(box, door);
+        const isSelected = selectedSide === door.side;
+        return (
+          <group key={`${objectName}-entry-door-${index}`} position={point}>
+            {isSelected && (
+              <mesh renderOrder={1001}>
+                <ringGeometry args={[Math.max(Math.min(width, depth) * 0.065, 0.45), Math.max(Math.min(width, depth) * 0.085, 0.58), 32]} />
+                <meshBasicMaterial color="#38bdf8" depthTest={false} depthWrite={false} side={THREE.DoubleSide} />
+              </mesh>
+            )}
+            <mesh
+              renderOrder={1000}
+              onPointerUp={(event) => {
+                event.stopPropagation();
+                if (door.open) onSelect?.(point.clone(), objectName, door.side);
+              }}
+            >
+              <sphereGeometry args={[isSelected ? Math.max(Math.min(width, depth) * 0.06, 0.42) : Math.max(Math.min(width, depth) * 0.045, 0.3), 20, 12]} />
+              <meshBasicMaterial color={door.open ? (isSelected ? "#00f0ff" : "#16C784") : "#E05252"} depthTest={false} depthWrite={false} />
+            </mesh>
+            <Html center distanceFactor={8} style={{ pointerEvents: door.open ? "auto" : "none" }}>
+              <button
+                type="button"
+                className={`map-door-marker-label${door.open ? " is-open" : " is-closed"}${isSelected ? " is-selected" : ""}`}
+                style={{
+                  cursor: door.open ? "pointer" : "default",
+                  background: isSelected ? "#0284c7" : undefined,
+                  borderColor: isSelected ? "#38bdf8" : undefined,
+                  color: isSelected ? "#ffffff" : undefined,
+                  boxShadow: isSelected ? "0 0 14px rgba(56, 189, 248, 0.9)" : undefined,
+                  transform: isSelected ? "scale(1.18)" : undefined,
+                  outline: "none",
+                }}
+                onPointerUp={(e) => {
+                  e.stopPropagation();
+                  if (door.open) onSelect?.(point.clone(), objectName, door.side);
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (door.open) onSelect?.(point.clone(), objectName, door.side);
+                }}
+              >
+                {labels[door.side]} {door.open ? "Pintu" : "Tutup"}
+              </button>
+            </Html>
+          </group>
+        );
+      })}
+    </group>
+  );
 }
 
 useGLTF.preload(GROUND_FLOOR_MODEL_URL);

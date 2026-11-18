@@ -64,6 +64,7 @@ import { FLOOR_LABELS, FLOOR_ORDER, floorViewLabel, type FloorId, type FloorView
 import { TERMINAL_MODEL_URL } from "@/lib/map3d/assets";
 import {
   SceneModel,
+  calculateDoorPoint,
   getSelectableLabel,
   type SceneBounds,
   type SceneObjectRecord,
@@ -96,7 +97,7 @@ import {
   type FloorTransition,
   type RoutePlace,
 } from "@/lib/map3d/multi-floor-route";
-import { resolveMapObjectEntryDoors, defaultMapObjectConfig, fetchMapObjectConfigsFromDb, getMapObjectPhotoUrl, readMapObjectConfigs, type MapObjectConfig } from "@/lib/map3d/admin-object-config";
+import { resolveMapObjectEntryDoors, defaultMapObjectConfig, fetchMapObjectConfigsFromDb, getMapObjectPhotoUrl, readMapObjectConfigs, type MapObjectConfig, type MapObjectDoorSide } from "@/lib/map3d/admin-object-config";
 import { geographicToT1Model, isUsableT1Position, T1_GEO_CALIBRATION } from "@/lib/map3d/passenger-geolocation";
 import { usePassengerGeolocation } from "@/hooks/usePassengerGeolocation";
 import { useMapStore } from "@/store/mapStore";
@@ -119,6 +120,29 @@ const mapCopy = {
   EN: {
     loading: "LOADING FLOOR MODEL", directions: "Directions", from: "From", to: "To", chooseStart: "Choose starting point", chooseDestination: "Choose destination", searchStart: "Search starting point", searchDestination: "Search destination", clearSearch: "Clear search", noResults: "No results. Try a tenant name, building code, or gate number.", routeHint: "The shortest route avoids walls and pillars through the model's available doorways.", chooseStartHint: "Your start is on the nearest walkway. Choose a destination.", selectStartHint: "Choose a starting point first.", noSafeRoute: "No safe route was found on this floor. Try another start or destination.", noFloorRoute: "No route via an escalator or staircase was found to the destination floor.", stepTitle: "Walking steps", previous: "Previous", next: "Next", mapView: "View map", simulation: "Start 3D simulation", continueSimulation: "Continue 3D simulation", pause: "Pause", resume: "Resume", center: "Recenter", estimate: "Estimated", minutes: "min", arrive: "Arrive at destination", straight: "Walk straight", left: "Turn left", right: "Turn right", floorDirection: "Follow signs to the destination floor", operationalHours: "Operating hours", open24: "Open 24 hours", activePeriod: "Active period", now: "Now", unspecified: "Not specified", facility: "AIRPORT FACILITY", tenant: "COMMERCIAL TENANT", frontPhoto: "Front view", resetRoute: "Clear route", showMap: "Show full map", zoomIn: "Zoom in", zoomOut: "Zoom out", hideExterior: "Hide exterior area", showExterior: "Show exterior area", compass: "Map compass", locating: "Calibrating GPS Accuracy 1.0...", locationActive: "Live location active (Accuracy 1.0)", locationDenied: "Location permission is blocked", locationUnavailable: "Location requires HTTPS or localhost", locationTimeout: "GPS has not responded", locationOutside: "You are not detected near Terminal 1", locationInaccurate: "GPS accuracy is not sufficient yet", retryLocation: "Try again", yourLocation: "Your location (GPS)", locationFloorNote: "GPS cannot detect floors. Correct it if needed." },
 } as const;
+
+const DOOR_SIDE_LABELS = {
+  ID: {
+    NORTH: "Utara",
+    EAST: "Timur",
+    SOUTH: "Selatan",
+    WEST: "Barat",
+  },
+  EN: {
+    NORTH: "North",
+    EAST: "East",
+    SOUTH: "South",
+    WEST: "West",
+  },
+} as const;
+
+const DOOR_SIDE_SHORT: Record<MapObjectDoorSide, string> = {
+  NORTH: "U",
+  EAST: "T",
+  SOUTH: "S",
+  WEST: "B",
+};
+
 const CameraController = forwardRef<
   ViewerApi,
   { bounds: SceneBounds | null; viewMode: CameraMode; onHeadingChange: (heading: number) => void }
@@ -480,6 +504,8 @@ export function AirportWayfinding() {
   const [bounds, setBounds] = useState<SceneBounds | null>(null);
   const [objects, setObjects] = useState<SceneObjectRecord[]>([]);
   const [selected, setSelected] = useState<SelectedObject | null>(null);
+  const [selectedDoorSide, setSelectedDoorSide] = useState<MapObjectDoorSide | null>(null);
+  const [selectedDoorPoint, setSelectedDoorPoint] = useState<THREE.Vector3 | null>(null);
   const [mapObjectConfigs, setMapObjectConfigs] = useState<Record<string, MapObjectConfig>>({});
   const [query, setQuery] = useState(() =>
     typeof window === "undefined"
@@ -825,12 +851,16 @@ export function AirportWayfinding() {
   );
 
   const chooseEntryPoint = useCallback(
-    (point: THREE.Vector3, objectName: string, side: "NORTH" | "EAST" | "SOUTH" | "WEST") => {
+    (point: THREE.Vector3, objectName: string, side: MapObjectDoorSide) => {
       if (!navigation) return;
       const displayName = mapObjectConfigs[objectName]?.displayName?.trim();
-      commitStartPoint({ floor: floorAtHeight(navigation, point.y), point: [point.x, point.z] }, `${displayName || objectName} · Pintu ${side}`);
+      const sideLabel = DOOR_SIDE_LABELS[lang][side];
+      const startName = `${displayName || objectName} · Pintu ${sideLabel}`;
+      setSelectedDoorSide(side);
+      setSelectedDoorPoint(point.clone());
+      commitStartPoint({ floor: floorAtHeight(navigation, point.y), point: [point.x, point.z] }, startName);
     },
-    [commitStartPoint, navigation],
+    [commitStartPoint, lang, mapObjectConfigs, navigation],
   );
 
   const setBuildingAsStart = useCallback(
@@ -874,10 +904,15 @@ export function AirportWayfinding() {
       const routeRecord = via ?? record;
       const objectConfig = mapObjectConfigs[record.name] ?? defaultMapObjectConfig(record.name);
       const routeConfig = mapObjectConfigs[routeRecord.name] ?? defaultMapObjectConfig(routeRecord.name);
+      const allDoors = resolveMapObjectEntryDoors(routeRecord.name, routeConfig.entryDoors);
+      const openDoors = allDoors.filter((d) => d.open);
+      const targetDoors = selectedDoorSide && openDoors.some((d) => d.side === selectedDoorSide)
+        ? openDoors.filter((d) => d.side === selectedDoorSide)
+        : allDoors;
       const target = {
         floor: routeRecord.floor,
         rect: recordRect(routeRecord),
-        entryDoors: resolveMapObjectEntryDoors(routeRecord.name, routeConfig.entryDoors),
+        entryDoors: targetDoors,
       };
       const departure = requiredDepartureForRecord(routeRecord);
       const requiredEntrance = departure && DEPARTURE_ENTRANCE_BY_AREA[departure]
@@ -1074,9 +1109,13 @@ export function AirportWayfinding() {
       if (selectingStart && record) {
         setSelected(selection);
         const config = mapObjectConfigs[record.name] ?? defaultMapObjectConfig(record.name);
-        const openDoors = config.entryDoors.filter((door) => door.open);
+        const openDoors = resolveMapObjectEntryDoors(record.name, config.entryDoors).filter((door) => door.open);
         if (openDoors.length > 0) {
           setRouteMessage(lang === "ID" ? "Pilih pintu masuk bangunan berdasarkan arah mata angin." : "Choose an open building entrance by compass direction.");
+          const defaultDoor = openDoors[0];
+          setSelectedDoorSide(defaultDoor.side);
+          const box = new THREE.Box3().setFromObject(record.object);
+          setSelectedDoorPoint(calculateDoorPoint(box, defaultDoor));
         } else {
           setBuildingAsStart(record);
         }
@@ -1084,6 +1123,17 @@ export function AirportWayfinding() {
       }
       if (!record) return;
       setSelected(selection);
+      const config = mapObjectConfigs[record.name] ?? defaultMapObjectConfig(record.name);
+      const openDoors = resolveMapObjectEntryDoors(record.name, config.entryDoors).filter((door) => door.open);
+      if (openDoors.length > 0) {
+        const defaultDoor = openDoors[0];
+        setSelectedDoorSide(defaultDoor.side);
+        const box = new THREE.Box3().setFromObject(record.object);
+        setSelectedDoorPoint(calculateDoorPoint(box, defaultDoor));
+      } else {
+        setSelectedDoorSide(null);
+        setSelectedDoorPoint(null);
+      }
       setDirectionsOpen(false);
       if (multiFloor) setFloorView(record.floor);
       viewerApi.current?.focusObject(record.object);
@@ -1519,6 +1569,7 @@ export function AirportWayfinding() {
               showObjectLabels
               liteMode={liteMode}
               selectedUuid={selected?.uuid ?? null}
+              selectedDoorSide={selectedDoorSide}
               onSelect={handleSelect}
               onSelectPoint={selectingStart && navigation ? handleManualStartPoint : undefined}
               onSelectEntryPoint={chooseEntryPoint}
@@ -2393,7 +2444,11 @@ export function AirportWayfinding() {
             <button
               type="button"
               className="gmaps-place-close"
-              onClick={() => setSelected(null)}
+              onClick={() => {
+                setSelected(null);
+                setSelectedDoorSide(null);
+                setSelectedDoorPoint(null);
+              }}
               aria-label={lang === "ID" ? "Tutup" : "Close"}
             >
               <X size={18} />
@@ -2427,12 +2482,55 @@ export function AirportWayfinding() {
               </span>
             </div>
 
+            {(() => {
+              const record = objects.find((item) => item.uuid === selected.uuid || item.name === selected.name);
+              if (!record) return null;
+              const doors = resolveMapObjectEntryDoors(record.name, selectedLocationConfig.entryDoors);
+              const openDoors = doors.filter((d) => d.open);
+              if (openDoors.length === 0) return null;
+
+              return (
+                <div className="gmaps-door-selector-wrap">
+                  <div className="gmaps-door-selector-header">
+                    <Compass size={13} className="gmaps-door-compass-icon" />
+                    <span className="gmaps-door-selector-title">
+                      {lang === "ID" ? "Pilih Pintu / Posisi Anda:" : "Select Entrance / Your Position:"}
+                    </span>
+                  </div>
+                  <div className="gmaps-door-pills" role="radiogroup" aria-label="Pilihan pintu tenant">
+                    {openDoors.map((door) => {
+                      const isCurrent = (selectedDoorSide ?? openDoors[0].side) === door.side;
+                      const sideName = DOOR_SIDE_LABELS[lang][door.side];
+                      return (
+                        <button
+                          key={door.side}
+                          type="button"
+                          role="radio"
+                          aria-checked={isCurrent}
+                          className={`gmaps-door-pill${isCurrent ? " is-active" : ""}`}
+                          onClick={() => {
+                            setSelectedDoorSide(door.side);
+                            const box = new THREE.Box3().setFromObject(record.object);
+                            const pt = calculateDoorPoint(box, door);
+                            setSelectedDoorPoint(pt);
+                          }}
+                        >
+                          <span className="gmaps-door-badge">{DOOR_SIDE_SHORT[door.side]}</span>
+                          <span className="gmaps-door-name">Pintu {sideName}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
+
             <div className="gmaps-place-actions">
               <button
                 type="button"
                 className="gmaps-btn-primary"
                 onClick={() => {
-                  const record = objects.find((item) => item.uuid === selected.uuid);
+                  const record = objects.find((item) => item.uuid === selected.uuid || item.name === selected.name);
                   if (record) {
                     if (startPoint) {
                       calculateRoute(record);
@@ -2444,7 +2542,28 @@ export function AirportWayfinding() {
                       if (entrance) {
                         startPassengerRoute(entrance, entranceLabel(entrance.name), record);
                       } else {
-                        setBuildingAsStart(record);
+                        const config = mapObjectConfigs[record.name] ?? defaultMapObjectConfig(record.name);
+                        const doors = resolveMapObjectEntryDoors(record.name, config.entryDoors);
+                        const openDoors = doors.filter((d) => d.open);
+                        const effectiveSide = selectedDoorSide ?? (openDoors.length > 0 ? openDoors[0].side : null);
+                        let pointToUse: THREE.Vector3 | null = selectedDoorPoint;
+                        if (!pointToUse && effectiveSide) {
+                          const doorObj = openDoors.find((d) => d.side === effectiveSide);
+                          if (doorObj) {
+                            const box = new THREE.Box3().setFromObject(record.object);
+                            pointToUse = calculateDoorPoint(box, doorObj);
+                          }
+                        }
+                        const displayName = config.displayName?.trim() || record.selectableLabel || record.name;
+                        if (pointToUse && effectiveSide) {
+                          const sideLabel = DOOR_SIDE_LABELS[lang][effectiveSide];
+                          commitStartPoint(
+                            { floor: record.floor, point: [pointToUse.x, pointToUse.z] },
+                            `${displayName} · Pintu ${sideLabel}`,
+                          );
+                        } else {
+                          setBuildingAsStart(record);
+                        }
                       }
                     }
                     setDirectionsOpen(true);
@@ -2460,9 +2579,32 @@ export function AirportWayfinding() {
                 type="button"
                 className="gmaps-btn-secondary"
                 onClick={() => {
-                  const record = objects.find((item) => item.uuid === selected.uuid);
+                  const record = objects.find((item) => item.uuid === selected.uuid || item.name === selected.name);
                   if (record) {
-                    setBuildingAsStart(record);
+                    const config = mapObjectConfigs[record.name] ?? defaultMapObjectConfig(record.name);
+                    const doors = resolveMapObjectEntryDoors(record.name, config.entryDoors);
+                    const openDoors = doors.filter((d) => d.open);
+                    const effectiveSide = selectedDoorSide ?? (openDoors.length > 0 ? openDoors[0].side : null);
+
+                    let pointToUse: THREE.Vector3 | null = selectedDoorPoint;
+                    if (!pointToUse && effectiveSide) {
+                      const doorObj = openDoors.find((d) => d.side === effectiveSide);
+                      if (doorObj) {
+                        const box = new THREE.Box3().setFromObject(record.object);
+                        pointToUse = calculateDoorPoint(box, doorObj);
+                      }
+                    }
+
+                    const displayName = config.displayName?.trim() || record.selectableLabel || record.name;
+                    if (pointToUse && effectiveSide) {
+                      const sideLabel = DOOR_SIDE_LABELS[lang][effectiveSide];
+                      commitStartPoint(
+                        { floor: record.floor, point: [pointToUse.x, pointToUse.z] },
+                        `${displayName} · Pintu ${sideLabel}`,
+                      );
+                    } else {
+                      setBuildingAsStart(record);
+                    }
                     setDirectionsOpen(true);
                     setMobileSheetExpanded(true);
                     setSelected(null);

@@ -248,9 +248,16 @@ button:active { transform: translateY(1px); }
 .map-compass-south { bottom: 7px; left: 50%; transform: translateX(-50%); }
 .map-compass-west { left: 8px; top: 50%; transform: translateY(-50%); }
 .map-compass-center { position: absolute; left: 50%; top: 50%; z-index: 1; transform: translate(-50%, -50%); color: #00d2ff; font-size: 17px; }
-.map-door-marker-label { display: inline-block; padding: 3px 6px; border: 1px solid rgba(255, 255, 255, 0.8); border-radius: 999px; color: #ffffff; background: rgba(31, 45, 49, 0.9); font-size: 10px; font-weight: 800; white-space: nowrap; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.28); }
+.map-door-marker-label { display: inline-block; padding: 3px 6px; border: 1px solid rgba(255, 255, 255, 0.8); border-radius: 999px; color: #ffffff; background: rgba(31, 45, 49, 0.9); font-size: 10px; font-weight: 800; white-space: nowrap; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.28); transition: all 0.15s ease; cursor: pointer; }
 .map-door-marker-label.is-open { border-color: #16c784; }
-.map-door-marker-label.is-closed { border-color: #e05252; color: #ffd7d7; }
+.map-door-marker-label.is-closed { border-color: #e05252; color: #ffd7d7; cursor: default; }
+.map-door-marker-label.is-selected {
+  background: #0284c7 !important;
+  border-color: #38bdf8 !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.9) !important;
+  transform: scale(1.18);
+}
 
 /* Map Legend & Color Key */
 .map-legend { position: absolute; left: 50%; bottom: 18px; z-index: 10; display: flex; align-items: center; gap: 16px; padding: 9px 18px; border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 999px; background: rgba(33, 44, 54, 0.85); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3); transform: translateX(-50%); backdrop-filter: blur(12px); pointer-events: none; }
