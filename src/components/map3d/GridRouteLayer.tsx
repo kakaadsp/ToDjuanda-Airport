@@ -3,7 +3,7 @@
 import { Html, Line } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useRef, type RefObject } from "react";
-import type * as THREE from "three";
+import * as THREE from "three";
 import type { RouteWorldPoint, RoutePlaybackSnapshot } from "@/lib/map3d/route-guidance";
 
 type GridRouteLayerProps = {
@@ -12,12 +12,14 @@ type GridRouteLayerProps = {
   start: RouteWorldPoint | null;
   destination: RouteWorldPoint | null;
   visitorPosition: RouteWorldPoint | null;
+  pickedPoint?: RouteWorldPoint | null;
+  pickedLabel?: string;
   startLabel?: string;
   heroVisible?: boolean;
   playbackRef?: RefObject<RoutePlaybackSnapshot | null>;
 };
 
-export function GridRouteLayer({ points, highlightedPoints, start, destination, visitorPosition, startLabel = "TITIK AWAL", heroVisible = false, playbackRef }: GridRouteLayerProps) {
+export function GridRouteLayer({ points, highlightedPoints, start, destination, visitorPosition, pickedPoint = null, pickedLabel = "TITIK JALAN", startLabel = "TITIK AWAL", heroVisible = false, playbackRef }: GridRouteLayerProps) {
   const marker = useRef<THREE.Group>(null);
   useFrame(() => {
     if (marker.current && playbackRef?.current) marker.current.position.set(...playbackRef.current.position);
@@ -55,6 +57,25 @@ export function GridRouteLayer({ points, highlightedPoints, start, destination, 
           </mesh>
           <Html position={[0, 0.75, 0]} center zIndexRange={[40, 0]} style={{ pointerEvents: "none" }}>
             <span className="navigation-marker-label destination-marker-label">TUJUAN</span>
+          </Html>
+        </group>
+      )}
+      {pickedPoint && (
+        <group position={pickedPoint}>
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.04, 0]} renderOrder={32} raycast={() => undefined}>
+            <ringGeometry args={[0.46, 0.74, 32]} />
+            <meshBasicMaterial color="#38bdf8" transparent opacity={0.85} depthWrite={false} toneMapped={false} side={THREE.DoubleSide} />
+          </mesh>
+          <mesh position={[0, 0.36, 0]} renderOrder={33} raycast={() => undefined}>
+            <sphereGeometry args={[0.38, 16, 16]} />
+            <meshBasicMaterial color="#0284c7" depthWrite={false} toneMapped={false} />
+          </mesh>
+          <mesh position={[0, 0.36, 0]} renderOrder={34} raycast={() => undefined}>
+            <sphereGeometry args={[0.16, 12, 12]} />
+            <meshBasicMaterial color="#ffffff" depthWrite={false} toneMapped={false} />
+          </mesh>
+          <Html position={[0, 1.0, 0]} center zIndexRange={[42, 0]} style={{ pointerEvents: "none" }}>
+            <span className="navigation-marker-label picked-marker-label">{pickedLabel}</span>
           </Html>
         </group>
       )}

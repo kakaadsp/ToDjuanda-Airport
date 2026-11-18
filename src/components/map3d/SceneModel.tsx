@@ -336,6 +336,7 @@ export function SceneModel({ selectedUuid, selectedDoorSide, onSelect, onSelectF
       const isHiddenTerminalZone = HIDDEN_TERMINAL_ZONE_OBJECT.test(sourceObjectName);
       if (HIDDEN_COMMERCIAL_OVERHEAD_OBJECT.test(sourceObjectName)) {
         object.visible = false;
+        object.raycast = () => undefined;
         object.userData.runtimeVisibilityReason = "commercial-overhead-obstruction";
       }
       if (isHiddenTerminalZone) {
@@ -565,13 +566,15 @@ export function SceneModel({ selectedUuid, selectedDoorSide, onSelect, onSelectF
         selectedObject.userData.sourceObjectName ||
         event.object.name ||
         selectedObject.name;
-      // Bidang lantai dapat dipilih di mana saja. Bangunan tetap masuk ke
-      // alur seleksi objek agar marker pintu arah mata angin dapat dipilih.
-      if (onSelectPoint && isFloorSurfaceName(sourceName)) {
+      const isWalkableConfigured = effectiveObjectConfigs[sourceName]?.occupancy === "WALKABLE";
+      const clickableFloor = isFloorSurfaceName(sourceName) || isWalkableConfigured;
+      // Bidang lantai & area berstatus jalan dapat dipilih di mana saja.
+      // Bangunan aktif tetap masuk ke alur seleksi objek agar marker pintu arah mata angin dapat dipilih.
+      if (onSelectPoint && clickableFloor) {
         onSelectPoint(event.point.clone(), sourceName);
-      } else if (isSelectableBuildingName(sourceName)) {
+      } else if (!isWalkableConfigured && isSelectableBuildingName(sourceName)) {
         onSelect(createSelectedObject(selectedObject));
-      } else if (isFloorSurfaceName(sourceName)) {
+      } else if (clickableFloor) {
         onSelectFloor?.(event.point.clone(), sourceName);
       }
     }
@@ -605,9 +608,13 @@ export function SceneModel({ selectedUuid, selectedDoorSide, onSelect, onSelectF
           event.object.name ||
           logicalObject?.name ||
           "";
-        if ((onSelectPoint && isFloorSurfaceName(sourceName)) || isSelectableBuildingName(sourceName) || (onSelectFloor && isFloorSurfaceName(sourceName))) {
+        const isWalkableConfigured = effectiveObjectConfigs[sourceName]?.occupancy === "WALKABLE";
+        const clickableFloor = isFloorSurfaceName(sourceName) || isWalkableConfigured;
+        if ((onSelectPoint && clickableFloor) || (!isWalkableConfigured && isSelectableBuildingName(sourceName)) || (onSelectFloor && clickableFloor)) {
           event.stopPropagation();
           setHovered(true);
+        } else {
+          setHovered(false);
         }
         }}
         onPointerOut={() => setHovered(false)}

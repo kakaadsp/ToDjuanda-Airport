@@ -114,6 +114,14 @@ type ViewerApi = {
 
 type CameraMode = "map" | "pov";
 
+type PickedWalkwayPoint = {
+  place: RoutePlace;
+  worldPoint: RouteWorldPoint;
+  title: string;
+  subtitle: string;
+  fullLabel: string;
+};
+
 const mapCopy = {
   ID: {
     loading: "MEMUAT MODEL LANTAI", directions: "Petunjuk arah", from: "Dari", to: "Ke", chooseStart: "Pilih titik awal", chooseDestination: "Pilih tujuan", searchStart: "Cari titik awal", searchDestination: "Cari tujuan", clearSearch: "Hapus pencarian", noResults: "Tidak ditemukan. Coba nama tenant, kode building, atau nomor gate.", routeHint: "Rute terdekat menghindari tembok dan pilar, melalui bukaan pintu yang ada pada model.", chooseStartHint: "Titik awal berada di area jalan terdekat. Pilih tujuan.", selectStartHint: "Pilih posisi awal terlebih dahulu.", noSafeRoute: "Tidak ditemukan jalur aman pada lantai ini. Coba titik awal atau tujuan lain.", noFloorRoute: "Tidak ditemukan jalur lewat eskalator atau tangga menuju lantai tujuan.", stepTitle: "Langkah perjalanan", previous: "Sebelumnya", next: "Berikutnya", mapView: "Lihat peta", simulation: "Mulai Simulasi", continueSimulation: "Mulai Simulasi", pause: "Jeda", resume: "Lanjutkan", center: "Pusatkan", estimate: "Perkiraan", minutes: "menit", arrive: "Tiba di tujuan", straight: "Jalan lurus", left: "Belok kiri", right: "Belok kanan", floorDirection: "Ikuti papan petunjuk ke lantai tujuan", operationalHours: "Jam operasional", open24: "Buka 24 jam", activePeriod: "Masa aktif", now: "Sekarang", unspecified: "Tidak ditentukan", facility: "FASILITAS BANDARA", tenant: "TENANT KOMERSIAL", frontPhoto: "Tampak depan", resetRoute: "Hapus rute", showMap: "Tampilkan seluruh peta", zoomIn: "Perbesar peta", zoomOut: "Perkecil peta", hideExterior: "Sembunyikan area luar gedung", showExterior: "Tampilkan area luar gedung", compass: "Arah mata angin pada model peta", locating: "Mengalibrasi GPS Akurasi 1.0...", locationActive: "Lokasi Anda Aktif (Akurasi 1.0)", locationDenied: "Izin lokasi diblokir", locationUnavailable: "Lokasi hanya tersedia melalui HTTPS atau localhost", locationTimeout: "GPS belum merespons", locationOutside: "Anda belum terdeteksi di sekitar Terminal 1", locationInaccurate: "Akurasi GPS belum cukup", retryLocation: "Coba lagi", yourLocation: "Lokasi Anda (GPS)", locationFloorNote: "GPS tidak dapat mendeteksi lantai. Koreksi bila perlu." },
@@ -506,6 +514,7 @@ export function AirportWayfinding() {
   const [selected, setSelected] = useState<SelectedObject | null>(null);
   const [selectedDoorSide, setSelectedDoorSide] = useState<MapObjectDoorSide | null>(null);
   const [selectedDoorPoint, setSelectedDoorPoint] = useState<THREE.Vector3 | null>(null);
+  const [pickedWalkwayPoint, setPickedWalkwayPoint] = useState<PickedWalkwayPoint | null>(null);
   const [mapObjectConfigs, setMapObjectConfigs] = useState<Record<string, MapObjectConfig>>({});
   const [query, setQuery] = useState(() =>
     typeof window === "undefined"
@@ -825,6 +834,40 @@ export function AirportWayfinding() {
     setRoutePaused(false);
   }, []);
 
+  const describeWalkwayPoint = useCallback(
+    (place: RoutePlace): { title: string; subtitle: string; fullLabel: string } => {
+      const floorText = FLOOR_LABELS[place.floor];
+      let nearestName: string | null = null;
+      let nearestDist = 12;
+      for (const item of objects) {
+        if (!item.selectable || item.floor !== place.floor) continue;
+        const cfg = mapObjectConfigs[item.name];
+        if (cfg?.occupancy === "WALKABLE" || cfg?.occupancy === "OBSTACLE") continue;
+        const [cx, cz] = recordCenter(item).point;
+        const dist = Math.hypot(cx - place.point[0], cz - place.point[1]);
+        if (dist < nearestDist) {
+          nearestDist = dist;
+          nearestName = cfg?.displayName?.trim() || item.selectableLabel || item.name;
+        }
+      }
+      const baseArea = lang === "EN" ? "Walkway" : "Area Jalan";
+      if (nearestName) {
+        const nearText = lang === "EN" ? `Near ${nearestName}` : `Dekat ${nearestName}`;
+        return {
+          title: nearText,
+          subtitle: `${baseArea} · ${floorText}`,
+          fullLabel: `${baseArea} · ${nearText}`,
+        };
+      }
+      return {
+        title: lang === "EN" ? "Walkway Point" : "Titik Area Jalan",
+        subtitle: floorText,
+        fullLabel: `${baseArea} · ${floorText}`,
+      };
+    },
+    [lang, mapObjectConfigs, objects],
+  );
+
   const commitStartPoint = useCallback(
     (place: RoutePlace, name: string) => {
       if (!navigation) return;
@@ -838,6 +881,7 @@ export function AirportWayfinding() {
       setAutomaticLocation(false);
       setLocationMapped(false);
       clearRoute();
+      setPickedWalkwayPoint(null);
       setRouteMessage(copy.chooseStartHint);
       setSelectingStart(false);
       setViewMode("map");
@@ -875,23 +919,58 @@ export function AirportWayfinding() {
   const handleManualStartPoint = useCallback(
     (point: THREE.Vector3, objectName?: string) => {
       if (!navigation) return;
-      // Klik pada tenant/fasilitas harus memakai pusat objek dan metadata
-      // lantainya. Raycast pada dinding atau atap dapat menghasilkan Y yang
-      // bukan ketinggian lantai, sehingga floorAtHeight(point.y) sebelumnya
-      // bisa memilih lantai yang salah dan membuat titik tampak melenceng.
-      const record = objectName
+      const isWalkableConfigured = objectName ? mapObjectConfigs[objectName]?.occupancy === "WALKABLE" : false;
+      // Klik pada tenant/fasilitas aktif memakai pusat objek dan metadata lantainya.
+      // Klik pada area jalan atau kavling berstatus Area Jalan langsung memakai titik klik yang presisi.
+      const record = objectName && !isWalkableConfigured
         ? objects.find((item) => item.name === objectName && item.selectable)
         : undefined;
       if (record) {
         setBuildingAsStart(record);
         return;
       }
-      commitStartPoint(
-        { floor: floorAtHeight(navigation, point.y), point: [point.x, point.z] },
-        "Posisi pada peta",
-      );
+      const floor = shownFloorView !== "ALL"
+        ? shownFloorView
+        : floorAtHeight(navigation, point.y);
+      const snapped = snapPlace(navigation, { floor, point: [point.x, point.z] });
+      if (!snapped) {
+        setRouteMessage(copy.selectStartHint);
+        return;
+      }
+      const { fullLabel } = describeWalkwayPoint(snapped);
+      commitStartPoint(snapped, fullLabel);
+      setDirectionsOpen(true);
+      setMobileSheetExpanded(true);
     },
-    [commitStartPoint, navigation, objects, passengerFloor, setBuildingAsStart],
+    [commitStartPoint, copy.selectStartHint, describeWalkwayPoint, mapObjectConfigs, navigation, objects, setBuildingAsStart, shownFloorView],
+  );
+
+  const handleFloorClick = useCallback(
+    (point: THREE.Vector3) => {
+      if (!navigation || viewMode === "pov") return;
+      const floor = shownFloorView !== "ALL"
+        ? shownFloorView
+        : floorAtHeight(navigation, point.y);
+      const snapped = snapPlace(navigation, { floor, point: [point.x, point.z] });
+      if (!snapped) return;
+      const info = describeWalkwayPoint(snapped);
+      const worldPoint: RouteWorldPoint = [
+        snapped.point[0],
+        placeElevation(navigation, snapped),
+        snapped.point[1],
+      ];
+      setSelected(null);
+      setSelectedDoorSide(null);
+      setSelectedDoorPoint(null);
+      setPickedWalkwayPoint({
+        place: snapped,
+        worldPoint,
+        title: info.title,
+        subtitle: info.subtitle,
+        fullLabel: info.fullLabel,
+      });
+    },
+    [describeWalkwayPoint, navigation, shownFloorView, viewMode],
   );
 
   /**
@@ -973,6 +1052,7 @@ export function AirportWayfinding() {
         ? `${lang === "ID" ? "Rute melewati" : "Route via"} ${route.transitions.map((transition) => transition.label.toLocaleLowerCase(lang === "ID" ? "id-ID" : "en-US")).join(", ")}.`
         : copy.routeHint);
       setSelected(null);
+      setPickedWalkwayPoint(null);
       setDirectionsOpen(true);
       setMobileSheetExpanded(true);
       // Mulai dari lantai titik awal. Lantai lain disembunyikan agar rute tidak
@@ -980,7 +1060,53 @@ export function AirportWayfinding() {
       if (multiFloor) setFloorView(start.floor);
       return true;
     },
-    [copy.noFloorRoute, copy.noSafeRoute, copy.routeHint, lang, mapObjectConfigs, multiFloor, navigation, objects],
+    [copy.noFloorRoute, copy.noSafeRoute, copy.routeHint, lang, mapObjectConfigs, multiFloor, navigation, objects, selectedDoorSide],
+  );
+
+  const planRouteToPlace = useCallback(
+    (start: RoutePlace, destination: RoutePlace, label: string) => {
+      if (!navigation) return false;
+      const target = {
+        floor: destination.floor,
+        rect: {
+          minX: destination.point[0],
+          maxX: destination.point[0],
+          minZ: destination.point[1],
+          maxZ: destination.point[1],
+        },
+      };
+      const route = findFloorRoute(navigation, start, target);
+      setRouteProgress(null);
+      setRoutePaused(false);
+      setActiveStepIndex(0);
+      setMobileSheetExpanded(true);
+      setViewMode("map");
+      if (!route) {
+        setRouteWorldPoints([]);
+        setRouteTransitions([]);
+        setRoutePointFloors([]);
+        setDestinationPoint(null);
+        setDestinationName(label);
+        setRouteMessage(start.floor === destination.floor ? copy.noSafeRoute : copy.noFloorRoute);
+        return false;
+      }
+      const end = route.points.at(-1);
+      setRouteWorldPoints(route.points);
+      setRouteTransitions(route.transitions);
+      setRoutePointFloors(route.pointFloors);
+      setDestinationPoint(end ? { floor: destination.floor, point: [end[0], end[2]] } : destination);
+      setDestinationName(label);
+      setRouteMessage(route.transitions.length
+        ? `${lang === "ID" ? "Rute melewati" : "Route via"} ${route.transitions.map((transition) => transition.label.toLocaleLowerCase(lang === "ID" ? "id-ID" : "en-US")).join(", ")}.`
+        : copy.routeHint);
+      setSelected(null);
+      setPickedWalkwayPoint(null);
+      setDirectionsOpen(true);
+      setMobileSheetExpanded(true);
+      if (multiFloor) setFloorView(start.floor);
+      return true;
+    },
+    [copy.noFloorRoute, copy.noSafeRoute, copy.routeHint, lang, multiFloor, navigation],
   );
 
   const calculateRoute = useCallback(
@@ -1105,6 +1231,7 @@ export function AirportWayfinding() {
 
   const handleSelect = useCallback(
     (selection: SelectedObject) => {
+      setPickedWalkwayPoint(null);
       const record = objects.find((item) => item.uuid === selection.uuid);
       if (selectingStart && record) {
         setSelected(selection);
@@ -1444,6 +1571,9 @@ export function AirportWayfinding() {
     clearRoute();
     setRouteMessage(copy.selectStartHint);
     setSelected(null);
+    setSelectedDoorSide(null);
+    setSelectedDoorPoint(null);
+    setPickedWalkwayPoint(null);
     setQuery("");
     setSelectingStart(false);
     setDirectionsOpen(false);
@@ -1456,7 +1586,12 @@ export function AirportWayfinding() {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setSelected(null);
+      if (event.key === "Escape") {
+        setSelected(null);
+        setSelectedDoorSide(null);
+        setSelectedDoorPoint(null);
+        setPickedWalkwayPoint(null);
+      }
       if (
         event.key.toLocaleLowerCase("id-ID") === "r" &&
         !(event.target instanceof HTMLInputElement)
@@ -1517,7 +1652,7 @@ export function AirportWayfinding() {
       data-destination-location={destinationName ?? ""}
       data-route-active={routeSessionActive ? "true" : "false"}
       data-route-paused={routePaused ? "true" : "false"}
-      data-has-selected={Boolean(selected)}
+      data-has-selected={Boolean(selected || pickedWalkwayPoint)}
     >
       {!routeSessionActive && (
         <PassengerRoadmap
@@ -1571,6 +1706,7 @@ export function AirportWayfinding() {
               selectedUuid={selected?.uuid ?? null}
               selectedDoorSide={selectedDoorSide}
               onSelect={handleSelect}
+              onSelectFloor={navigation ? handleFloorClick : undefined}
               onSelectPoint={selectingStart && navigation ? handleManualStartPoint : undefined}
               onSelectEntryPoint={chooseEntryPoint}
               onReady={handleReady}
@@ -1588,6 +1724,12 @@ export function AirportWayfinding() {
               start={startWorldPoint}
               destination={destinationWorldPoint}
               visitorPosition={liveTracking ? livePosition : (visibleRouteProgress?.position ?? null)}
+              pickedPoint={
+                pickedWalkwayPoint && (shownFloorView === "ALL" || shownFloorView === pickedWalkwayPoint.place.floor)
+                  ? pickedWalkwayPoint.worldPoint
+                  : null
+              }
+              pickedLabel={lang === "ID" ? "TITIK JALAN" : "WALKWAY PIN"}
               startLabel={automaticLocation && locationMapped
                 ? (lang === "ID" ? "LOKASI ANDA" : "YOUR LOCATION")
                 : (lang === "ID" ? "TITIK AWAL" : "START")}
@@ -1962,7 +2104,7 @@ export function AirportWayfinding() {
       </div>
 
       {/* Floating Directions Panel */}
-      {directionsOpen && !selected && (
+      {directionsOpen && !selected && !pickedWalkwayPoint && (
         <aside
           className="gmaps-directions-panel"
           data-expanded={mobileSheetExpanded ? "true" : "false"}
@@ -2613,6 +2755,110 @@ export function AirportWayfinding() {
               >
                 <MapPin size={16} />
                 <span>{copy.chooseStart}</span>
+              </button>
+            </div>
+          </div>
+        </aside>
+      )}
+
+      {/* Walkway Manual Pin Card */}
+      {pickedWalkwayPoint && !selected && (
+        <aside
+          className="gmaps-place-card"
+          aria-label={lang === "ID" ? `Titik jalan ${pickedWalkwayPoint.title}` : `Walkway point ${pickedWalkwayPoint.title}`}
+        >
+          <div className="gmaps-place-card-top">
+            <button
+              type="button"
+              className="gmaps-place-close"
+              onClick={() => setPickedWalkwayPoint(null)}
+              aria-label={lang === "ID" ? "Tutup" : "Close"}
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          <div className="gmaps-place-content">
+            <span className="gmaps-place-badge">
+              {lang === "ID" ? "AREA JALAN · TITIK MANUAL" : "WALKWAY · MANUAL PIN"}
+            </span>
+            <h3 className="gmaps-place-title">{pickedWalkwayPoint.title}</h3>
+            <p className="gmaps-place-category">{pickedWalkwayPoint.subtitle}</p>
+            <p className="gmaps-place-desc">
+              {lang === "ID"
+                ? "Klik titik lain di area jalan pada peta 3D untuk memindahkan posisi pin dengan presisi."
+                : "Click any other spot on the 3D walkway to reposition your pin accurately."}
+            </p>
+
+            <div className="gmaps-place-actions">
+              <button
+                type="button"
+                className="gmaps-btn-primary"
+                onClick={() => {
+                  const prevDestName = destinationName;
+                  const prevDestPoint = destinationPoint;
+                  const picked = pickedWalkwayPoint;
+                  commitStartPoint(picked.place, picked.fullLabel);
+                  if (prevDestName) {
+                    const destRecord = objects.find(
+                      (r) =>
+                        r.name === prevDestName ||
+                        r.selectableLabel === prevDestName ||
+                        mapObjectConfigs[r.name]?.displayName === prevDestName,
+                    );
+                    if (destRecord) {
+                      planRoute(picked.place, destRecord);
+                    } else if (prevDestPoint) {
+                      planRouteToPlace(picked.place, prevDestPoint, prevDestName);
+                    }
+                  }
+                  setDirectionsOpen(true);
+                  setMobileSheetExpanded(true);
+                }}
+              >
+                <MapPin size={16} />
+                <span>{copy.chooseStart}</span>
+              </button>
+              <button
+                type="button"
+                className="gmaps-btn-secondary"
+                onClick={() => {
+                  const picked = pickedWalkwayPoint;
+                  if (startPoint) {
+                    planRouteToPlace(startPoint, picked.place, picked.fullLabel);
+                  } else if (passengerGpsStart) {
+                    setStartPoint(passengerGpsStart);
+                    setStartName(copy.yourLocation);
+                    planRouteToPlace(passengerGpsStart, picked.place, picked.fullLabel);
+                  } else {
+                    let bestEntrance: SceneObjectRecord | null = null;
+                    let bestDist = Number.POSITIVE_INFINITY;
+                    for (const entrance of objects) {
+                      if (!DEPARTURE_ENTRANCE.test(entrance.name)) continue;
+                      const [ex, ez] = recordCenter(entrance).point;
+                      const d = Math.hypot(ex - picked.place.point[0], ez - picked.place.point[1]);
+                      if (d < bestDist) {
+                        bestDist = d;
+                        bestEntrance = entrance;
+                      }
+                    }
+                    const snappedEntrance = bestEntrance && navigation ? snapPlace(navigation, recordCenter(bestEntrance)) : null;
+                    if (bestEntrance && snappedEntrance) {
+                      setStartPoint(snappedEntrance);
+                      setStartName(entranceLabel(bestEntrance.name));
+                      setAutomaticLocation(false);
+                      setLocationMapped(false);
+                      planRouteToPlace(snappedEntrance, picked.place, picked.fullLabel);
+                    } else {
+                      commitStartPoint(picked.place, picked.fullLabel);
+                      setDirectionsOpen(true);
+                      setMobileSheetExpanded(true);
+                    }
+                  }
+                }}
+              >
+                <Navigation size={16} />
+                <span>{copy.directions}</span>
               </button>
             </div>
           </div>

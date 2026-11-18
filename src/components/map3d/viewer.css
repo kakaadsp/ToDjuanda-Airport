@@ -1025,6 +1025,7 @@
 
 .map3d-root .start-marker-label { background: #16a36a; }
 .map3d-root .destination-marker-label { background: #ff5a36; }
+.map3d-root .picked-marker-label { background: #0284c7; border-color: #7dd3fc; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.55); }
 
 .map3d-root .route-poi-label {
   display: inline-block;
