@@ -26,6 +26,7 @@ import {
   Map,
   MapPin,
   MapPinned,
+  Menu,
   Pencil,
   RefreshCw,
   RotateCcw,
@@ -198,6 +199,20 @@ export function AdminDashboardClient({
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
+  // Pada layar mobile/tablet (<= 900px), defaultkan sidebar drawer tertutup ke kiri
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.innerWidth <= 900) {
+      setIsSidebarCollapsed(true);
+    }
+  }, []);
+
+  const handleSelectTab = (tab: string) => {
+    setActiveTab(tab);
+    if (typeof window !== "undefined" && window.innerWidth <= 900) {
+      setIsSidebarCollapsed(true);
+    }
+  };
+
   const handleLogout = async () => {
     if (loggingOut) return;
     setLoggingOut(true);
@@ -215,12 +230,12 @@ export function AdminDashboardClient({
   const handleInspectOnMap = (spaceCode: string) => {
     setMapObjectToEdit(spaceCode);
     setMapEditNonce((n) => n + 1);
-    setActiveTab("map");
+    handleSelectTab("map");
   };
 
   const handleOpenClosedInDirectory = () => {
     setReportFilters({ terminal: "ALL", category: "ALL", status: "TEMPORARILY_CLOSED" });
-    setActiveTab("tenants");
+    handleSelectTab("tenants");
   };
   const [users, setUsers] = useState<AdminUserRow[]>(INITIAL_USERS);
   const [usersLoading, setUsersLoading] = useState(false);
@@ -783,6 +798,15 @@ export function AdminDashboardClient({
       {/* Admin Top Header Navigation */}
       <header className="admin-header-bar">
         <div className="admin-header-left">
+          <button
+            type="button"
+            className="admin-mobile-nav-toggle"
+            onClick={() => setIsSidebarCollapsed((prev) => !prev)}
+            aria-label={isSidebarCollapsed ? "Buka menu navigasi" : "Tutup menu navigasi"}
+            title="Menu Navigasi"
+          >
+            <Menu size={22} />
+          </button>
           <Link href="/" className="admin-brand-link">
             <Image src="/injourney-airports.png" width={180} height={52} priority alt="InJourney Airports" />
           </Link>
@@ -802,6 +826,15 @@ export function AdminDashboardClient({
       </header>
 
       <div className="admin-body-container" data-sidebar-collapsed={isSidebarCollapsed ? "true" : "false"}>
+        {/* Backdrop for mobile drawer */}
+        {!isSidebarCollapsed && (
+          <div
+            className="admin-sidebar-backdrop"
+            onClick={() => setIsSidebarCollapsed(true)}
+            aria-hidden="true"
+          />
+        )}
+
         {/* Sidebar Controls */}
         <aside className="admin-sidebar-nav" aria-label="Navigasi Menu Admin">
           <div className="user-profile-badge">
@@ -816,8 +849,8 @@ export function AdminDashboardClient({
               type="button"
               className="sidebar-collapse-badge-btn"
               onClick={() => setIsSidebarCollapsed(true)}
-              title="Geser / Sembunyikan Menu"
-              aria-label="Sembunyikan Menu"
+              title="Tutup Menu"
+              aria-label="Tutup Menu"
             >
               <PanelLeftClose size={18} />
             </button>
@@ -828,7 +861,7 @@ export function AdminDashboardClient({
               type="button"
               className="nav-item"
               data-active={activeTab === "overview"}
-              onClick={() => setActiveTab("overview")}
+              onClick={() => handleSelectTab("overview")}
             >
               <BarChart3 size={18} />
               <span>Dashboard</span>
@@ -837,7 +870,7 @@ export function AdminDashboardClient({
               type="button"
               className="nav-item"
               data-active={activeTab === "map"}
-              onClick={() => setActiveTab("map")}
+              onClick={() => handleSelectTab("map")}
             >
               <MapPinned size={18} />
               <span>Peta Terminal</span>
@@ -847,7 +880,7 @@ export function AdminDashboardClient({
               type="button"
               className="nav-item"
               data-active={activeTab === "tenants"}
-              onClick={() => setActiveTab("tenants")}
+              onClick={() => handleSelectTab("tenants")}
             >
               <Store size={18} />
               <span>Direktori Peta</span>
@@ -859,7 +892,7 @@ export function AdminDashboardClient({
                   type="button"
                   className="nav-item"
                   data-active={activeTab === "users"}
-                  onClick={() => setActiveTab("users")}
+                  onClick={() => handleSelectTab("users")}
                 >
                   <Users size={18} />
                   <span>Akun & Role Administrator</span>
@@ -868,7 +901,7 @@ export function AdminDashboardClient({
                   type="button"
                   className="nav-item"
                   data-active={activeTab === "audit"}
-                  onClick={() => setActiveTab("audit")}
+                  onClick={() => handleSelectTab("audit")}
                 >
                   <FileClock size={18} />
                   <span>Audit Logs & Log Keamanan</span>
@@ -936,7 +969,7 @@ export function AdminDashboardClient({
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
                   </div>
-                  <button type="button" className="btn-primary" onClick={() => setActiveTab("map")}>
+                  <button type="button" className="btn-primary" onClick={() => handleSelectTab("map")}>
                     <MapPinned size={16} /> Kelola di Peta
                   </button>
                 </div>
@@ -1139,7 +1172,7 @@ export function AdminDashboardClient({
                           <button
                             type="button"
                             className={`status-action-button ${t.status === "ACTIVE" ? "deactivate" : "activate"}`}
-                            onClick={() => { setMapObjectToEdit(t.spaceCode); setMapEditNonce((n) => n + 1); setActiveTab("map"); }}
+                            onClick={() => { setMapObjectToEdit(t.spaceCode); setMapEditNonce((n) => n + 1); handleSelectTab("map"); }}
                             aria-label={`Edit ${t.name} pada peta terminal`}
                           >
                             <MapPinned size={15} />
