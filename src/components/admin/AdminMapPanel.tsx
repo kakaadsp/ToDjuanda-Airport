@@ -5,7 +5,7 @@ import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import * as THREE from "three";
-import { AlertCircle, Check, CheckCircle2, Clock, Image as ImageIcon, Layers3, MapPin, Minus, Plus, RotateCcw, Save, XCircle } from "lucide-react";
+import { AlertCircle, Check, CheckCircle2, Clock, Image as ImageIcon, Layers3, MapPin, Minus, Plus, RotateCcw, Save, Search, X, XCircle } from "lucide-react";
 import { MapStage } from "@/components/wayfinding/MapStage";
 import { floors, spaces } from "@/data/demo-wayfinding";
 import type { MapSpace, TerminalCode } from "@/types";
@@ -267,6 +267,23 @@ export function AdminMapPanel({ initialObjectName = null, focusNonce = 0 }: { in
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
+  // State pencarian tenant / kavling / kotak
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const searchContainerRef = useRef<HTMLDivElement | null>(null);
+  const editorFormRef = useRef<HTMLElement | null>(null);
+
+  // Tutup dropdown saat klik di luar
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+        setIsSearchOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   // Muat dari DB saat panel dibuka; fallback ke localStorage jika DB tidak tersedia
   useEffect(() => {
     fetchMapObjectConfigsFromDb()
@@ -278,6 +295,49 @@ export function AdminMapPanel({ initialObjectName = null, focusNonce = 0 }: { in
     () => objects.filter((record) => record.floor === floorView && (record.metadata.key === "visitor" || (record.selectable && /^(T1|TI)-GF-|^T1-FF-|^BAGGAGE|^DOOR__|^tembok[-_]pillar|^tembok_pilar_/i.test(record.name)))),
     [floorView, objects],
   );
+
+  // Seluruh objek editable di kedua lantai untuk fitur pencarian global
+  const allEditableObjects = useMemo(
+    () => objects.filter((record) => record.metadata.key === "visitor" || (record.selectable && /^(T1|TI)-GF-|^T1-FF-|^BAGGAGE|^DOOR__|^tembok[-_]pillar|^tembok_pilar_/i.test(record.name))),
+    [objects],
+  );
+
+  // Hasil pencarian cepat dropdown
+  const searchResults = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return [];
+    return allEditableObjects
+      .filter((record) => {
+        const config = configs[record.name];
+        const displayName = (config?.displayName || "").toLowerCase();
+        const codeName = record.name.toLowerCase();
+        const label = (record.selectableLabel || "").toLowerCase();
+        const cat = (config?.category || record.metadata.category || "").toLowerCase();
+        const occ = (config?.occupancy || "").toLowerCase();
+        return (
+          displayName.includes(q) ||
+          codeName.includes(q) ||
+          label.includes(q) ||
+          cat.includes(q) ||
+          occ.includes(q)
+        );
+      })
+      .slice(0, 15);
+  }, [allEditableObjects, searchQuery, configs]);
+
+  // Objek yang terfilter pada lantai aktif
+  const filteredListObjects = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return editableObjects;
+    return editableObjects.filter((record) => {
+      const config = configs[record.name];
+      const displayName = (config?.displayName || "").toLowerCase();
+      const codeName = record.name.toLowerCase();
+      const label = (record.selectableLabel || "").toLowerCase();
+      const cat = (config?.category || record.metadata.category || "").toLowerCase();
+      return displayName.includes(q) || codeName.includes(q) || label.includes(q) || cat.includes(q);
+    });
+  }, [editableObjects, searchQuery, configs]);
   const selectRecord = useCallback((record: SceneObjectRecord) => {
     setSelected({ ...record.metadata, uuid: record.uuid, name: record.name, position: [0, 0, 0] });
     setDraft(configs[record.name] ?? defaultMapObjectConfig(record.name));
@@ -292,6 +352,19 @@ export function AdminMapPanel({ initialObjectName = null, focusNonce = 0 }: { in
       cameraControlRef.current?.focusOn(record.object);
     }
   }, [objects, selectRecord]);
+
+  const handleSelectSearchedRecord = useCallback((record: SceneObjectRecord) => {
+    if (record.floor !== floorView) {
+      setFloorView(record.floor);
+    }
+    selectRecord(record);
+    setFocusTarget(record.object);
+    cameraControlRef.current?.focusOn(record.object);
+    setIsSearchOpen(false);
+    setTimeout(() => {
+      editorFormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 120);
+  }, [floorView, selectRecord]);
 
   // Otomatis pilih dan zoom in ke objek saat navigasi dari direktori (misal: "Edit di peta")
   useEffect(() => {
@@ -408,17 +481,88 @@ export function AdminMapPanel({ initialObjectName = null, focusNonce = 0 }: { in
           <strong>{editableObjects.length} objek dapat diatur</strong>
         </div>
       </div>
-      <div className="admin-map-selectors admin-3d-floor-selector" aria-label="Pilih lantai editor 3D">
-        {(["L1", "L2"] as FloorId[]).map((floor) => (
-          <button
-            key={floor}
-            type="button"
-            aria-pressed={floorView === floor}
-            onClick={() => { setFloorView(floor); setSelected(null); setDraft(null); setSaved(false); }}
-          >
-            {FLOOR_LABELS[floor]}
-          </button>
-        ))}
+      <div className="admin-map-toolbar-row">
+        <div className="admin-map-selectors admin-3d-floor-selector" aria-label="Pilih lantai editor 3D">
+          {(["L1", "L2"] as FloorId[]).map((floor) => (
+            <button
+              key={floor}
+              type="button"
+              aria-pressed={floorView === floor}
+              onClick={() => { setFloorView(floor); setSelected(null); setDraft(null); setSaved(false); }}
+            >
+              {FLOOR_LABELS[floor]}
+            </button>
+          ))}
+        </div>
+
+        {/* Search Bar Tenant / Kotak / Kavling */}
+        <div className="admin-map-search-container" ref={searchContainerRef}>
+          <div className="admin-map-search-input-wrap">
+            <Search size={16} className="search-icon" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setIsSearchOpen(true);
+              }}
+              onFocus={() => setIsSearchOpen(true)}
+              placeholder="Cari tenant, kotak, atau kavling (misal: Baggage, Family Mart)..."
+              aria-label="Cari tenant, kotak, atau kavling di peta"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                className="search-clear-btn"
+                onClick={() => {
+                  setSearchQuery("");
+                  setIsSearchOpen(false);
+                }}
+                aria-label="Hapus pencarian"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+
+          {/* Dropdown Live Search Results */}
+          {isSearchOpen && searchResults.length > 0 && (
+            <div className="admin-map-search-dropdown">
+              <div className="admin-map-search-dropdown-header">
+                <span>Hasil Pencarian ({searchResults.length})</span>
+                <small>Pilih untuk fokus 3D & edit</small>
+              </div>
+              <div className="admin-map-search-dropdown-list">
+                {searchResults.map((record) => {
+                  const config = configs[record.name];
+                  const title = config?.displayName?.trim() || record.selectableLabel || record.name;
+                  const occ = config?.occupancy || "OCCUPIED";
+                  const occLabel = occ === "WALKABLE" ? "Area Jalan" : occ === "VACANT" ? "Kosong" : occ === "OBSTACLE" ? "Obstacle" : (config?.category || record.metadata.category || "Tenant");
+
+                  return (
+                    <button
+                      type="button"
+                      key={record.uuid}
+                      className="admin-map-search-item"
+                      onClick={() => handleSelectSearchedRecord(record)}
+                    >
+                      <div className="search-item-left">
+                        <span className="search-item-floor-badge">{FLOOR_LABELS[record.floor]}</span>
+                        <div className="search-item-texts">
+                          <strong>{title}</strong>
+                          <small>{record.name}</small>
+                        </div>
+                      </div>
+                      <span className={`search-item-tag ${occ === "VACANT" ? "vacant" : occ === "WALKABLE" ? "walkable" : "occupied"}`}>
+                        {occLabel}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
       <div className="admin-map-canvas admin-3d-editor-canvas">
         <Canvas dpr={[1, 1.5]} camera={{ fov: 55, near: 0.01, far: 100000, position: [20, 20, 20] }}>
@@ -476,10 +620,25 @@ export function AdminMapPanel({ initialObjectName = null, focusNonce = 0 }: { in
         <aside className="admin-object-list">
           <div className="admin-object-list-header">
             <strong>Objek editable · {FLOOR_LABELS[floorView]}</strong>
-            <span>{editableObjects.length}</span>
+            <span>{searchQuery ? `${filteredListObjects.length} / ${editableObjects.length}` : editableObjects.length}</span>
+          </div>
+          <div className="admin-object-list-filter">
+            <Search size={14} className="filter-icon" />
+            <input
+              type="text"
+              placeholder="Filter nama atau kode blok..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              aria-label="Filter objek di lantai ini"
+            />
+            {searchQuery && (
+              <button type="button" onClick={() => setSearchQuery("")} aria-label="Hapus filter">
+                <X size={13} />
+              </button>
+            )}
           </div>
           <div className="admin-object-list-scroll">
-            {editableObjects.map((record) => (
+            {filteredListObjects.map((record) => (
               <button
                 type="button"
                 key={record.uuid}
@@ -497,16 +656,39 @@ export function AdminMapPanel({ initialObjectName = null, focusNonce = 0 }: { in
                 </small>
               </button>
             ))}
-            {!editableObjects.length && (
+            {!filteredListObjects.length && (
               <div className="admin-object-empty">
-                <strong>Belum ada objek editable</strong>
-                <span>Objek yang dapat dikonfigurasi akan muncul setelah model selesai dimuat.</span>
+                <strong>{searchQuery ? "Tidak ada objek yang cocok" : "Belum ada objek editable"}</strong>
+                <span>
+                  {searchQuery
+                    ? `Tidak ditemukan objek dengan kata kunci "${searchQuery}" di ${FLOOR_LABELS[floorView]}.`
+                    : "Objek yang dapat dikonfigurasi akan muncul setelah model selesai dimuat."}
+                </span>
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery("")}
+                    style={{
+                      marginTop: "8px",
+                      padding: "6px 14px",
+                      borderRadius: "8px",
+                      background: "#00a8bd",
+                      color: "#fff",
+                      border: "none",
+                      fontSize: "11px",
+                      fontWeight: "700",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Reset filter
+                  </button>
+                )}
               </div>
             )}
           </div>
         </aside>
 
-        <section className="admin-object-form">
+        <section className="admin-object-form" ref={editorFormRef}>
           {!draft ? (
             <div className="admin-object-empty">
               <ImageIcon size={22} />
@@ -659,7 +841,7 @@ export function AdminMapPanel({ initialObjectName = null, focusNonce = 0 }: { in
                     </div>
 
                     {/* Tombol Buka, Buka 24 Jam, Tutup */}
-                    <div className="admin-status-toggle-row" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px" }}>
+                    <div className="admin-status-toggle-row">
                       <button
                         type="button"
                         className={`admin-status-btn open ${draft.openTime !== "CLOSED" && !((draft.openTime === "00:00" && (draft.closeTime === "23:59" || draft.closeTime === "24:00" || draft.closeTime === "00:00")) || draft.openTime === "24 Jam") ? "is-active" : ""}`}
@@ -667,7 +849,6 @@ export function AdminMapPanel({ initialObjectName = null, focusNonce = 0 }: { in
                           updateDraft("openTime", draft.openTime && draft.openTime !== "CLOSED" && draft.openTime !== "00:00" ? draft.openTime : "08:00");
                           updateDraft("closeTime", draft.closeTime && draft.closeTime !== "CLOSED" && draft.closeTime !== "23:59" ? draft.closeTime : "22:00");
                         }}
-                        style={{ minHeight: "38px", padding: "0 10px", fontSize: "12px" }}
                       >
                         <CheckCircle2 size={16} />
                         <span>Buka</span>
@@ -680,7 +861,6 @@ export function AdminMapPanel({ initialObjectName = null, focusNonce = 0 }: { in
                           updateDraft("openTime", "00:00");
                           updateDraft("closeTime", "23:59");
                         }}
-                        style={{ minHeight: "38px", padding: "0 10px", fontSize: "12px" }}
                       >
                         <Clock size={16} />
                         <span>Buka 24 Jam</span>
@@ -693,7 +873,6 @@ export function AdminMapPanel({ initialObjectName = null, focusNonce = 0 }: { in
                           updateDraft("openTime", "CLOSED");
                           updateDraft("closeTime", "CLOSED");
                         }}
-                        style={{ minHeight: "38px", padding: "0 10px", fontSize: "12px" }}
                       >
                         <XCircle size={16} />
                         <span>Tutup</span>
@@ -769,8 +948,8 @@ export function AdminMapPanel({ initialObjectName = null, focusNonce = 0 }: { in
                           />{" "}
                           Buka
                         </label>
-                        <label className="admin-object-door-position">
-                          Posisi{" "}
+                        <div className="admin-object-door-position">
+                          <span>Posisi</span>
                           <input
                             type="range"
                             min="0"
@@ -779,8 +958,8 @@ export function AdminMapPanel({ initialObjectName = null, focusNonce = 0 }: { in
                             aria-label={`Posisi pintu ${index + 1}`}
                             onChange={(event) => updateDoor(index, "position", event.target.value)}
                           />
-                          <span>{door.position}%</span>
-                        </label>
+                          <span className="door-pos-val">{door.position}%</span>
+                        </div>
                       </div>
                     ))}
                   </div>
