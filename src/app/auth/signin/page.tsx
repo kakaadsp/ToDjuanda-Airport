@@ -48,6 +48,13 @@ export default function SignInPage() {
       </section>
 
       <section className="signin-panel">
+        <div className="signin-mobile-brand-bar">
+          <Link href="/" className="signin-mobile-logo-link">
+            <Image src="/injourney-airports.png" width={110} height={52} alt="InJourney Airports" priority />
+          </Link>
+          <span className="signin-mobile-eyebrow">BANDARA JUANDA</span>
+        </div>
+
         <div className="signin-lock-icon"><LockKeyhole size={24} /></div>
         <span className="signin-panel-kicker">PORTAL ADMIN</span>
         <h2>Selamat datang kembali</h2>
