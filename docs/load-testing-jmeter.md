@@ -38,7 +38,7 @@ Sebagai sistem navigasi publik di bandara tersibuk di Jawa Timur, API ToDjuanda 
 ### B. Endpoint Kritis yang Diuji (HTTP Samplers)
 1. **Sampler 1: `POST /api/route` (Kalkulasi Rute Pejalan Kaki)**
    - **Tipe**: Algoritma komputasi intensif (Dijkstra / A-Star & Walkable Grid).
-   - **Payload**: Koordinat titik masuk `T1-ENTRANCE-NODE` menuju gerai `T1-GF-COMM-01`.
+   - **Payload**: Koordinat titik masuk `T1-ENTRANCE-NODE` menuju gerai `T1-L1_FNB1-NODE`.
    - **Assertions**: HTTP Response Code `200 OK` & Duration Latency `< 500ms`.
 2. **Sampler 2: `GET /api/tenants` (Pencarian Direktori Gerai)**
    - **Tipe**: Query database relasional berindeks (Filter status `ACTIVE` & terminal `T1`).
