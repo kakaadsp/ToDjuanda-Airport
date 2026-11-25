@@ -1,0 +1,55 @@
+services:
+  # ----------------------------------------------------------------------------
+  # Layanan 1: Database PostgreSQL untuk Lingkungan Staging
+  # ----------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: todjuanda-staging-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: todjuanda_admin
+      POSTGRES_PASSWORD: StagingPass2026!
+      POSTGRES_DB: todjuanda_staging
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_staging_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U todjuanda_admin -d todjuanda_staging"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - todjuanda-network
+
+  # ----------------------------------------------------------------------------
+  # Layanan 2: Aplikasi ToDjuanda Smart Airport Navigation System
+  # ----------------------------------------------------------------------------
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: todjuanda-staging-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://todjuanda_admin:StagingPass2026!@postgres:5432/todjuanda_staging?schema=public
+      AUTH_SECRET: staging_super_secret_jwt_key_juanda_2026_production_grade
+      AUTH_URL: http://localhost:3000
+      PORT: 3000
+      HOSTNAME: "0.0.0.0"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - todjuanda-network
+
+volumes:
+  postgres_staging_data:
+    driver: local
+
+networks:
+  todjuanda-network:
+    driver: bridge
